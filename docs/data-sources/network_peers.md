@@ -39,11 +39,9 @@ data "couchbase-capella_network_peers" "existing_network_peers" {
 Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `commands` (Attributes) (see [below for nested schema](#nestedatt--data--commands))
 - `id` (String)
 - `name` (String)
-- `provider_config` (String)
-- `provider_type` (String) Type of provider to filter on. By default all providers are returned.
+- `provider_config` (Attributes) (see [below for nested schema](#nestedatt--data--provider_config))
 - `status` (Attributes) (see [below for nested schema](#nestedatt--data--status))
 
 <a id="nestedatt--data--audit"></a>
@@ -60,37 +58,50 @@ Read-Only:
 - `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 
-<a id="nestedatt--data--commands"></a>
-### Nested Schema for `data.commands`
+<a id="nestedatt--data--provider_config"></a>
+### Nested Schema for `data.provider_config`
 
 Read-Only:
 
-- `aws` (Attributes) (see [below for nested schema](#nestedatt--data--commands--aws))
-- `azure` (Attributes) (see [below for nested schema](#nestedatt--data--commands--azure))
-- `gcp` (Attributes) (see [below for nested schema](#nestedatt--data--commands--gcp))
+- `aws_config` (Attributes) (see [below for nested schema](#nestedatt--data--provider_config--aws_config))
+- `azure_config` (Attributes) (see [below for nested schema](#nestedatt--data--provider_config--azure_config))
+- `gcp_config` (Attributes) (see [below for nested schema](#nestedatt--data--provider_config--gcp_config))
 
-<a id="nestedatt--data--commands--aws"></a>
-### Nested Schema for `data.commands.aws`
-
-Read-Only:
-
-- `command` (String)
-
-
-<a id="nestedatt--data--commands--azure"></a>
-### Nested Schema for `data.commands.azure`
+<a id="nestedatt--data--provider_config--aws_config"></a>
+### Nested Schema for `data.provider_config.aws_config`
 
 Read-Only:
 
-- `command` (String)
+- `account_id` (String)
+- `cidr` (String)
+- `provider_id` (String) The unique identifier of the provider.
+- `region` (String)
+- `vpc_id` (String)
 
 
-<a id="nestedatt--data--commands--gcp"></a>
-### Nested Schema for `data.commands.gcp`
+<a id="nestedatt--data--provider_config--azure_config"></a>
+### Nested Schema for `data.provider_config.azure_config`
 
 Read-Only:
 
-- `command` (String)
+- `cidr` (String)
+- `provider_id` (String) The unique identifier of the provider.
+- `resource_group` (String)
+- `subscription_id` (String)
+- `tenant_id` (String)
+- `vnet_id` (String)
+
+
+<a id="nestedatt--data--provider_config--gcp_config"></a>
+### Nested Schema for `data.provider_config.gcp_config`
+
+Read-Only:
+
+- `cidr` (String)
+- `network_name` (String)
+- `project_id` (String) The GUID4 ID of the project.
+- `provider_id` (String) The unique identifier of the provider.
+- `service_account` (String)
 
 
 

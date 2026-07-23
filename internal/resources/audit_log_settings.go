@@ -273,10 +273,49 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 	}
 }
 
-func (a *AuditLogSettings) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// There is no V4 API to delete audit log settings, so we do a noop.
-	//
-	// The framework will automatically update the state file. See:
+// Delete disables audit logging for the cluster.
+func (a *AuditLogSettings) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state providerschema.ClusterAuditSettings
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.ClusterId.ValueString()
+	)
+
+	auditLogUpdateRequest := api.UpdateClusterAuditSettingsRequest{
+		AuditEnabled: false,
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/auditLog", a.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err := a.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		auditLogUpdateRequest,
+		a.Token,
+		nil,
+	)
+
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error deleting audit log settings",
+			"Could not disable audit log settings, unexpected error: "+errString,
+		)
+		return
+	}
+
+	// The framework will automatically remove the resource from the state file. See:
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/delete#recommendations
 }
 

@@ -15,28 +15,49 @@ func NetworkPeerSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", networkPeerBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "cluster_id", networkPeerBuilder, requiredString())
 
-	commandAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(commandAttrs, "command", networkPeerBuilder, computedString())
+	awsConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(awsConfigAttrs, "account_id", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(awsConfigAttrs, "vpc_id", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(awsConfigAttrs, "region", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(awsConfigAttrs, "cidr", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(awsConfigAttrs, "provider_id", networkPeerBuilder, computedString())
 
-	commandsAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(commandsAttrs, "aws", networkPeerBuilder, &schema.SingleNestedAttribute{
+	gcpConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(gcpConfigAttrs, "cidr", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(gcpConfigAttrs, "network_name", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(gcpConfigAttrs, "project_id", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(gcpConfigAttrs, "service_account", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(gcpConfigAttrs, "provider_id", networkPeerBuilder, computedString())
+
+	azureConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(azureConfigAttrs, "tenant_id", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(azureConfigAttrs, "cidr", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(azureConfigAttrs, "resource_group", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(azureConfigAttrs, "subscription_id", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(azureConfigAttrs, "vnet_id", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(azureConfigAttrs, "provider_id", networkPeerBuilder, computedString())
+
+	providerConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(providerConfigAttrs, "aws_config", networkPeerBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
-		Attributes: commandAttrs,
+		Attributes: awsConfigAttrs,
 	})
-	capellaschema.AddAttr(commandsAttrs, "gcp", networkPeerBuilder, &schema.SingleNestedAttribute{
+	capellaschema.AddAttr(providerConfigAttrs, "gcp_config", networkPeerBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
-		Attributes: commandAttrs,
+		Attributes: gcpConfigAttrs,
 	})
-	capellaschema.AddAttr(commandsAttrs, "azure", networkPeerBuilder, &schema.SingleNestedAttribute{
+	capellaschema.AddAttr(providerConfigAttrs, "azure_config", networkPeerBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
-		Attributes: commandAttrs,
+		Attributes: azureConfigAttrs,
 	})
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", networkPeerBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "name", networkPeerBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "provider_type", networkPeerBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "provider_config", networkPeerBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "provider_config", networkPeerBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: providerConfigAttrs,
+	})
 	capellaschema.AddAttr(dataAttrs, "audit", networkPeerBuilder, computedAudit())
 	capellaschema.AddAttr(dataAttrs, "status", networkPeerBuilder, &schema.SingleNestedAttribute{
 		Computed: true,
@@ -44,10 +65,6 @@ func NetworkPeerSchema() schema.Schema {
 			"state":     schema.StringAttribute{Computed: true},
 			"reasoning": schema.StringAttribute{Computed: true},
 		},
-	})
-	capellaschema.AddAttr(dataAttrs, "commands", networkPeerBuilder, &schema.SingleNestedAttribute{
-		Computed:   true,
-		Attributes: commandsAttrs,
 	})
 
 	capellaschema.AddAttr(attrs, "data", networkPeerBuilder, &schema.ListNestedAttribute{
