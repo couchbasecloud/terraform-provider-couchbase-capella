@@ -42,9 +42,19 @@ type DatabaseCredential struct {
 	// Audit contains all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
 
+	// CredentialType is the type of the database credential which determines the level of access control:
+	// "basic" uses bucket-level access permissions defined in the Access field. When omitted, this is the default.
+	// "advanced" uses capella user roles defined in the UserRoles field for fine-grained RBAC access.
+	CredentialType types.String `tfsdk:"credential_type"`
+
 	// Access is a list of access which can be narrowed to the scope level of every bucket in the Capella cluster.
 	// Access can be "read", "write" or both.
+	// Access is required for a basic credential type and must not be set for an advanced credential type.
 	Access []Access `tfsdk:"access"`
+
+	// UserRoles is a list of capella user role names assigned to the database credential.
+	// UserRoles is required for an advanced credential type and must not be set for a basic credential type.
+	UserRoles []types.String `tfsdk:"user_roles"`
 }
 
 // Access is a list of privileges or permissions which can be narrowed to the scope level of every bucket in the Capella cluster.
@@ -168,6 +178,10 @@ type DatabaseCredentialItem struct {
 	// Access is a list of access which can be narrowed to the scope level of every bucket in the Capella cluster.
 	// Access can be "read", "write" or both.
 	Access []Access `tfsdk:"access"`
+
+	// UserRoles is a list of capella user role names assigned to the database credential.
+	// It is only populated for advanced credential types.
+	UserRoles []types.String `tfsdk:"user_roles"`
 
 	// Audit All audit-related fields.
 	Audit CouchbaseAuditData `tfsdk:"audit"`

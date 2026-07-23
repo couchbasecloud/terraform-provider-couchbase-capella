@@ -28,58 +28,47 @@ The data source to retrieve database credentials for a cluster. Database credent
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
-Optional:
-
-- `access` (Attributes List) (see [below for nested schema](#nestedatt--data--access))
-
 Read-Only:
 
+- `access` (Attributes Set) (see [below for nested schema](#nestedatt--data--access))
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `id` (String)
 - `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
+- `user_roles` (Set of String)
 
 <a id="nestedatt--data--access"></a>
 ### Nested Schema for `data.access`
 
-Required:
+Read-Only:
 
-- `privileges` (List of String)
-
-Optional:
-
+- `privileges` (Set of String)
 - `resources` (Attributes) (see [below for nested schema](#nestedatt--data--access--resources))
 
 <a id="nestedatt--data--access--resources"></a>
 ### Nested Schema for `data.access.resources`
 
-Optional:
+Read-Only:
 
-- `buckets` (Attributes List) (see [below for nested schema](#nestedatt--data--access--resources--buckets))
+- `buckets` (Attributes Set) (see [below for nested schema](#nestedatt--data--access--resources--buckets))
 
 <a id="nestedatt--data--access--resources--buckets"></a>
 ### Nested Schema for `data.access.resources.buckets`
 
-Required:
+Read-Only:
 
 - `name` (String)
-
-Optional:
-
-- `scopes` (Attributes List) (see [below for nested schema](#nestedatt--data--access--resources--buckets--scopes))
+- `scopes` (Attributes Set) (see [below for nested schema](#nestedatt--data--access--resources--buckets--scopes))
 
 <a id="nestedatt--data--access--resources--buckets--scopes"></a>
 ### Nested Schema for `data.access.resources.buckets.scopes`
 
-Required:
+Read-Only:
 
+- `collections` (Set of String)
 - `name` (String)
-
-Optional:
-
-- `collections` (List of String)
 
 
 
