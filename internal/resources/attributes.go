@@ -3,6 +3,7 @@ package resources
 import (
 	"regexp"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -98,6 +99,22 @@ func requiredNonEmptyStringAttribute() *schema.StringAttribute {
 		[]string{required, requiresReplace},
 		validator.String(stringvalidator.LengthAtLeast(1)),
 	)
+}
+
+// rfc3339Attribute is a variadic function which returns a string attribute with the requested fields set to true
+// if the string satisfies the rfc3339 format, otherwise an error is returned.
+func rfc3339Attribute(fields ...string) *schema.StringAttribute {
+	attribute := stringAttribute(fields)
+	attribute.CustomType = timetypes.RFC3339Type{}
+	return attribute
+}
+
+// rfc3339DefaultAttribute sets the default values for a string field that should satisfy the rfc3339 format
+// and returns the string attribute.
+func rfc3339DefaultAttribute(defaultValue string, fields ...string) *schema.StringAttribute {
+	attribute := rfc3339Attribute(fields...)
+	attribute.Default = stringdefault.StaticString(defaultValue)
+	return attribute
 }
 
 // boolAttribute is a variadic function which sets the requested fields

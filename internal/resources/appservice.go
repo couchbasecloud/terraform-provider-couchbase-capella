@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-
-	"time"
-
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -94,6 +92,10 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if !plan.Version.IsNull() && !plan.Version.IsUnknown() {
 		version := plan.Version.ValueString()
 		appServiceRequest.Version = &version
+	}
+
+	if !plan.LoadBalancerCidr.IsNull() && !plan.LoadBalancerCidr.IsUnknown() {
+		appServiceRequest.LoadBalancerCidr = plan.LoadBalancerCidr.ValueStringPointer()
 	}
 
 	var organizationId = plan.OrganizationId.ValueString()
@@ -255,6 +257,17 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		resp.Diagnostics.AddError(
 			"Error updating app service",
 			"Could not update app service id "+state.Id.String()+" unexpected error: "+errors.ErrUnableToUpdateAppServiceName.Error(),
+		)
+		return
+	}
+
+	if !plan.Version.IsNull() && !plan.Version.IsUnknown() && !plan.Version.Equal(state.Version) {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service ID "+state.Id.String()+" version as this is not supported. "+
+				"To fix, destroy the App Service and create a new one with the desired version, "+
+				"update the version in the plan to the current version ("+state.Version.ValueString()+"), "+
+				"or omit version from the plan completely.",
 		)
 		return
 	}
@@ -568,6 +581,9 @@ func initializePendingAppServiceWithPlanAndId(plan providerschema.AppService, id
 	}
 	if plan.Version.IsNull() || plan.Version.IsUnknown() {
 		plan.Version = types.StringNull()
+	}
+	if plan.LoadBalancerCidr.IsNull() || plan.LoadBalancerCidr.IsUnknown() {
+		plan.LoadBalancerCidr = types.StringNull()
 	}
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.Etag = types.StringNull()

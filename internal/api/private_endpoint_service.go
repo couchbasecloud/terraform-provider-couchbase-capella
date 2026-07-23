@@ -3,6 +3,23 @@ package api
 // GetPrivateEndpointServiceStatusResponse is the response received from the Capella V4 Public API
 // when getting private endpoint service status.
 type GetPrivateEndpointServiceStatusResponse struct {
-	Enabled    bool   `json:"enabled"`
+	Enabled bool `json:"enabled"`
+
+	// Status is the lifecycle state of the private endpoint service derived from
+	// the most recent enable/disable/update operation (for example "enableFailed"
+	// or "enabling"). It is optional and best-effort: it is omitted on GCP, when
+	// the status feature flag is disabled, and on older control planes, in which
+	// case callers fall back to the Enabled boolean.
+	Status *string `json:"status,omitempty"`
+
+	// ServiceName is the endpoint service name that customer VPC/VNET endpoints
+	// connect to. For AWS it is the VPC endpoint service name; for Azure it is
+	// the Private Link Service resource ID. It is available once the private
+	// endpoint service is enabled so it can be fed directly into the
+	// customer-side endpoint resource. It is optional and best-effort: it is
+	// omitted when the service is not enabled, when the name cannot be
+	// determined, and for GCP clusters (not currently returned).
+	ServiceName *string `json:"serviceName,omitempty"`
+
 	PrivateDns string `json:"privateDns"`
 }

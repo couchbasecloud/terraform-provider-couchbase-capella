@@ -19,9 +19,10 @@ variable "app_service" {
   description = "App Service configuration details useful for creation"
 
   type = object({
-    name        = string
-    description = optional(string)
-    nodes       = optional(number)
+    name               = string
+    description        = optional(string)
+    nodes              = optional(number)
+    load_balancer_cidr = optional(string)
     compute = object({
       cpu = number
       ram = number

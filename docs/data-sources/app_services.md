@@ -45,6 +45,7 @@ Read-Only:
  - **Constraints**: Maximum length: 1024 characters
 - `id` (String) - The ID of the App Service created.
  - **Format**: UUID (GUID4)
+- `load_balancer_cidr` (String)
 - `name` (String) - Name of the App Service (up to 256 characters).
  - **Constraints**: Maximum length: 256 characters
 - `nodes` (Number) - Number of nodes configured for the App Service.

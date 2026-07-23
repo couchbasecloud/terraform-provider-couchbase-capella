@@ -76,6 +76,7 @@ func TestAccBackupScheduleResourceInvalidDayOfWeek(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "funday", 10, 4, "30days", false),
+				ExpectError: regexp.MustCompile("day_of_week value must be one of"),
 				ExpectError: regexp.MustCompile(`(?s)day_of_week.*value must be one of|Attribute.*day_of_week.*one of`),
 			},
 		},
@@ -89,22 +90,8 @@ func TestAccBackupScheduleResourceInvalidRetention(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 10, 4, "7days", false),
-				ExpectError: regexp.MustCompile(`(?s)retention_time.*value must be one of|Attribute.*retention_time.*one of`),
-			},
-		},
-	})
-}
-
-func TestAccBackupScheduleResourceInvalidIncrementalEvery(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 10, 3, "90days", false),
-				ExpectError: regexp.MustCompile(`(?s)incremental_every.*value must be one of|Attribute.*incremental_every.*one of`),
+				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 10, 4, "9999days", false),
+				ExpectError: regexp.MustCompile("retention_time value must be one of"),
 			},
 		},
 	})
@@ -132,7 +119,21 @@ func TestAccBackupScheduleResourceInvalidStartAt(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 99, 4, "30days", false),
-				ExpectError: regexp.MustCompile(`(?s)start_at.*value must be between 0 and 23`),
+				ExpectError: regexp.MustCompile("start_at value must be one of"),
+			},
+		},
+	})
+}
+
+func TestAccBackupScheduleResourceInvalidIncrementalEvery(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 10, 3, "30days", false),
+				ExpectError: regexp.MustCompile("incremental_every value must be one of"),
 			},
 		},
 	})
