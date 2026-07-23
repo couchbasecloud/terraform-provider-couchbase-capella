@@ -184,7 +184,7 @@ var (
 	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
 	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
-	ErrRestoreTimesMustNotBeSetWhileCreateBackup = errors.New("restore times must not be set during backup creation")
+	ErrRestoreTimesMustNotBeSetWhileCreateBackup = errors.New("restore times must not be set while create backup")
 
 	ErrRestoreMustNotBeSetWhileCreateBackup = errors.New("restore must not be set during backup creation")
 
