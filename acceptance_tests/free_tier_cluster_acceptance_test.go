@@ -8,83 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccFreeTierClusterResourceCloudProvidersSequential(t *testing.T) {
-	awsResourceName := randomStringWithPrefix("tf_acc_free_tier_cluster_aws_")
-	azureResourceName := randomStringWithPrefix("tf_acc_free_tier_cluster_azure_")
-	gcpResourceName := randomStringWithPrefix("tf_acc_free_tier_cluster_gcp_")
-	awsCidr := generateRandomCIDR()
-	azureCidr := generateRandomCIDR()
-	gcpCidr := generateRandomCIDR()
-
-	awsConfig := testAccFreeTierClusterResourceCloudProviderConfig(awsResourceName, "aws", "us-east-2", awsCidr, "Valid free tier AWS cluster.")
-	awsUpdatedConfig := testAccFreeTierClusterResourceCloudProviderConfig(awsResourceName, "aws", "us-east-2", awsCidr, "Updated valid free tier AWS cluster.")
-	azureConfig := testAccFreeTierClusterResourceCloudProviderConfig(azureResourceName, "azure", "eastus", azureCidr, "Valid free tier Azure cluster.")
-	gcpConfig := testAccFreeTierClusterResourceCloudProviderConfig(gcpResourceName, "gcp", "us-central1", gcpCidr, "Valid free tier GCP cluster.")
-	awsResourceReference := "couchbase-capella_free_tier_cluster." + awsResourceName
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: awsConfig,
-				Check: testAccFreeTierClusterResourceCloudProviderChecks(
-					awsResourceName,
-					"aws",
-					"us-east-2",
-					awsCidr,
-					"Valid free tier AWS cluster.",
-				),
-			},
-			{
-				ResourceName:      awsResourceReference,
-				ImportStateIdFunc: generateClusterImportIdForResource(awsResourceReference),
-				ImportState:       true,
-			},
-			{
-				Config: awsUpdatedConfig,
-				Check: testAccFreeTierClusterResourceCloudProviderChecks(
-					awsResourceName,
-					"aws",
-					"us-east-2",
-					awsCidr,
-					"Updated valid free tier AWS cluster.",
-				),
-			},
-			{
-				Config:  awsUpdatedConfig,
-				Destroy: true,
-			},
-			{
-				Config: azureConfig,
-				Check: testAccFreeTierClusterResourceCloudProviderChecks(
-					azureResourceName,
-					"azure",
-					"eastus",
-					azureCidr,
-					"Valid free tier Azure cluster.",
-				),
-			},
-			{
-				Config:  azureConfig,
-				Destroy: true,
-			},
-			{
-				Config: gcpConfig,
-				Check: testAccFreeTierClusterResourceCloudProviderChecks(
-					gcpResourceName,
-					"gcp",
-					"us-central1",
-					gcpCidr,
-					"Valid free tier GCP cluster.",
-				),
-			},
-			{
-				Config:  gcpConfig,
-				Destroy: true,
-			},
-		},
-	})
-}
+// Live free-tier cluster CRUD/import coverage lives in
+// TestAccFreeTierClusterLifecycle, which shares a single cluster across all
+// free-tier resources (only one free-tier cluster is allowed per organization).
+// The tests below are validation-only: they fail at plan time and never create
+// a cluster, so they stay independent and run in parallel.
 
 func TestAccFreeTierClusterResourceInvalidCloudProviderType(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_free_tier_cluster_invalid_cloud_provider_")
@@ -126,39 +54,6 @@ func TestAccFreeTierClusterResourceNameTooLong(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccFreeTierClusterResourceCloudProviderChecks(resourceName, cloudProviderType, region, cidr, description string) resource.TestCheckFunc {
-	resourceReference := "couchbase-capella_free_tier_cluster." + resourceName
-
-	return resource.ComposeAggregateTestCheckFunc(
-		resource.TestCheckResourceAttrSet(resourceReference, "id"),
-		resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-		resource.TestCheckResourceAttr(resourceReference, "description", description),
-		resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", cloudProviderType),
-		resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", region),
-		resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-		resource.TestCheckResourceAttrSet(resourceReference, "etag"),
-	)
-}
-
-func testAccFreeTierClusterResourceCloudProviderConfig(resourceName, cloudProviderType, region, cidr, description string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "couchbase-capella_free_tier_cluster" "%[4]s" {
-	organization_id = "%[2]s"
-	project_id      = "%[3]s"
-	name            = "%[4]s"
-	description     = "%[8]s"
-
-	cloud_provider = {
-		type   = "%[5]s"
-		region = "%[6]s"
-		cidr   = "%[7]s"
-	}
-}
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cloudProviderType, region, cidr, description)
 }
 
 func testAccFreeTierClusterResourceInvalidCloudProviderTypeConfig(resourceName string) string {
