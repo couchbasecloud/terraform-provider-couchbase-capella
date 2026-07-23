@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // Cursor represents pagination metadata for navigating through large data sets.
@@ -82,8 +83,14 @@ func GetPaginated[DataSchema ~[]T, T any](
 		baseUrl   = cfg.Url
 	)
 
+	// Keep any query parameters that may have been supplied in the base URL
+	separator := "?"
+	if strings.Contains(baseUrl, "?") {
+		separator = "&"
+	}
+
 	for {
-		cfg.Url = baseUrl + fmt.Sprintf("?page=%d&perPage=%d", page, perPage)
+		cfg.Url = baseUrl + fmt.Sprintf("%spage=%d&perPage=%d", separator, page, perPage)
 		if string(sortBy) != "" {
 			cfg.Url += fmt.Sprintf("&sortBy=%s", string(sortBy))
 		}
