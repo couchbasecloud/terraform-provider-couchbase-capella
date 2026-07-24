@@ -141,6 +141,7 @@ var acronyms = map[string]string{
 	"oidc": "OIDC",
 	"sso":  "SSO",
 	"tls":  "TLS",
+	"ttl":  "TTL",
 	"uri":  "URI",
 	"url":  "URL",
 	"uuid": "UUID",
