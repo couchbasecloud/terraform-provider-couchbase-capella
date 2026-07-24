@@ -42,6 +42,12 @@ var (
 	globalClusterCreated     bool
 	globalAppServiceCreated  bool
 
+	// globalSkipAppService, set from ACC_SKIP_APP_SERVICE, makes TestMain skip
+	// the shared app service + app endpoint provisioning for runs that don't
+	// need them (e.g. private endpoint tests). Tests that require the shared app
+	// service must not be run with this set.
+	globalSkipAppService bool
+
 	// dmClusterId is a dedicated cluster for data management (bucket/scope/collection) tests,
 	// kept separate from the global cluster to avoid rebalance contention with app service tests.
 	dmClusterId      string
@@ -112,7 +118,7 @@ var (
 	globalDeletedExternallyEPCollectionName = "tf_acc_ep_del_ext_col"
 	globalACFDeletedExtEPCollectionName     = "tf_acc_ep_acf_dex_col"
 	// Collections for currently-skipped tests — not provisioned while skipped, but
-	// named so the tests are ready to run once the underlying bugs are fixed. 
+	// named so the tests are ready to run once the underlying bugs are fixed.
 	globalCorsDisabledFalseEPCollectionName = "tf_acc_ep_cors_df_col"
 	globalMultipleOIDCEPCollectionName      = "tf_acc_ep_moidc_col"
 	globalRemoveCorsEPCollectionName        = "tf_acc_ep_rmcors_col"

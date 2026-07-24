@@ -17,12 +17,13 @@ func PrivateEndpointsSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointsBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "private_endpoint_dns", privateEndpointsBuilder, computedString(), "GetPrivateEndpointsResponse")
 
+	// The list-endpoints API returns only id, status and serviceName per
+	// endpoint (see api.GetPrivateEndpointResponse). The nested attributes must
+	// match the PrivateEndpointData struct exactly or terraform-plugin-framework
+	// fails state conversion whenever the list is non-empty; org/project/cluster
+	// already exist at the top level and cloud_provider is not returned here.
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "organization_id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "project_id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "cluster_id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "cloud_provider", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "status", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "service_name", privateEndpointsBuilder, computedString())
 

@@ -39,10 +39,6 @@ data "couchbase-capella_private_endpoints" "list_endpoints" {
 
 Read-Only:
 
-- `cloud_provider` (String)
-- `cluster_id` (String) The GUID4 ID of the cluster.
 - `id` (String)
-- `organization_id` (String) The GUID4 ID of the organization.
-- `project_id` (String) The GUID4 ID of the project.
 - `service_name` (String)
 - `status` (String)
