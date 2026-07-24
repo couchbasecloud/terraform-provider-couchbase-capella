@@ -236,10 +236,13 @@ resource "couchbase-capella_private_endpoints" "%[2]s" {
 func TestAccPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 	region := os.Getenv("ACC_AWS_REGION")
 	vpcID := os.Getenv("ACC_AWS_VPC_ID")
-	subnetCSV := os.Getenv("ACC_AWS_SUBNET_IDS")
+	// Parse up front so a value that is only commas/whitespace (which would
+	// render to subnet_ids = [] and fail later with a confusing AWS error) is
+	// caught here as "no subnets" rather than passing a bare non-empty check.
+	subnetIDs := parseSubnetIDs(os.Getenv("ACC_AWS_SUBNET_IDS"))
 	vpcCIDR := os.Getenv("ACC_AWS_VPC_CIDR")
-	if region == "" || vpcID == "" || subnetCSV == "" || vpcCIDR == "" {
-		t.Skip("skipping: set ACC_AWS_REGION, ACC_AWS_VPC_ID, ACC_AWS_SUBNET_IDS (comma-separated) and ACC_AWS_VPC_CIDR (plus AWS credentials) to run this end-to-end test")
+	if region == "" || vpcID == "" || len(subnetIDs) == 0 || vpcCIDR == "" {
+		t.Skip("skipping: set ACC_AWS_REGION, ACC_AWS_VPC_ID, ACC_AWS_SUBNET_IDS (comma-separated, at least one subnet id) and ACC_AWS_VPC_CIDR (plus AWS credentials) to run this end-to-end test")
 	}
 
 	serviceName := randomStringWithPrefix("tf_acc_pe_svc_")
@@ -259,7 +262,7 @@ func TestAccPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrivateEndpointsWithEndpointConfig(
-					serviceName, dsName, acceptName, region, vpcID, subnetListHCL(subnetCSV), vpcCIDR,
+					serviceName, dsName, acceptName, region, vpcID, subnetsToHCL(subnetIDs), vpcCIDR,
 					globalOrgId, globalProjectId, globalClusterId,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -282,15 +285,24 @@ func TestAccPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 	})
 }
 
-// subnetListHCL turns a comma-separated list of subnet IDs into the body of an
-// HCL list, e.g. "subnet-a, subnet-b" -> `"subnet-a", "subnet-b"`.
-func subnetListHCL(csv string) string {
-	parts := strings.Split(csv, ",")
-	quoted := make([]string, 0, len(parts))
-	for _, p := range parts {
+// parseSubnetIDs splits a comma-separated list into trimmed, non-empty subnet
+// IDs. A value that is only commas/whitespace yields an empty slice.
+func parseSubnetIDs(csv string) []string {
+	var ids []string
+	for _, p := range strings.Split(csv, ",") {
 		if s := strings.TrimSpace(p); s != "" {
-			quoted = append(quoted, strconv.Quote(s))
+			ids = append(ids, s)
 		}
+	}
+	return ids
+}
+
+// subnetsToHCL renders subnet IDs as the body of an HCL list, e.g.
+// []string{"subnet-a", "subnet-b"} -> `"subnet-a", "subnet-b"`.
+func subnetsToHCL(ids []string) string {
+	quoted := make([]string, 0, len(ids))
+	for _, id := range ids {
+		quoted = append(quoted, strconv.Quote(id))
 	}
 	return strings.Join(quoted, ", ")
 }
@@ -331,7 +343,7 @@ func testAccCheckPrivateEndpointInList(dsRef, vpceRef string) resource.TestCheck
 // enable the service, create a real interface VPC endpoint against it, wait for
 // the connection to register, then list (data source) and accept (resource).
 func testAccPrivateEndpointsWithEndpointConfig(
-	serviceName, dsName, acceptName, region, vpcID, subnetListHCL, vpcCIDR, orgID, projectID, clusterID string,
+	serviceName, dsName, acceptName, region, vpcID, subnetsHCL, vpcCIDR, orgID, projectID, clusterID string,
 ) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -398,5 +410,5 @@ resource "couchbase-capella_private_endpoints" %[4]q {
 
   depends_on = [time_sleep.wait_for_registration]
 }
-`, globalProviderBlock, serviceName, dsName, acceptName, region, vpcID, subnetListHCL, vpcCIDR, orgID, projectID, clusterID)
+`, globalProviderBlock, serviceName, dsName, acceptName, region, vpcID, subnetsHCL, vpcCIDR, orgID, projectID, clusterID)
 }
