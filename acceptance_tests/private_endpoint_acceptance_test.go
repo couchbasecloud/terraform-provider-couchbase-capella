@@ -225,22 +225,19 @@ resource "couchbase-capella_private_endpoints" "%[2]s" {
 // the environment for the aws provider). The VPC must be in the same region as
 // the Capella cluster:
 //
-//	ACC_AWS_REGION            e.g. us-east-1 (must match the cluster region)
-//	ACC_AWS_VPC_ID            e.g. vpc-0123456789abcdef0
-//	ACC_AWS_SUBNET_IDS        comma-separated, e.g. subnet-aaa,subnet-bbb
-//	ACC_AWS_VPC_CIDR          e.g. 10.0.0.0/16
-//	ACC_AWS_ASSUME_ROLE_ARN   optional; when the ambient AWS credentials reach the
-//	                          VPC's account only via STS AssumeRole, set this to
-//	                          the role ARN in that account (e.g. arn:aws:iam::264138468394:role/...)
+//	ACC_AWS_REGION      e.g. us-east-1 (must match the cluster region)
+//	ACC_AWS_VPC_ID      e.g. vpc-0123456789abcdef0
+//	ACC_AWS_SUBNET_IDS  comma-separated, e.g. subnet-aaa,subnet-bbb
+//	ACC_AWS_VPC_CIDR    e.g. 10.0.0.0/16
+//
+// The AWS credentials come from the ambient environment (the aws provider is
+// region-only). In cross-account CI, assume the target-account role in the
+// pipeline and export AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN before running.
 func TestAccPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 	region := os.Getenv("ACC_AWS_REGION")
 	vpcID := os.Getenv("ACC_AWS_VPC_ID")
 	subnetCSV := os.Getenv("ACC_AWS_SUBNET_IDS")
 	vpcCIDR := os.Getenv("ACC_AWS_VPC_CIDR")
-	// Optional: when the ambient AWS credentials reach the VPC's account only via
-	// STS AssumeRole (e.g. static CI keys assuming into a target account), set
-	// this to the role ARN and the AWS provider will assume it.
-	assumeRoleARN := os.Getenv("ACC_AWS_ASSUME_ROLE_ARN")
 	if region == "" || vpcID == "" || subnetCSV == "" || vpcCIDR == "" {
 		t.Skip("skipping: set ACC_AWS_REGION, ACC_AWS_VPC_ID, ACC_AWS_SUBNET_IDS (comma-separated) and ACC_AWS_VPC_CIDR (plus AWS credentials) to run this end-to-end test")
 	}
@@ -263,7 +260,7 @@ func TestAccPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 			{
 				Config: testAccPrivateEndpointsWithEndpointConfig(
 					serviceName, dsName, acceptName, region, vpcID, subnetListHCL(subnetCSV), vpcCIDR,
-					globalOrgId, globalProjectId, globalClusterId, assumeRoleARN,
+					globalOrgId, globalProjectId, globalClusterId,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(serviceRef, "enabled", "true"),
@@ -334,26 +331,13 @@ func testAccCheckPrivateEndpointInList(dsRef, vpceRef string) resource.TestCheck
 // enable the service, create a real interface VPC endpoint against it, wait for
 // the connection to register, then list (data source) and accept (resource).
 func testAccPrivateEndpointsWithEndpointConfig(
-	serviceName, dsName, acceptName, region, vpcID, subnetListHCL, vpcCIDR, orgID, projectID, clusterID, assumeRoleARN string,
+	serviceName, dsName, acceptName, region, vpcID, subnetListHCL, vpcCIDR, orgID, projectID, clusterID string,
 ) string {
-	// When ACC_AWS_ASSUME_ROLE_ARN is set (e.g. static CI keys that can only
-	// reach the target account via STS AssumeRole), have the AWS provider assume
-	// that role so the VPC endpoint is created in the account that owns the VPC.
-	// When empty, the provider uses the ambient credential chain unchanged.
-	assumeRole := ""
-	if assumeRoleARN != "" {
-		assumeRole = fmt.Sprintf(`
-  assume_role {
-    role_arn     = %q
-    session_name = "tf-acc-private-endpoint"
-  }`, assumeRoleARN)
-	}
-
 	return fmt.Sprintf(`
 %[1]s
 
 provider "aws" {
-  region = %[5]q%[12]s
+  region = %[5]q
 }
 
 resource "couchbase-capella_private_endpoint_service" %[2]q {
@@ -414,5 +398,5 @@ resource "couchbase-capella_private_endpoints" %[4]q {
 
   depends_on = [time_sleep.wait_for_registration]
 }
-`, globalProviderBlock, serviceName, dsName, acceptName, region, vpcID, subnetListHCL, vpcCIDR, orgID, projectID, clusterID, assumeRole)
+`, globalProviderBlock, serviceName, dsName, acceptName, region, vpcID, subnetListHCL, vpcCIDR, orgID, projectID, clusterID)
 }
