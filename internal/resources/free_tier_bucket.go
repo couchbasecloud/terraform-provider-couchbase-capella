@@ -298,6 +298,7 @@ func (f *FreeTierBucket) retrieveFreeTierBucket(ctx context.Context, organizatio
 		BucketConflictResolution: types.StringValue(bucketResp.BucketConflictResolution),
 		DurabilityLevel:          types.StringValue(bucketResp.DurabilityLevel),
 		Replicas:                 types.Int64Value(bucketResp.Replicas),
+		Vbuckets:                 types.Int64Value(bucketResp.Vbuckets),
 		Flush:                    types.BoolValue(bucketResp.Flush),
 		TimeToLiveInSeconds:      types.Int64Value(bucketResp.TimeToLiveInSeconds),
 		EvictionPolicy:           types.StringValue(bucketResp.EvictionPolicy),
