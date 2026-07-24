@@ -31,11 +31,11 @@ func DatabaseCredentialSchema() schema.Schema {
 
 	scopeAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(scopeAttrs, "name", databaseCredentialBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(scopeAttrs, "collections", databaseCredentialBuilder, stringSetAttribute(optional))
+	capellaschema.AddAttr(scopeAttrs, "collections", databaseCredentialBuilder, stringListAttribute(optional))
 
 	bucketAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(bucketAttrs, "name", databaseCredentialBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(bucketAttrs, "scopes", databaseCredentialBuilder, &schema.SetNestedAttribute{
+	capellaschema.AddAttr(bucketAttrs, "scopes", databaseCredentialBuilder, &schema.ListNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: scopeAttrs,
@@ -43,7 +43,7 @@ func DatabaseCredentialSchema() schema.Schema {
 	})
 
 	resourcesAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(resourcesAttrs, "buckets", databaseCredentialBuilder, &schema.SetNestedAttribute{
+	capellaschema.AddAttr(resourcesAttrs, "buckets", databaseCredentialBuilder, &schema.ListNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: bucketAttrs,
@@ -57,7 +57,7 @@ func DatabaseCredentialSchema() schema.Schema {
 		Attributes: resourcesAttrs,
 	})
 
-	capellaschema.AddAttr(attrs, "access", databaseCredentialBuilder, &schema.SetNestedAttribute{
+	capellaschema.AddAttr(attrs, "access", databaseCredentialBuilder, &schema.ListNestedAttribute{
 		Required: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: accessAttrs,
