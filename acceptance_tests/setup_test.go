@@ -112,6 +112,14 @@ func setup(ctx context.Context, client *api.Client) error {
 	// The data-management cluster is provisioned lazily by ensureDMCluster()
 	// from the first data_management_* test that runs, so non-DM runs skip it.
 
+	// The app service and app endpoint are the last things set up here, so runs
+	// that don't need them (e.g. private endpoint tests) can skip the slow
+	// provisioning entirely via ACC_SKIP_APP_SERVICE and return early.
+	if globalSkipAppService {
+		log.Print("ACC_SKIP_APP_SERVICE set; skipping app service and app endpoint setup")
+		return nil
+	}
+
 	// Create app service only if not provided via env var
 	if globalAppServiceId == "" {
 		if err := createAppService(ctx, client); err != nil {
