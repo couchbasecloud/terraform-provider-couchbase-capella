@@ -49,8 +49,7 @@ func createCluster(ctx context.Context, client *api.Client) error {
 				Services: &[]clusterapi.Service{
 					clusterapi.Service("data"),
 					clusterapi.Service("index"),
-					clusterapi.Service("query"),
-					clusterapi.Service("eventing")},
+					clusterapi.Service("query")},
 				NumOfNodes: ptr.To(3),
 			},
 			{
