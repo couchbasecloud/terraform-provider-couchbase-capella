@@ -7,6 +7,7 @@ import (
 	goer "errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -56,6 +57,15 @@ type EndpointCfg struct {
 
 // defaultWaitAttempt re-attempt http request after 2 seconds.
 const defaultWaitAttempt = time.Second * 2
+
+// maxRetryAttempts caps the number of retries for retryable errors
+// (rate limit, service unavailable, gateway timeout) so that a
+// persistently unavailable endpoint fails fast instead of hanging
+// for the full context timeout (10 minutes).
+const maxRetryAttempts = 5
+
+// maxBackoff caps exponential backoff to prevent unbounded growth.
+const maxBackoff = 30 * time.Second
 
 // ExecuteWithRetry is used to construct and execute a HTTP request with retry.
 // It then returns the response.
@@ -182,6 +192,7 @@ func exec(
 		err      error
 		backOff  time.Duration
 		response *Response
+		attempts int
 	)
 
 	const timeout = time.Minute * 10
@@ -190,26 +201,56 @@ func exec(
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	start := time.Now()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, fmt.Errorf("timed out executing request against api: %w", ctx.Err())
 		case <-timer.C:
 			response, backOff, err = fn()
-			switch {
-			case err == nil:
+			if err == nil {
 				return response, nil
-			case goer.Is(err, errors.ErrRatelimit):
-			case goer.Is(err, errors.ErrServiceUnavailable):
-			case !goer.Is(err, errors.ErrGatewayTimeout):
+			}
+
+			if !isRetryable(err) {
 				return response, err
+			}
+
+			if attempts >= maxRetryAttempts {
+				return nil, &RetriesExhaustedError{
+					Original: err,
+					Attempts: attempts + 1,
+					Elapsed:  time.Since(start),
+				}
 			}
 
 			if backOff > 0 {
 				timer.Reset(backOff)
 			} else {
-				timer.Reset(waitOnReattempt)
+				timer.Reset(backoffWithJitter(attempts))
 			}
+			attempts++
 		}
 	}
+}
+
+// isRetryable reports whether err is a sentinel error that the exec loop should retry.
+func isRetryable(err error) bool {
+	return goer.Is(err, errors.ErrRatelimit) ||
+		goer.Is(err, errors.ErrServiceUnavailable) ||
+		goer.Is(err, errors.ErrGatewayTimeout)
+}
+
+// backoffWithJitter computes an exponential backoff duration with equal jitter.
+// The base is defaultWaitAttempt (2s), doubling each attempt and capped at
+// maxBackoff (30s). Jitter is applied as raw/2 + rand(0, raw/2) so the
+// result is guaranteed to be between raw/2 and raw.
+func backoffWithJitter(attempt int) time.Duration {
+	raw := defaultWaitAttempt * (1 << attempt)
+	if raw > maxBackoff {
+		raw = maxBackoff
+	}
+	// Equal jitter: raw/2 + rand(0, raw/2)
+	return raw/2 + time.Duration(rand.Int63n(int64(raw/2+1)))
 }
