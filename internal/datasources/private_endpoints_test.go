@@ -10,12 +10,6 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// TestPrivateEndpointsSchemaMatchesStructNonEmpty guards against a struct/schema
-// mismatch on the couchbase-capella_private_endpoints data source. The nested
-// "data" attributes must line up exactly with the PrivateEndpointData struct, or
-// terraform-plugin-framework fails state conversion the moment the endpoint list
-// is non-empty (the empty-list path never exercises the mismatch, which is why
-// the acceptance test that only checks data.# = 0 did not catch it).
 func TestPrivateEndpointsSchemaMatchesStructNonEmpty(t *testing.T) {
 	state := &tfsdk.State{Schema: PrivateEndpointsSchema()}
 

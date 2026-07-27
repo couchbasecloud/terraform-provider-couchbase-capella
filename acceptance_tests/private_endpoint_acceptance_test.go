@@ -209,36 +209,17 @@ resource "couchbase-capella_private_endpoints" "%[2]s" {
 `, globalProviderBlock, resourceName)
 }
 
-// TestAccPrivateEndpointsDataSourceWithEndpoint is an end-to-end test for the
-// couchbase-capella_private_endpoints data source against a NON-EMPTY endpoint
-// list. It enables the private endpoint service, creates a real AWS interface
-// VPC endpoint against the service, waits for Capella to register the
-// connection, then reads the data source and accepts the endpoint.
+// TestAccPrivateEndpointsDataSourceWithEndpoint is an end-to-end test: it enables
+// the private endpoint service, creates a real AWS interface VPC endpoint, then
+// reads the non-empty private_endpoints data source and accepts the endpoint.
 //
-// This is the path that regressed: the data source's nested `data` schema did
-// not match the PrivateEndpointData struct, so state conversion failed with a
-// "Value Conversion Error" the moment the list contained an endpoint. The
-// existing TestAccPrivateEndpointServiceEnableDisable only covers the empty
-// list (data.# = 0), so it never exercised the mismatch.
-//
-// It runs only when the AWS inputs are supplied (and AWS credentials are set in
-// the environment for the aws provider). The VPC must be in the same region as
-// the Capella cluster:
-//
-//	ACC_AWS_REGION      e.g. us-east-1 (must match the cluster region)
-//	ACC_AWS_VPC_ID      e.g. vpc-0123456789abcdef0
-//	ACC_AWS_SUBNET_IDS  comma-separated, e.g. subnet-aaa,subnet-bbb
-//	ACC_AWS_VPC_CIDR    e.g. 10.0.0.0/16
-//
-// The AWS credentials come from the ambient environment (the aws provider is
-// region-only). In cross-account CI, assume the target-account role in the
-// pipeline and export AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN before running.
+// Gated on ACC_AWS_REGION / ACC_AWS_VPC_ID / ACC_AWS_SUBNET_IDS / ACC_AWS_VPC_CIDR
+// (plus AWS credentials in the environment); it skips otherwise. It is run from
+// the QE Jenkins pipeline, which supplies AWS credentials, and is intentionally
+// not wired into the GitHub Actions workflow (that needs a dedicated TF AWS account).
 func TestAccPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 	region := os.Getenv("ACC_AWS_REGION")
 	vpcID := os.Getenv("ACC_AWS_VPC_ID")
-	// Parse up front so a value that is only commas/whitespace (which would
-	// render to subnet_ids = [] and fail later with a confusing AWS error) is
-	// caught here as "no subnets" rather than passing a bare non-empty check.
 	subnetIDs := parseSubnetIDs(os.Getenv("ACC_AWS_SUBNET_IDS"))
 	vpcCIDR := os.Getenv("ACC_AWS_VPC_CIDR")
 	if region == "" || vpcID == "" || len(subnetIDs) == 0 || vpcCIDR == "" {
@@ -270,9 +251,7 @@ func TestAccPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttrSet(serviceRef, "service_name"),
 					resource.TestCheckResourceAttrSet(vpceRef, "id"),
 					resource.TestCheckResourceAttrSet(dsRef, "private_endpoint_dns"),
-					// Regression guard: converting a NON-EMPTY endpoint list to
-					// state must succeed. Pre-fix this step errored with a "Value
-					// Conversion Error" before any check below could run.
+					// Regression guard: converting a NON-EMPTY endpoint list to state must succeed.
 					resource.TestCheckResourceAttrSet(dsRef, "data.0.id"),
 					resource.TestCheckResourceAttrSet(dsRef, "data.0.status"),
 					resource.TestCheckResourceAttrSet(dsRef, "data.0.service_name"),
