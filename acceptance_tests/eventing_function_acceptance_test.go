@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
@@ -1415,17 +1416,36 @@ func TestAccEventingFunctionResourceImportUndeployed(t *testing.T) {
 	})
 }
 
-// eventingAppCodeSizePadBytes pads the handler past the eventing appcode size limit (raise if a cluster's limit is higher).
-const eventingAppCodeSizePadBytes = 8 * 1024 * 1024
+// generateRandomChars returns random alphanumeric characters using a fixed random seed for test reproducibility.
+func generateRandomChars(t *testing.T, length int) string {
+	t.Helper()
+
+	const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	charGen := rand.New(rand.NewSource(0)) // #nosec G404
+	pad := make([]byte, length)
+	for i := range pad {
+		pad[i] = charSet[charGen.Intn(len(charSet))]
+	}
+
+	return string(pad)
+}
 
 // Scenario 16 error cases: each ExpectError matches a deterministic provider summary; alternations cover create-time vs deploy-time rejection.
 
 // TestAccEventingFunctionResourceAppCodeSize (16.02, ERR_APPCODE_SIZE): an oversized handler is rejected by the eventing service.
 func TestAccEventingFunctionResourceAppCodeSize(t *testing.T) {
+	const (
+		// eventingAppCodeSizeBytes is the amount of bytes to generate for the function code to trigger the ERR_APPCODE_SIZE error.
+		// The eventing service has a 128KB limit after code compression, so generate 256KB of code which compresses to roughly ~196KB
+		// which triggers the error.
+		eventingAppCodeSizeBytes = (128 * 1024) * 2
+	)
+
 	funcName := randomStringWithPrefix("tf_acc_evt_appcode_size_fn_")
 
 	// A valid handler padded with a large comment so the failure is size, not compilation.
-	bigCode := `function OnUpdate(doc, meta) {\n  /* ` + strings.Repeat("a", eventingAppCodeSizePadBytes) + ` */\n  log(\"x\", meta.id);\n}\n`
+	bigCode := `function OnUpdate(doc, meta) {\n  /* ` + generateRandomChars(t, eventingAppCodeSizeBytes) + ` */\n  log(\"x\", meta.id);\n}\n`
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
