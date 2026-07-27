@@ -47,11 +47,12 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 	appServiceName := randomStringWithPrefix("tf_acc_app_svc_")
 	description := "terraform app service optional fields acceptance test"
 
+	const version = "4.0"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, 2, 2, 4),
+				Config: testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, version, 2, 2, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
@@ -61,10 +62,10 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "AWS"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
+					resource.TestCheckResourceAttr(resourceReference, "version", version),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "current_state"),
-					resource.TestCheckResourceAttrSet(resourceReference, "version"),
 					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.created_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
@@ -78,7 +79,7 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, 3, 4, 8),
+				Config: testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, version, 3, 4, 8),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
@@ -88,15 +89,20 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "AWS"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "8"),
+					resource.TestCheckResourceAttr(resourceReference, "version", version),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "current_state"),
-					resource.TestCheckResourceAttrSet(resourceReference, "version"),
 					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.created_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.version"),
 				),
+			},
+			{
+				// Changing the major.minor version is not supported and must be rejected at apply time.
+				Config:      testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, "1.0", 3, 4, 8),
+				ExpectError: regexp.MustCompile(`(?s)version as this is not supported`),
 			},
 		},
 	})
@@ -207,7 +213,7 @@ resource "couchbase-capella_app_service" "%[4]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr)
 }
 
-func testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description string, nodes, cpu, ram int) string {
+func testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, version string, nodes, cpu, ram int) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -252,13 +258,14 @@ resource "couchbase-capella_app_service" "%[4]s" {
 	cluster_id      = couchbase-capella_cluster.%[5]s.id
 	name            = "%[7]s"
 	description     = "%[8]s"
+	version         = "%[12]s"
 	nodes           = %[9]d
 	compute = {
 		cpu = %[10]d
 		ram = %[11]d
 	}
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr, appServiceName, description, nodes, cpu, ram)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr, appServiceName, description, nodes, cpu, ram, version)
 }
 
 func testAccAppServiceResourceNameTooLongConfig(resourceName string) string {

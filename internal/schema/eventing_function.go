@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventing_function"
 	eventingapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventingfunction"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
@@ -251,7 +250,7 @@ func (e EventingFunctionResource) Validate() (map[Attr]string, error) {
 // model. The export value supplied by the caller is preserved so it round-trips into state.
 func NewEventingFunction(
 	ctx context.Context,
-	function eventing_function.EventingFunction,
+	function eventingapi.GetEventingFunctionResponse,
 	organizationId, projectId, clusterId, name string,
 	export types.Bool,
 ) (EventingFunction, diag.Diagnostics) {
@@ -271,7 +270,7 @@ func NewEventingFunction(
 // NewOneEventingFunction converts a single eventing function API response into its Terraform model.
 // It is shared by the single and list eventing function data sources to build the per-function
 // fields and their nested objects.
-func NewOneEventingFunction(ctx context.Context, function eventing_function.EventingFunction) (OneEventingFunction, diag.Diagnostics) {
+func NewOneEventingFunction(ctx context.Context, function eventingapi.GetEventingFunctionResponse) (OneEventingFunction, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	model := OneEventingFunction{
@@ -300,7 +299,7 @@ func NewOneEventingFunction(ctx context.Context, function eventing_function.Even
 	return model, diags
 }
 
-func newEventingFunctionKeyspaceObject(ctx context.Context, keyspace eventing_function.Keyspace) (types.Object, diag.Diagnostics) {
+func newEventingFunctionKeyspaceObject(ctx context.Context, keyspace eventingapi.Keyspace) (types.Object, diag.Diagnostics) {
 	model := EventingFunctionKeyspace{
 		Bucket:     types.StringValue(keyspace.Bucket),
 		Scope:      types.StringPointerValue(keyspace.Scope),
@@ -348,12 +347,12 @@ func NewEventingFunctionResource(
 		ClusterId:            types.StringValue(clusterId),
 		Name:                 types.StringValue(resp.Name),
 		Description:          description,
-		Code:                 types.StringValue(resp.Code),
+		Code:                 types.StringPointerValue(resp.Code),
 		EventSource:          keyspaceToSchema(resp.EventSource),
 		EventMetadataStorage: keyspaceToSchema(resp.EventMetadataStorage),
 		Settings:             settings,
 		Bindings:             bindings,
-		State:                types.StringValue(resp.Status),
+		State:                types.StringPointerValue(resp.Status),
 	}
 
 	if prior != nil {
@@ -373,7 +372,10 @@ func keyspaceToSchema(k eventingapi.Keyspace) *EventingFunctionKeyspace {
 	}
 }
 
-func settingsToSchema(s eventingapi.Settings) (types.Object, error) {
+func settingsToSchema(s *eventingapi.Settings) (types.Object, error) {
+	if s == nil {
+		return types.ObjectNull(EventingFunctionSettings{}.AttributeTypes()), nil
+	}
 	obj, d := types.ObjectValue(EventingFunctionSettings{}.AttributeTypes(), map[string]attr.Value{
 		"worker_count":           types.Int64PointerValue(s.WorkerCount),
 		"script_timeout":         types.Int64PointerValue(s.ScriptTimeout),
@@ -391,8 +393,8 @@ func settingsToSchema(s eventingapi.Settings) (types.Object, error) {
 }
 
 // bindingsToSchema returns nil when no bindings are present so the optional attribute stays null.
-func bindingsToSchema(b eventingapi.Bindings) (*EventingFunctionBindingsResource, error) {
-	if len(b.Buckets) == 0 && len(b.Urls) == 0 && len(b.Constants) == 0 {
+func bindingsToSchema(b *eventingapi.Bindings) (*EventingFunctionBindingsResource, error) {
+	if b == nil || (len(b.Buckets) == 0 && len(b.Urls) == 0 && len(b.Constants) == 0) {
 		return nil, nil
 	}
 
@@ -494,7 +496,7 @@ func carryForwardURLSecrets(ctx context.Context, refreshed, prior *EventingFunct
 	return nil
 }
 
-func newEventingFunctionSettingsObject(ctx context.Context, settings *eventing_function.Settings) (types.Object, diag.Diagnostics) {
+func newEventingFunctionSettingsObject(ctx context.Context, settings *eventingapi.Settings) (types.Object, diag.Diagnostics) {
 	if settings == nil {
 		return types.ObjectNull(EventingFunctionSettings{}.AttributeTypes()), nil
 	}
@@ -511,7 +513,7 @@ func newEventingFunctionSettingsObject(ctx context.Context, settings *eventing_f
 	return types.ObjectValueFrom(ctx, model.AttributeTypes(), model)
 }
 
-func newEventingFunctionBindingsObject(ctx context.Context, bindings *eventing_function.Bindings) (types.Object, diag.Diagnostics) {
+func newEventingFunctionBindingsObject(ctx context.Context, bindings *eventingapi.Bindings) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if bindings == nil {
 		return types.ObjectNull(EventingFunctionBindings{}.AttributeTypes()), diags
@@ -565,7 +567,7 @@ func newEventingFunctionBindingsObject(ctx context.Context, bindings *eventing_f
 	return obj, diags
 }
 
-func newEventingFunctionAuthenticationObject(ctx context.Context, authentication *eventing_function.Authentication) (types.Object, diag.Diagnostics) {
+func newEventingFunctionAuthenticationObject(ctx context.Context, authentication *eventingapi.URLBindingAuthentication) (types.Object, diag.Diagnostics) {
 	if authentication == nil {
 		return types.ObjectNull(EventingFunctionURLBindingAuthentication{}.AttributeTypes()), nil
 	}

@@ -86,7 +86,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `connection_string` (String) - ConnectionString specifies the Capella database endpoint for your client connection.
 - `current_state` (String) - **Valid Values**: `draft`, `deploying`, `scaling`, `upgrading`, `rebalancing`, `peering`, `destroying`, `healthy`, `degraded`, `turnedOff`, `turningOff`, `turningOn`, `deploymentFailed`, `scaleFailed`, `upgradeFailed`, `rebalanceFailed`, `peeringFailed`, `destroyFailed`, `offline`, `turningOffFailed`, `turningOnFailed`
-- `deletion_protection` (Boolean)
+- `deletion_protection` (Boolean) - Indicates whether deletion protection is enabled for the cluster. When enabled, the cluster cannot be deleted.
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
 - `id` (String) - The ID of the cluster created.
  - **Format**: UUID (GUID4)

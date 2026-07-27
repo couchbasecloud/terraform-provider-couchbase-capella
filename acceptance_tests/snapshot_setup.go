@@ -21,6 +21,9 @@ var (
 	snapshotClusterID      string
 	snapshotClusterCreated bool
 	snapshotClusterErr     error
+
+	// Serializes tests that trigger snapshot restores; Capella allows only one restore per cluster.
+	cloudSnapshotRestoreMu sync.Mutex
 )
 
 // ensureSnapshotCluster lazily provisions a dedicated cluster used by the

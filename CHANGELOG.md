@@ -1,5 +1,43 @@
 # Changelog
 
+## [v1.9.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.9.1) (2026-06-30)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.9.0...v1.9.1)
+
+**Implemented enhancements:**
+
+- \[AV-134634\] Fix - Fail fast and auto-recover from private endpoint service failed states [\#647](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/647) ([cloudy-vishnu](https://github.com/cloudy-vishnu))
+- \[AV-128971\] Add certificate datasource tests; provision DM cluster lazily [\#637](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/637) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-127227\] Handle app endpoint deletion and forbidden errors in various resource operations [\#634](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/634) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-128970\] Add acceptance tests for query index datasources [\#625](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/625) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-128954\] Add acceptance tests for events datasources [\#624](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/624) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+
+**Fixed bugs:**
+
+- \[AV-131920\] Refactor network peer schema to enhance provider configuration attributes [\#666](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/666) ([akhilravuri-cb](https://github.com/akhilravuri-cb))
+- \[AV-135236\] Validate RFC3339 Format for start\_time in Snapshot Backup Schedule Resource [\#665](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/665) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-132169\] Reject empty private endpoint endpoint\_id at plan time [\#663](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/663) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-132168\] Reject unsupported network peer provider\_type [\#660](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/660) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-132167\] Reject short private endpoint command VPC IDs at plan time [\#659](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/659) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-134866\] Fix flaky app\_endpoint tests by sharing bucket via collections [\#655](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/655) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-132154\] Fix enum lookup for nested fields [\#650](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/650) ([matty271828](https://github.com/matty271828))
+- \[AV-129960\] Add handling for service unavailable errors [\#649](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/649) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-132148\] Validate free-tier cluster region at plan time [\#645](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/645) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-131924\] Fix provider\_type erased on import/read [\#643](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/643) ([tanushgolwala](https://github.com/tanushgolwala))
+- \[AV-129893\] Enhance network peer error handling and state management [\#639](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/639) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-134037\] Auto-attach enum validators for -to-named-enum fields [\#638](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/638) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-132231\] Add clear duplicate/missing-day validation for on/off schedule [\#635](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/635) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-132230\] Add UUID validation for cluster on/off schedule data source IDs [\#632](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/632) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-132229\] Add config validation for cluster on/off schedule time boundaries [\#631](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/631) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-132227\] Add config validation for cluster on/off schedule days [\#630](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/630) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-132908\] Serialize cloud\_snapshot\_restore acceptance tests [\#629](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/629) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-132944\] Add audit log export and settings validation coverage [\#626](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/626) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
+**Merged pull requests:**
+
+- \[AV-131920\] Update network peer documentation to reflect changes in provider configuration attributes [\#672](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/672) ([akhilravuri-cb](https://github.com/akhilravuri-cb))
+- \[AV-132988\] Fix flaky private endpoint service acceptance test [\#633](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/633) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
 ## [v1.9.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.9.0) (2026-05-29)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.8.1...v1.9.0)

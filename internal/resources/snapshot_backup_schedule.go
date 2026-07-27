@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,7 +94,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 	}
 
 	var refreshedState *providerschema.SnapshotBackupSchedule
-	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
+	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		tflog.Debug(ctx, "Error getting snapshot backup schedule after upsert", map[string]interface{}{
 			"organizationId": organizationId,
@@ -154,7 +153,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 		clusterId      = IDs[providerschema.ClusterId]
 	)
 
-	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, state.StartTime.ValueString())
+	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Getting Snapshot Backup Schedule in Capella",
@@ -214,7 +213,7 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
+	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		tflog.Debug(ctx, "Error getting snapshot backup schedule after upsert", map[string]interface{}{
 			"organizationId": organizationId,
@@ -331,7 +330,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 }
 
 // getSnapshotBackupSchedule retrieves the snapshot backup schedule for a cluster.
-func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, startTimeString string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
+func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	backupScheduleResp, err := s.ClientV1.ExecuteWithRetry(
@@ -362,40 +361,7 @@ func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, 
 		return nil, err
 	}
 
-	snapshotBackupSchedule.StartTime, err = s.getStartTime(ctx, startTimeString, &snapshotBackupSchedule)
-	if err != nil {
-		return nil, err
-	}
-
 	return &snapshotBackupSchedule, nil
-}
-
-// getStartTime compares the start time of the current state with the start time of the actual resource, and returns the resource's start time only if it is different.
-// This ensures that the resource storing an equivalent start time does not cause the state to be unnecessarily updated.
-func (s *SnapshotBackupSchedule) getStartTime(ctx context.Context, currentStartTimeString string, snapshotBackupSchedule *snapshot_backup_schedule.SnapshotBackupSchedule) (string, error) {
-	newStartTime, err := time.Parse(time.RFC3339, snapshotBackupSchedule.StartTime)
-	if err != nil {
-		tflog.Debug(ctx, "Error parsing updated start time", map[string]interface{}{
-			"snapshotBackupSchedule.StartTime": snapshotBackupSchedule.StartTime,
-			"err":                              err,
-		})
-		return "", err
-	}
-	if currentStartTimeString == "" {
-		return newStartTime.Format(time.RFC3339), nil
-	}
-	currentStartTime, err := time.Parse(time.RFC3339, currentStartTimeString)
-	if err != nil {
-		tflog.Debug(ctx, "Error parsing current start time", map[string]interface{}{
-			"currentStartTimeString": currentStartTimeString,
-			"err":                    err,
-		})
-		return "", err
-	}
-	if currentStartTime.Equal(newStartTime) {
-		return currentStartTimeString, nil
-	}
-	return newStartTime.Format(time.RFC3339), nil
 }
 
 func (s *SnapshotBackupSchedule) convertCopyToRegions(ctx context.Context, copyToRegionsSet types.Set) ([]string, error) {

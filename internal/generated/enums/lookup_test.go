@@ -54,6 +54,55 @@ func TestLookup_AlternateSchemaWins(t *testing.T) {
 	}
 }
 
+func TestLookup_NestedObjectViaAlternateSchema(t *testing.T) {
+	// backup_schedule_schema.go flattens weekly_schedule into its own
+	// attribute map with NewSchemaBuilder("backupSchedule", "scheduledBackup")
+	// and passes "WeeklySchedule" as the alternate schema. The generator keys
+	// the enums as CreateScheduledBackupRequest → "weeklySchedule.dayOfWeek",
+	// so Lookup must resolve the nested dotted path.
+	b := stubBuilder{resource: "backupSchedule", schema: "scheduledBackup"}
+
+	cases := []struct {
+		field    string
+		wantType string
+	}{
+		{"day_of_week", "string"},
+		{"start_at", "integer"},
+		{"incremental_every", "integer"},
+		{"retention_time", "string"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.field, func(t *testing.T) {
+			def := Lookup(b, []string{"WeeklySchedule"}, tc.field)
+			if def == nil {
+				t.Fatalf("expected enum for weekly_schedule.%s, got nil", tc.field)
+			}
+			if def.Type != tc.wantType {
+				t.Errorf("expected %s enum, got %q", tc.wantType, def.Type)
+			}
+		})
+	}
+
+	// A nested field without an enum (cost_optimized_retention is a bool)
+	// must not resolve.
+	if def := Lookup(b, []string{"WeeklySchedule"}, "cost_optimized_retention"); def != nil {
+		t.Errorf("expected nil for non-enum nested field, got %+v", def)
+	}
+
+	// Without the nested-object hint the bare leaf name must not resolve:
+	// the enum is only keyed under the dotted path.
+	if def := Lookup(b, nil, "day_of_week"); def != nil {
+		t.Errorf("expected nil for day_of_week without WeeklySchedule hint, got %+v", def)
+	}
+}
+
+func TestNestedFieldCandidates(t *testing.T) {
+	got := nestedFieldCandidates([]string{"WeeklySchedule"}, []string{"dayOfWeek"})
+	if len(got) != 1 || got[0] != "weeklySchedule.dayOfWeek" {
+		t.Fatalf(`nestedFieldCandidates = %v, want ["weeklySchedule.dayOfWeek"]`, got)
+	}
+}
+
 // Composition lookup tests
 
 func TestCompositionLookup_OneOf(t *testing.T) {

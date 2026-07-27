@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventing_function"
+	eventingapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventingfunction"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -73,7 +73,7 @@ func (d *EventingFunctions) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	cfg := api.EndpointCfg{Url: requestUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	functions, err := api.GetPaginated[[]eventing_function.EventingFunction](ctx, d.ClientV1, d.Token, cfg, api.SortByName)
+	functions, err := api.GetPaginated[[]eventingapi.GetEventingFunctionResponse](ctx, d.ClientV1, d.Token, cfg, api.SortByName)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Eventing Functions",

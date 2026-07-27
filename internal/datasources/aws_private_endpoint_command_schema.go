@@ -16,7 +16,7 @@ func AwsPrivateEndpointCommandSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", awsPrivateEndpointCommandBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "project_id", awsPrivateEndpointCommandBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "cluster_id", awsPrivateEndpointCommandBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "vpc_id", awsPrivateEndpointCommandBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "vpc_id", awsPrivateEndpointCommandBuilder, requiredString(), "CreateVPCEndpointCommandRequest")
 	capellaschema.AddAttr(attrs, "subnet_ids", awsPrivateEndpointCommandBuilder, &schema.SetAttribute{
 		Required:    true,
 		ElementType: types.StringType,

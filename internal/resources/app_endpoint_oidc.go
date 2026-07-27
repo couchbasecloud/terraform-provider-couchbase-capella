@@ -149,6 +149,12 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, r.Data, resp, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName]); handled {
+			return
+		} else if forbiddenErr != nil {
+			resp.Diagnostics.AddError("Error Reading OIDC Provider", forbiddenErr.Error())
+			return
+		}
 		resp.Diagnostics.AddError("Error Reading OIDC Provider", "Could not read OIDC provider: "+errString)
 		return
 	}

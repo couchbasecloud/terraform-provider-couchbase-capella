@@ -19,9 +19,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &AuditLogExport{}
-	_ resource.ResourceWithConfigure   = &AuditLogExport{}
-	_ resource.ResourceWithImportState = &AuditLogExport{}
+	_ resource.Resource                   = &AuditLogExport{}
+	_ resource.ResourceWithConfigure      = &AuditLogExport{}
+	_ resource.ResourceWithImportState    = &AuditLogExport{}
+	_ resource.ResourceWithValidateConfig = &AuditLogExport{}
 )
 
 const errorMessageAfterAuditLogExportCreation = "Audit log export job creating is successful, but encountered an error while checking the current" +
@@ -49,6 +50,36 @@ func (a *AuditLogExport) Metadata(_ context.Context, req resource.MetadataReques
 // Schema defines the schema for the audit log export resource.
 func (a *AuditLogExport) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = AuditLogExportSchema()
+}
+
+func (a *AuditLogExport) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.AuditLogExport
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Start.IsNull() || config.Start.IsUnknown() || config.End.IsNull() || config.End.IsUnknown() {
+		return
+	}
+
+	start, err := time.Parse(time.RFC3339, config.Start.ValueString())
+	if err != nil {
+		return
+	}
+
+	end, err := time.Parse(time.RFC3339, config.End.ValueString())
+	if err != nil {
+		return
+	}
+
+	if end.Before(start) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("end"),
+			"Invalid Audit Log Export Window",
+			"end must not be earlier than start",
+		)
+	}
 }
 
 // Configure set provider-defined data, clients, etc. that is passed to data sources or resources in the provider.
@@ -100,6 +131,13 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 		resp.Diagnostics.AddError(
 			"Error creating audit log export job",
 			"Could not parse end time, unexpected error: "+err.Error(),
+		)
+		return
+	}
+	if end.Before(start) {
+		resp.Diagnostics.AddError(
+			"Error creating audit log export job",
+			"end must not be earlier than start",
 		)
 		return
 	}

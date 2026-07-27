@@ -17,4 +17,6 @@ resource "couchbase-capella_app_service" "new_app_service" {
     cpu = var.app_service.compute.cpu
     ram = var.app_service.compute.ram
   }
+  # load_balancer_cidr pins the load balancer subnet CIDR (Azure App Services only). Allocated dynamically when omitted.
+  load_balancer_cidr = var.app_service.load_balancer_cidr
 }

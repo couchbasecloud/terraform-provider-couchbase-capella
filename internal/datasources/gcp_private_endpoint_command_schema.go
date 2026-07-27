@@ -16,7 +16,7 @@ func GcpPrivateEndpointCommandSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", gcpPrivateEndpointCommandBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "project_id", gcpPrivateEndpointCommandBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "cluster_id", gcpPrivateEndpointCommandBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "vpc_network_id", gcpPrivateEndpointCommandBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "vpc_network_id", gcpPrivateEndpointCommandBuilder, requiredString(), "CreateGCPPrivateEndpointCommandRequest")
 	capellaschema.AddAttr(attrs, "subnet_ids", gcpPrivateEndpointCommandBuilder, &schema.SetAttribute{
 		Required:    true,
 		ElementType: types.StringType,

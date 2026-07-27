@@ -157,8 +157,11 @@ func (p *PrivateEndpoint) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	if refreshedState.Status.ValueString() == "rejected" {
-		tflog.Info(ctx, "private endpoint association is rejected; removing from state to force re-association")
+	// Both rejected and failed associations are terminal and cannot recover in
+	// place, so remove them from state to force a clean re-association on the
+	// next apply rather than leaving a stuck resource.
+	if s := refreshedState.Status.ValueString(); s == "rejected" || s == "failed" {
+		tflog.Info(ctx, "private endpoint association is "+s+"; removing from state to force re-association")
 		resp.State.RemoveResource(ctx)
 		return
 	}

@@ -10,31 +10,33 @@ import (
 )
 
 func TestAccAppEndpoint(t *testing.T) {
-	ensureFixtureBucketByName(t, globalEPBucketName)
+	ensureFixtureCollection(t, globalEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPBucketName, "syncFnXattr", true),
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "bucket", globalEPBucketName),
+					resource.TestCheckResourceAttr(resourceReference, "bucket", appEndpointBucketName),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "syncFnXattr"),
 				),
 			},
 			{
-				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPBucketName, "new_xattr", false),
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "new_xattr", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "false"),
@@ -82,7 +84,9 @@ func TestAccAppEndpointInexistentCollection(t *testing.T) {
 		appEndpointBucketName,
 		epName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +97,7 @@ func TestAccAppEndpointInexistentCollection(t *testing.T) {
 	})
 }
 
-func testAccAppEndpointResourceConfig(resourceName, endpointName, bucketName, userXattr string, deltaSync bool) string {
+func testAccAppEndpointResourceConfig(resourceName, endpointName, collectionName, userXattr string, deltaSync bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -102,7 +106,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id         = "%[4]s"
 	cluster_id         = "%[5]s"
 	app_service_id     = "%[6]s"
-	bucket             = "%[7]s"
+	bucket             = "`+appEndpointBucketName+`"
 	name               = "%[8]s"
 	user_xattr_key     = "%[9]s"
 	delta_sync_enabled = %[10]t
@@ -119,7 +123,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 		  collections = {
-			"_default" = {}
+			"%[7]s" = {}
 		  }
 		}
 	}
@@ -131,7 +135,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 		userXattr,
 		deltaSync,
@@ -141,15 +145,17 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 // TestAccAppEndpointNoCors verifies that creating an app endpoint without a
 // cors block does not produce perpetual state drift on subsequent plans.
 func TestAccAppEndpointNoCors(t *testing.T) {
-	ensureFixtureBucketByName(t, globalNoCorsEPBucketName)
+	ensureFixtureCollection(t, globalNoCorsEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_ep_nocors_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_ep_nocors_")
 
-	cfg := testAccAppEndpointNoCorsConfig(resourceName, epName, globalNoCorsEPBucketName)
+	cfg := testAccAppEndpointNoCorsConfig(resourceName, epName, globalNoCorsEPCollectionName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -170,7 +176,7 @@ func TestAccAppEndpointNoCors(t *testing.T) {
 	})
 }
 
-func testAccAppEndpointNoCorsConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointNoCorsConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -179,12 +185,12 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 	scopes = {
 		"_default" = {
 		  collections = {
-			"_default" = {}
+			"%[7]s" = {}
 		  }
 		}
 	}
@@ -196,7 +202,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
@@ -230,25 +236,27 @@ func testAccAppEndpointComputedAttrs(resourceReference string) resource.TestChec
 // The API rejects empty/missing origin when a cors block is present.
 // Provider schema must reject this before issuing the API request.
 func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
-	ensureFixtureBucketByName(t, globalCorsDisabledFalseEPBucketName)
+	ensureFixtureCollection(t, globalCorsDisabledFalseEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				Config:      testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPCollectionName),
 				ExpectError: re.MustCompile(`(?s).*cors\.origin.*at least 1 value.*`),
 			},
 			{
-				Config:      testAccAppEndpointCorsEmptyOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				Config:      testAccAppEndpointCorsEmptyOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPCollectionName),
 				ExpectError: re.MustCompile(`(?s).*cors\.origin.*at least 1 value.*`),
 			},
 			{
-				Config: testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				Config: testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "true"),
@@ -260,17 +268,19 @@ func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 
 // ── S6: Full cors config (all fields) — happy path (also covers I2 import) ───
 func TestAccAppEndpointCorsFullConfig(t *testing.T) {
-	ensureFixtureBucketByName(t, globalCorsFullEPBucketName)
+	ensureFixtureCollection(t, globalCorsFullEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalCorsFullEPBucketName),
+				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalCorsFullEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "false"),
@@ -298,16 +308,18 @@ func TestAccAppEndpointCorsFullConfig(t *testing.T) {
 // supplied. Single-provider creation (S17/S18) works correctly.
 func TestAccAppEndpointMultipleOIDC(t *testing.T) {
 	t.Skip("AV-128222: multiple OIDC providers cause a 500 Internal Server Error; unskip once the bug is fixed")
-	ensureFixtureBucketByName(t, globalMultipleOIDCEPBucketName)
+	ensureFixtureCollection(t, globalMultipleOIDCEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointMultipleOIDCResourceConfig(resourceName, epName, globalMultipleOIDCEPBucketName),
+				Config: testAccAppEndpointMultipleOIDCResourceConfig(resourceName, epName, globalMultipleOIDCEPCollectionName),
 			},
 		},
 	})
@@ -315,17 +327,19 @@ func TestAccAppEndpointMultipleOIDC(t *testing.T) {
 
 // ── S20: cors with specific (non-wildcard) origins — happy path ───────────────
 func TestAccAppEndpointCorsSpecificOrigins(t *testing.T) {
-	ensureFixtureBucketByName(t, globalCorsSpecificEPBucketName)
+	ensureFixtureCollection(t, globalCorsSpecificEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsSpecificOriginsResourceConfig(resourceName, epName, globalCorsSpecificEPBucketName),
+				Config: testAccAppEndpointCorsSpecificOriginsResourceConfig(resourceName, epName, globalCorsSpecificEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cors.origin.#", "2"),
@@ -345,17 +359,19 @@ func TestAccAppEndpointCorsSpecificOrigins(t *testing.T) {
 // default). Users cannot set max_age=0 — the value is always silently replaced.
 func TestAccAppEndpointCorsMaxAgeZeroSilentDrift(t *testing.T) {
 	t.Skip("AV-128218: cors.max_age=0 is silently omitted by the API request model; unskip once zero values round-trip correctly")
-	ensureFixtureBucketByName(t, globalCorsMaxAge0EPBucketName)
+	ensureFixtureCollection(t, globalCorsMaxAge0EPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsMaxAgeZeroResourceConfig(resourceName, epName, globalCorsMaxAge0EPBucketName),
+				Config: testAccAppEndpointCorsMaxAgeZeroResourceConfig(resourceName, epName, globalCorsMaxAge0EPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "0"),
 					// https://jira.issues.couchbase.com/browse/AV-128218
@@ -367,17 +383,19 @@ func TestAccAppEndpointCorsMaxAgeZeroSilentDrift(t *testing.T) {
 
 // ── S18: OIDC with all optional fields — happy path ───────────────────────────
 func TestAccAppEndpointOIDCFullFields(t *testing.T) {
-	ensureFixtureBucketByName(t, globalOIDCFullEPBucketName)
+	ensureFixtureCollection(t, globalOIDCFullEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointOIDCAllFieldsResourceConfig(resourceName, epName, globalOIDCFullEPBucketName),
+				Config: testAccAppEndpointOIDCAllFieldsResourceConfig(resourceName, epName, globalOIDCFullEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.#", "1"),
@@ -397,17 +415,19 @@ func TestAccAppEndpointOIDCFullFields(t *testing.T) {
 
 // ── S22: OIDC with discovery_url — happy path ─────────────────────────────────
 func TestAccAppEndpointOIDCDiscoveryURL(t *testing.T) {
-	ensureFixtureBucketByName(t, globalOIDCDiscEPBucketName)
+	ensureFixtureCollection(t, globalOIDCDiscEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointOIDCDiscoveryURLResourceConfig(resourceName, epName, globalOIDCDiscEPBucketName),
+				Config: testAccAppEndpointOIDCDiscoveryURLResourceConfig(resourceName, epName, globalOIDCDiscEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.#", "1"),
@@ -422,30 +442,32 @@ func TestAccAppEndpointOIDCDiscoveryURL(t *testing.T) {
 
 // ── U1: Expand cors from minimal (origin only) to full (all fields) — happy path ──
 func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
-	ensureFixtureBucketByName(t, globalCorsExpandEPBucketName)
+	ensureFixtureCollection(t, globalCorsExpandEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsExpandEPBucketName),
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsExpandEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "bucket", globalCorsExpandEPBucketName),
+					resource.TestCheckResourceAttr(resourceReference, "bucket", appEndpointBucketName),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
 				),
 			},
 			{
-				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalCorsExpandEPBucketName),
+				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalCorsExpandEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "false"),
@@ -463,19 +485,21 @@ func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
 // cors is effectively write-once via Terraform.
 func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 	t.Skip("AV-128229 / AV-128217: removing the cors block after it is set should succeed once the bugs are fixed")
-	ensureFixtureBucketByName(t, globalRemoveCorsEPBucketName)
+	ensureFixtureCollection(t, globalRemoveCorsEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalRemoveCorsEPBucketName),
+				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalRemoveCorsEPCollectionName),
 			},
 			{
-				Config: testAccAppEndpointNoCorsResourceConfig(resourceName, epName, globalRemoveCorsEPBucketName),
+				Config: testAccAppEndpointNoCorsResourceConfig(resourceName, epName, globalRemoveCorsEPCollectionName),
 			},
 		},
 	})
@@ -485,19 +509,21 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 // The API rejects disabling CORS when other cors fields (origin etc.) are also set.
 func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 	t.Skip("AV-128229: toggling cors.disabled=true while other CORS fields are set should succeed once the bug is fixed")
-	ensureFixtureBucketByName(t, globalCorsDisableToggleEPBucketName)
+	ensureFixtureCollection(t, globalCorsDisableToggleEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsDisableToggleEPBucketName),
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
 			},
 			{
-				Config: testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, globalCorsDisableToggleEPBucketName),
+				Config: testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
 			},
 		},
 	})
@@ -505,23 +531,25 @@ func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 
 // ── U5: cors origin wildcard → specific URLs — happy path ────────────────────
 func TestAccAppEndpointUpdateCorsOriginWildcardToSpecific(t *testing.T) {
-	ensureFixtureBucketByName(t, globalCorsWildEPBucketName)
+	ensureFixtureCollection(t, globalCorsWildEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsWildEPBucketName),
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsWildEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
 				),
 			},
 			{
-				Config: testAccAppEndpointCorsSpecificOriginsResourceConfig(resourceName, epName, globalCorsWildEPBucketName),
+				Config: testAccAppEndpointCorsSpecificOriginsResourceConfig(resourceName, epName, globalCorsWildEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "cors.origin.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "https://app.example.com"),
@@ -534,20 +562,22 @@ func TestAccAppEndpointUpdateCorsOriginWildcardToSpecific(t *testing.T) {
 
 // ── U7: Add OIDC block to existing endpoint — happy path ─────────────────────
 func TestAccAppEndpointUpdateAddOIDC(t *testing.T) {
-	ensureFixtureBucketByName(t, globalAddOIDCEPBucketName)
+	ensureFixtureCollection(t, globalAddOIDCEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalAddOIDCEPBucketName),
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalAddOIDCEPCollectionName),
 			},
 			{
-				Config: testAccAppEndpointWithOIDCResourceConfig(resourceName, epName, globalAddOIDCEPBucketName),
+				Config: testAccAppEndpointWithOIDCResourceConfig(resourceName, epName, globalAddOIDCEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.issuer", "https://accounts.google.com"),
@@ -565,19 +595,21 @@ func TestAccAppEndpointUpdateAddOIDC(t *testing.T) {
 // from the GET response, and Terraform detects the plan/state mismatch.
 func TestAccAppEndpointUpdateRemoveOIDC(t *testing.T) {
 	t.Skip("AV-128167: removing the oidc block should succeed once the bug is fixed")
-	ensureFixtureBucketByName(t, globalRemoveOIDCEPBucketName)
+	ensureFixtureCollection(t, globalRemoveOIDCEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointWithOIDCResourceConfig(resourceName, epName, globalRemoveOIDCEPBucketName),
+				Config: testAccAppEndpointWithOIDCResourceConfig(resourceName, epName, globalRemoveOIDCEPCollectionName),
 			},
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalRemoveOIDCEPBucketName),
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalRemoveOIDCEPCollectionName),
 			},
 		},
 	})
@@ -585,7 +617,7 @@ func TestAccAppEndpointUpdateRemoveOIDC(t *testing.T) {
 
 // ── U9: Update access_control_function body — happy path ─────────────────────
 func TestAccAppEndpointUpdateACF(t *testing.T) {
-	ensureFixtureBucketByName(t, globalACFUpdateEPBucketName)
+	ensureFixtureCollection(t, globalACFUpdateEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
@@ -594,17 +626,19 @@ func TestAccAppEndpointUpdateACF(t *testing.T) {
 	initialACF := "function(doc, oldDoc, meta) { channel(doc.channels); }"
 	updatedACF := "function(doc, oldDoc, meta) { channel(doc.type); }"
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointACFResourceConfig(resourceName, epName, globalACFUpdateEPBucketName, initialACF),
+				Config: testAccAppEndpointACFResourceConfig(resourceName, epName, globalACFUpdateEPCollectionName, initialACF),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 				),
 			},
 			{
-				Config: testAccAppEndpointACFResourceConfig(resourceName, epName, globalACFUpdateEPBucketName, updatedACF),
+				Config: testAccAppEndpointACFResourceConfig(resourceName, epName, globalACFUpdateEPCollectionName, updatedACF),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 				),
@@ -619,19 +653,21 @@ func TestAccAppEndpointUpdateACF(t *testing.T) {
 // Terraform detects plan=0 vs state=3600 and raises inconsistency error.
 func TestAccAppEndpointUpdateCorsMaxAgeToZero(t *testing.T) {
 	t.Skip("AV-128218: updating cors.max_age to 0 currently produces inconsistent state; unskip once zero values round-trip correctly")
-	ensureFixtureBucketByName(t, globalCorsMaxAgeZeroEPBucketName)
+	ensureFixtureCollection(t, globalCorsMaxAgeZeroEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, epName, globalCorsMaxAgeZeroEPBucketName, 3600),
+				Config: testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, epName, globalCorsMaxAgeZeroEPCollectionName, 3600),
 			},
 			{
-				Config:      testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, epName, globalCorsMaxAgeZeroEPBucketName, 0),
+				Config:      testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, epName, globalCorsMaxAgeZeroEPCollectionName, 0),
 				ExpectError: re.MustCompile("Provider produced inconsistent result after apply"),
 				// https://jira.issues.couchbase.com/browse/AV-128218
 			},
@@ -644,23 +680,25 @@ func TestAccAppEndpointUpdateCorsMaxAgeToZero(t *testing.T) {
 // non-zero value recovers the drift. The non-zero value is not omitted by
 // omitempty and is applied correctly by the API.
 func TestAccAppEndpointUpdateCorsMaxAgeFromZero(t *testing.T) {
-	ensureFixtureBucketByName(t, globalCorsMaxAgeFromZeroEPBucketName)
+	ensureFixtureCollection(t, globalCorsMaxAgeFromZeroEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsMaxAgeZeroResourceConfig(resourceName, epName, globalCorsMaxAgeFromZeroEPBucketName),
+				Config: testAccAppEndpointCorsMaxAgeZeroResourceConfig(resourceName, epName, globalCorsMaxAgeFromZeroEPCollectionName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "0"),
 				),
 			},
 			{
-				Config: testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, epName, globalCorsMaxAgeFromZeroEPBucketName, 3600),
+				Config: testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, epName, globalCorsMaxAgeFromZeroEPCollectionName, 3600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "3600"),
 				),
@@ -680,7 +718,7 @@ func TestAccAppEndpointUpdateCorsMaxAgeFromZero(t *testing.T) {
 
 // testAccAppEndpointNoCorsResourceConfig creates an endpoint with no cors block.
 // Used by: TestAccAppEndpointUpdateRemoveCors (U2 phase 2, skipped).
-func testAccAppEndpointNoCorsResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointNoCorsResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -689,13 +727,13 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -707,14 +745,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointCorsDisabledFalseResourceConfig creates an endpoint with
 // cors { disabled=false } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
-func testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -723,7 +761,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -733,7 +771,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -745,14 +783,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig creates an endpoint with
 // cors { disabled=true } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
-func testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -761,7 +799,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -771,7 +809,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -783,14 +821,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointCorsEmptyOriginResourceConfig creates an endpoint with
 // cors { disabled=false, origin=[] }. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
-func testAccAppEndpointCorsEmptyOriginResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsEmptyOriginResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -799,7 +837,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -810,7 +848,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -822,7 +860,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
@@ -830,7 +868,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 // testAccAppEndpointCorsMaxAgeZeroResourceConfig creates an endpoint with
 // cors.max_age=0. Used by: TestAccAppEndpointCorsMaxAgeZeroSilentDrift (S21),
 // TestAccAppEndpointUpdateCorsMaxAgeFromZero (U11 phase 1).
-func testAccAppEndpointCorsMaxAgeZeroResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsMaxAgeZeroResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -839,7 +877,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -851,7 +889,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -863,14 +901,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointMultipleOIDCResourceConfig creates an endpoint with two OIDC
 // providers. Used by: TestAccAppEndpointMultipleOIDC (S19, skipped).
-func testAccAppEndpointMultipleOIDCResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointMultipleOIDCResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -879,7 +917,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -901,7 +939,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -913,7 +951,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
@@ -921,7 +959,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 // testAccAppEndpointCorsAllFieldsResourceConfig creates an endpoint with all
 // cors fields set. Used by: TestAccAppEndpointCorsFullConfig (S6),
 // TestAccAppEndpointUpdateCorsExpand (U1 phase 2), TestAccAppEndpointUpdateRemoveCors (U2 phase 1, skipped).
-func testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -930,7 +968,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -944,7 +982,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -956,7 +994,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
@@ -964,7 +1002,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 // testAccAppEndpointCorsSpecificOriginsResourceConfig creates an endpoint with
 // specific (non-wildcard) cors origins. Used by: TestAccAppEndpointCorsSpecificOrigins (S20),
 // TestAccAppEndpointUpdateCorsOriginWildcardToSpecific (U5 phase 2).
-func testAccAppEndpointCorsSpecificOriginsResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsSpecificOriginsResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -973,7 +1011,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -987,7 +1025,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -999,14 +1037,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointOIDCAllFieldsResourceConfig creates an endpoint with an OIDC
 // provider using all optional fields. Used by: TestAccAppEndpointOIDCFullFields (S18).
-func testAccAppEndpointOIDCAllFieldsResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointOIDCAllFieldsResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1015,7 +1053,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -1036,7 +1074,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -1048,14 +1086,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointOIDCDiscoveryURLResourceConfig creates an endpoint with an OIDC
 // provider that includes a discovery_url. Used by: TestAccAppEndpointOIDCDiscoveryURL (S22).
-func testAccAppEndpointOIDCDiscoveryURLResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointOIDCDiscoveryURLResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1064,7 +1102,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -1082,7 +1120,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -1094,7 +1132,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
@@ -1104,7 +1142,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 // TestAccAppEndpointUpdateCorsDisableToggle (U3 phase 1, skipped),
 // TestAccAppEndpointUpdateCorsOriginWildcardToSpecific (U5 phase 1),
 // TestAccAppEndpointUpdateAddOIDC (U7 phase 1), TestAccAppEndpointUpdateRemoveOIDC (U8 phase 2, skipped).
-func testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1113,7 +1151,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -1123,7 +1161,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -1135,14 +1173,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointCorsDisabledTrueResourceConfig creates an endpoint with
 // cors.disabled=true. Used by: TestAccAppEndpointUpdateCorsDisableToggle (U3 phase 2, skipped).
-func testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1151,7 +1189,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -1162,7 +1200,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -1174,7 +1212,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
@@ -1182,7 +1220,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 // testAccAppEndpointCorsMaxAgeResourceConfig creates an endpoint with a
 // parameterised cors.max_age. Used by: TestAccAppEndpointUpdateCorsMaxAgeToZero (U10),
 // TestAccAppEndpointUpdateCorsMaxAgeFromZero (U11 phase 2).
-func testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, endpointName, bucketName string, maxAge int) string {
+func testAccAppEndpointCorsMaxAgeResourceConfig(resourceName, endpointName, collectionName string, maxAge int) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1191,7 +1229,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -1202,7 +1240,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -1214,7 +1252,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 		maxAge,
 	)
@@ -1223,7 +1261,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 // testAccAppEndpointWithOIDCResourceConfig creates an endpoint with cors and a
 // minimal OIDC provider. Used by: TestAccAppEndpointUpdateAddOIDC (U7 phase 2),
 // TestAccAppEndpointUpdateRemoveOIDC (U8 phase 1, skipped).
-func testAccAppEndpointWithOIDCResourceConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointWithOIDCResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1232,7 +1270,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -1249,7 +1287,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -1261,14 +1299,14 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 // testAccAppEndpointACFResourceConfig creates an endpoint with a parameterised
 // access_control_function body. Used by: TestAccAppEndpointUpdateACF (U9).
-func testAccAppEndpointACFResourceConfig(resourceName, endpointName, bucketName, acfBody string) string {
+func testAccAppEndpointACFResourceConfig(resourceName, endpointName, collectionName, acfBody string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1277,7 +1315,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	cors = {
@@ -1287,7 +1325,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {
+				"%[7]s" = {
 					access_control_function = "%[9]s"
 				}
 			}
@@ -1301,7 +1339,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 		acfBody,
 	)

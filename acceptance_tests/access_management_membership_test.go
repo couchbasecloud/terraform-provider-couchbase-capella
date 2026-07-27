@@ -180,9 +180,9 @@ func TestAccDatasourceUsersFullFieldContent(t *testing.T) {
 
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
-						"name":              username,
-						"email":             email,
-						"organization_id":   globalOrgId,
+						"name":                 username,
+						"email":                email,
+						"organization_id":      globalOrgId,
 						"organization_roles.#": "1",
 						"organization_roles.0": "organizationMember",
 					}),

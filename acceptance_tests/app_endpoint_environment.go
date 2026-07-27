@@ -24,6 +24,33 @@ var appEndpointEnvironmentOnce struct {
 	err error
 }
 
+// appEndpointCRUDConcurrency bounds how many app_endpoint resource tests run
+// endpoint create/update/delete at once. Every app-endpoint test shares a
+// single app service, and each endpoint mutation forces a Sync Gateway
+// reconfiguration; running too many concurrently triggers transient HTTP 500s
+// ("internal server error", code 10000) on update/list. Bounding concurrency
+// keeps the suite mostly parallel while avoiding that contention. Tune if the
+// 500s persist (lower) or the suite is too slow (raise).
+//
+// Lowered from 3 to 2: at 3, a teardown DELETE (which is held under the same
+// slot as the test body, so it counts toward this bound) still occasionally hit
+// the transient 500 during post-test destroy, failing the run with dangling
+// resources.
+const appEndpointCRUDConcurrency = 2
+
+var appEndpointCRUDSem = make(chan struct{}, appEndpointCRUDConcurrency)
+
+// acquireAppEndpointCRUDSlot blocks until an endpoint-CRUD slot is free and
+// returns a release function. Call it after t.Parallel() and after fixture
+// provisioning, deferring the returned release for the test body:
+//
+//	t.Parallel()
+//	defer acquireAppEndpointCRUDSlot()()
+func acquireAppEndpointCRUDSlot() func() {
+	appEndpointCRUDSem <- struct{}{}
+	return func() { <-appEndpointCRUDSem }
+}
+
 func ensureAppEndpointTestEnvironment(t *testing.T) {
 	t.Helper()
 
@@ -207,7 +234,7 @@ func waitForAppEndpointTestCluster(ctx context.Context, client *api.Client, dest
 				return err
 			}
 			if clusterResp.CurrentState == clusterapi.Healthy {
-				log.Print("app endpoint test cluster created")
+				log.Printf("app endpoint test cluster created - %s", appEndpointClusterId)
 				return nil
 			}
 		}
@@ -330,7 +357,7 @@ func waitForAppEndpointTestAppService(ctx context.Context, client *api.Client, d
 				return fmt.Errorf("error unmarshalling app service response: %w", err)
 			}
 			if appServiceResponse.CurrentState == appservice.Healthy {
-				log.Print("app endpoint test app service created")
+				log.Printf("app endpoint test app service created - %s", appEndpointAppServiceId)
 				return nil
 			}
 		}

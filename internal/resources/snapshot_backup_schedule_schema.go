@@ -19,7 +19,7 @@ func SnapshotBackupScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", snapshotBackupScheduleBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "interval", snapshotBackupScheduleBuilder, int64Attribute(required))
 	capellaschema.AddAttr(attrs, "retention", snapshotBackupScheduleBuilder, int64Attribute(required))
-	capellaschema.AddAttr(attrs, "start_time", snapshotBackupScheduleBuilder, stringDefaultAttribute(time.Now().Truncate(time.Hour).Format(time.RFC3339), optional, computed))
+	capellaschema.AddAttr(attrs, "start_time", snapshotBackupScheduleBuilder, rfc3339DefaultAttribute(time.Now().Truncate(time.Hour).Format(time.RFC3339), optional, computed))
 	capellaschema.AddAttr(attrs, "copy_to_regions", snapshotBackupScheduleBuilder, stringSetAttribute(optional))
 
 	return schema.Schema{

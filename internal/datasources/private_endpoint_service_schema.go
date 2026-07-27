@@ -16,6 +16,8 @@ func PrivateEndpointServiceSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", privateEndpointServiceBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointServiceBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "enabled", privateEndpointServiceBuilder, computedBool())
+	capellaschema.AddAttr(attrs, "status", privateEndpointServiceBuilder, computedString())
+	capellaschema.AddAttr(attrs, "service_name", privateEndpointServiceBuilder, computedString())
 
 	return schema.Schema{
 		MarkdownDescription: "The data source to retrieve private endpoint service information for a cluster.",

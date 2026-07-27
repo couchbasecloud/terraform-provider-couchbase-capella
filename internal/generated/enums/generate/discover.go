@@ -332,10 +332,10 @@ func (w *walker) run() {
 	}
 }
 
-// schema visits a single schema node. Property $refs are skipped — those schemas
-// are visited independently as top-level entries in run. Composition keywords
-// (allOf/oneOf/anyOf) are traversed transparently: branches contribute to the
-// same logical field, and dedupByID merges any colliding sites at the end.
+// schema visits a single schema node. Object-typed property $refs are skipped
+// (visited as top-level entries in run); scalar-enum $refs are captured via
+// refEnum. Composition keywords (allOf/oneOf/anyOf) are traversed transparently
+// and dedupByID merges colliding sites at the end.
 func (w *walker) schema(id string, s *openapi3.Schema, schemaName, fieldPath, sourcePath string, sc scope) {
 	if s == nil {
 		return
@@ -370,16 +370,52 @@ func (w *walker) schema(id string, s *openapi3.Schema, schemaName, fieldPath, so
 		w.recordConstraints(s, schemaName, fieldPath, sourcePath)
 	}
 	for fieldName, propRef := range s.Properties {
-		if propRef == nil || propRef.Ref != "" || propRef.Value == nil {
+		if propRef == nil || propRef.Value == nil {
 			continue
 		}
-		w.schema(
-			id+"_"+toPascal(fieldName), propRef.Value,
-			schemaName, joinPath(fieldPath, fieldName),
-			sourcePath+".properties."+fieldName, sc,
-		)
+		childID := id + "_" + toPascal(fieldName)
+		childPath := joinPath(fieldPath, fieldName)
+		childSource := sourcePath + ".properties." + fieldName
+		// Skip object $refs (walked top-level); capture scalar-enum $refs.
+		if propRef.Ref != "" {
+			w.refEnum(childID, propRef.Value, schemaName, childPath, childSource, sc)
+			continue
+		}
+		w.schema(childID, propRef.Value, schemaName, childPath, childSource, sc)
 	}
 	w.items(id, s, schemaName, fieldPath, sourcePath, sc)
+}
+
+// refEnum records an enum site for a $ref target that is a scalar enum (or an
+// array of one). Object targets are ignored — they are walked top-level.
+func (w *walker) refEnum(id string, v *openapi3.Schema, schemaName, fieldPath, sourcePath string, sc scope) {
+	if v == nil {
+		return
+	}
+	if len(v.Enum) > 0 {
+		w.sites = append(w.sites, enumSite{
+			ID:         id,
+			Scope:      sc,
+			SchemaName: schemaName,
+			FieldPath:  fieldPath,
+			Type:       typeOf(v),
+			Values:     enumValues(v.Enum),
+			SourcePath: sourcePath,
+		})
+		return
+	}
+	if v.Items != nil && v.Items.Value != nil && len(v.Items.Value.Enum) > 0 {
+		iv := v.Items.Value
+		w.sites = append(w.sites, enumSite{
+			ID:         id + "_Item",
+			Scope:      sc,
+			SchemaName: schemaName,
+			FieldPath:  joinPath(fieldPath, "[]"),
+			Type:       typeOf(iv),
+			Values:     enumValues(iv.Enum),
+			SourcePath: sourcePath + ".items",
+		})
+	}
 }
 
 func (w *walker) composition(id string, refs openapi3.SchemaRefs, schemaName, fieldPath, sourcePath string, sc scope, kw string) {
@@ -502,7 +538,12 @@ func (w *walker) recordConstraints(s *openapi3.Schema, schemaName, fieldPath, so
 }
 
 func (w *walker) items(id string, s *openapi3.Schema, schemaName, fieldPath, sourcePath string, sc scope) {
-	if s.Items == nil || s.Items.Ref != "" || s.Items.Value == nil {
+	if s.Items == nil || s.Items.Value == nil {
+		return
+	}
+	// Skip object $ref items (walked top-level); capture scalar-enum ones.
+	if s.Items.Ref != "" {
+		w.refEnum(id+"_Item", s.Items.Value, schemaName, joinPath(fieldPath, "[]"), sourcePath+".items", sc)
 		return
 	}
 	w.schema(id+"_Item", s.Items.Value, schemaName, joinPath(fieldPath, "[]"), sourcePath+".items", sc)

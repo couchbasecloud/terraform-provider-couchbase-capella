@@ -241,8 +241,9 @@ func TestWalker_NestedProperty(t *testing.T) {
 }
 
 func TestWalker_PropertyRefSkipped(t *testing.T) {
-	// A $ref'd property should not be inlined; the referenced schema is
-	// visited as its own top-level entry instead.
+	// An unresolved $ref property (Value nil) is skipped; the referenced schema
+	// is visited as its own top-level entry instead. (Resolved scalar-enum refs
+	// are captured — see TestWalker_PropertyRefScalarEnumCaptured.)
 	doc := &openapi3.T{
 		Components: &openapi3.Components{
 			Schemas: openapi3.Schemas{
@@ -299,6 +300,100 @@ func TestWalker_ArrayItems(t *testing.T) {
 	}
 	if got.ID != "Roles_Roles_Item" {
 		t.Errorf("ID = %q, want Roles_Roles_Item", got.ID)
+	}
+}
+
+func TestWalker_PropertyRefScalarEnumCaptured(t *testing.T) {
+	// A property whose resolved $ref target is a scalar enum is captured under
+	// (schema, field) — the case the generator previously dropped (the enum
+	// reached only the field-less top-level site, which buildEnumTable discards).
+	tz := &openapi3.Schema{Type: &openapi3.Types{"string"}, Enum: []any{"PT", "ET"}}
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"onOffTimezone": refOf(tz),
+				"Schedule": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"timezone": resolvedRef("#/components/schemas/onOffTimezone", tz),
+					},
+				}),
+			},
+		},
+	}
+
+	sites := runWalker(t, doc)
+	got, ok := findSite(sites, "Schedule", "timezone")
+	if !ok {
+		t.Fatalf("want a Schedule.timezone site, got %v", idsOf(sites))
+	}
+	if got.ID != "Schedule_Timezone" || got.Type != "string" {
+		t.Errorf("unexpected site: %+v", got)
+	}
+	if !equalStrings(got.Values, []string{"PT", "ET"}) {
+		t.Errorf("values = %v, want [PT ET]", got.Values)
+	}
+}
+
+func TestWalker_ArrayItemRefScalarEnumCaptured(t *testing.T) {
+	// An array whose items resolve to a scalar-enum $ref is captured at "[]".
+	role := &openapi3.Schema{Type: &openapi3.Types{"string"}, Enum: []any{"admin", "viewer"}}
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"Role": refOf(role),
+				"User": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"roles": refOf(&openapi3.Schema{
+							Type:  &openapi3.Types{"array"},
+							Items: resolvedRef("#/components/schemas/Role", role),
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	sites := runWalker(t, doc)
+	got, ok := findSite(sites, "User", "roles.[]")
+	if !ok {
+		t.Fatalf("want a User.roles.[] site, got %v", idsOf(sites))
+	}
+	if !equalStrings(got.Values, []string{"admin", "viewer"}) {
+		t.Errorf("values = %v, want [admin viewer]", got.Values)
+	}
+}
+
+func TestWalker_ObjectRefPropertyNotInlined(t *testing.T) {
+	// A property whose resolved $ref target is an object is NOT inlined; only
+	// the object's own top-level visit records its inner enum.
+	inner := &openapi3.Schema{
+		Type: &openapi3.Types{"object"},
+		Properties: openapi3.Schemas{
+			"kind": refOf(&openapi3.Schema{Type: &openapi3.Types{"string"}, Enum: []any{"a", "b"}}),
+		},
+	}
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"Inner": refOf(inner),
+				"Container": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"inner": resolvedRef("#/components/schemas/Inner", inner),
+					},
+				}),
+			},
+		},
+	}
+
+	sites := runWalker(t, doc)
+	if _, ok := findSite(sites, "Container", "inner.kind"); ok {
+		t.Errorf("object $ref property must not be inlined; got Container.inner.kind in %v", idsOf(sites))
+	}
+	if _, ok := findSite(sites, "Inner", "kind"); !ok {
+		t.Errorf("want Inner.kind from the top-level visit, got %v", idsOf(sites))
 	}
 }
 
@@ -416,6 +511,21 @@ func TestWalker_SortedOutput(t *testing.T) {
 
 func refOf(s *openapi3.Schema) *openapi3.SchemaRef {
 	return &openapi3.SchemaRef{Value: s}
+}
+
+// resolvedRef mimics what the OpenAPI loader produces for a property/item $ref:
+// both the Ref string and the resolved target Value are populated.
+func resolvedRef(ref string, s *openapi3.Schema) *openapi3.SchemaRef {
+	return &openapi3.SchemaRef{Ref: ref, Value: s}
+}
+
+func findSite(sites []enumSite, schemaName, fieldPath string) (enumSite, bool) {
+	for _, s := range sites {
+		if s.SchemaName == schemaName && s.FieldPath == fieldPath {
+			return s, true
+		}
+	}
+	return enumSite{}, false
 }
 
 func runWalker(t *testing.T, doc *openapi3.T) []enumSite {

@@ -122,7 +122,7 @@ func TestAccSnapshotBackupScheduleResourceInvalidStartTime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, "invalid_time", "[]"),
-				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
+				ExpectError: regexp.MustCompile("A string value was provided that is not valid RFC3339 string format"),
 			},
 		},
 	})
