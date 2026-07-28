@@ -54,17 +54,27 @@ git checkout -b <JIRA_KEY>-<short-kebab-description> main
 - Name the acceptance test `TestAcc<Feature>_AV_XXXXX`.
 - Error wrapping: `fmt.Errorf("...: %w", err)`.
 
-### 3. Validate (do NOT run acceptance tests)
+### 3. Validate — CI-parity gate (do NOT run acceptance tests)
 
-Acceptance tests hit live Capella and are not run here. Compile-check them instead.
+Run the same checks CI runs on every PR and treat them as hard gates. CI runs `golangci-lint`
+(config `.golangci.yml`, `only-new-issues: true`) + `make tfcheck` via `lint.yml`, and
+`make vet` + `make test` via `unit-tests.yml`. Acceptance tests hit live Capella and are only
+compile-checked here.
 
 ```bash
-goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella <changed_files>
-make fmt
-make lint
+# Format ONLY the files you changed — NOT the whole repo.
+# Do not use `make fmt` or `terraform fmt -recursive .` (they reformat unrelated files).
+gofmt -s -w <changed .go files>
+goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella <changed .go files>
+terraform fmt <changed .tf files>               # only if any .tf changed
+
+# Lint — there is NO `make lint` target; use lint-fix, then confirm clean
+make lint-fix                                   # golangci-lint run --fix
+golangci-lint run                               # must report no new issues in changed files
+
 make vet
-make test                       # unit tests
-go test -c -o /dev/null ./acceptance_tests/   # compile acceptance tests without running
+make test                                       # unit tests
+go test -c -o /dev/null ./acceptance_tests/     # compile acceptance tests without running
 
 # Build the binary (per CLAUDE.md)
 VERSION=$(git describe --tags --abbrev=0)
@@ -72,7 +82,7 @@ go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchb
   -o ./bin/terraform-provider-couchbase-capella
 ```
 
-Fix every error before continuing. Do NOT run `make testacc`.
+Fix every error and re-run until all pass clean before opening the PR. Do NOT run `make testacc`.
 
 ### 4. Commit
 

@@ -149,30 +149,74 @@ Search the codebase for the function, file, or code path named in the ticket. Re
 relevant source files, identify the **root cause**, and explain why the current code
 produces the bug. Assess a **fix confidence (0-100%)**.
 
-### Phase 3: Fix + Acceptance Test
+### Phase 3: Fix + Test
 
 Only proceed if confidence is **>= 80%** (see Confidence Thresholds below).
 
+**Priority 1 — get the fix right. This is the main focus; the tests come after.**
 - Apply the root-cause fix following the `tf-bugfix` skill's diagnosis methodology.
-- **Choose the test by the layer the bug lives in** (this routing is owned by the droid;
-  the `tf-bugfix` skill's step 4 covers only the acceptance-test case):
-  - **Resource / data-source behavior** (schema, CRUD, plan/apply, import, diff) →
-    **acceptance test** in `acceptance_tests/`, following the `tf-bugfix` and
-    `tf-acceptance-test-gen` skills; name it `TestAcc<Feature>_AV_XXXXX`. This is the
-    default for most provider bugs.
-  - **Internal / non-lifecycle logic** (API client, validators, plan modifiers,
-    converters, enum lookups, pure helpers) → table-driven **unit test** in the same
-    package as the fix (e.g. `internal/api/client_test.go`). An acceptance test cannot
-    meaningfully assert this layer and would need live credentials.
-  - **Both** when a resource bug's root cause is an isolable internal helper.
+- **Verify every API assumption against the generated client before writing a call.** Never
+  assume an endpoint exists just because a sibling method does — e.g. "DELETE `/x/{id}` exists,
+  so GET `/x/{id}` must too" is often false (App Service allowed-CIDRs has DELETE-by-id but
+  **no** GET-by-id). Confirm the operation is present in `internal/generated/api` (grep the
+  client, e.g. `GetAppServiceAllowedCidr`) or in `openapi.generated.yaml` before calling it. A
+  call to a non-existent endpoint compiles cleanly but returns 404 at runtime.
 - New datasources/resources must use `ClientV1` (per `CLAUDE.md`).
 
-### Phase 4: Validate
+**Priority 2 — add an acceptance test (the default for provider bugs).**
+- Add an **acceptance test** in `acceptance_tests/`, following the `tf-bugfix` and
+  `tf-acceptance-test-gen` skills; name it `TestAcc<Feature>_AV_XXXXX`. This is the default
+  proof and covers the great majority of bugs — resource/data-source CRUD, plan/apply, import,
+  diff, and config **validation** (via an `ExpectError` step). Extend an existing
+  `*_acceptance_test.go` when one exists for the resource.
 
-Follow the `tf-fix-pr` skill "Validate" step: `goimports`, `make fmt`, `make lint`,
-`make vet`, `make test`, `go test -c -o /dev/null ./acceptance_tests/`, and the
-`CLAUDE.md` `go build`. **Do NOT run `make testacc`** — it creates live Capella resources
-and requires credentials this session does not have. Fix every error before continuing.
+**Priority 3 — add a unit test only when it is required or requested.**
+- Add a table-driven **unit test** in the same package when EITHER:
+  - the fix is in **standalone internal logic that an acceptance test cannot meaningfully
+    reach** (e.g. `internal/api` retry/pagination, converters, parsers, pure helpers) — here a
+    unit test is the *only* effective proof; **or**
+  - the **prompt explicitly asks for a unit test**.
+- Otherwise a unit test is optional — do not add one just to have both. "Can't mock the API
+  client" is never a reason to skip a needed unit test: `*api.Client` wraps `http.Client` with
+  an injectable URL (`HostURL` / `EndpointCfg.Url`), so drive it with an `httptest.Server`
+  (multi-page responses for pagination).
+
+**Never open a PR with no test and no explanation.** If — after genuinely exhausting acceptance,
+`httptest`, and unit options — no automated test is possible, (a) lower confidence below 100%,
+(b) state why in the PR, and (c) add a **"Reviewer action required: add <acceptance/unit> test
+for …"** callout.
+
+### Phase 4: Validate (CI-parity gate — must pass before opening the PR)
+
+Mirror the checks CI runs on every PR. CI runs `golangci-lint` (config `.golangci.yml`,
+`only-new-issues: true`) + `make tfcheck` via `lint.yml`, and `make vet` + `make test` via
+`unit-tests.yml`. The bar is **"your change introduces no new failure"** — not "the whole repo
+is clean" (the repo may already have pre-existing drift, e.g. `make tfcheck` can be red from
+unrelated example HCL; that is not yours to fix).
+
+**Format — write only the files you changed:**
+- `gofmt -s -w` + `goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella`
+  on your changed `.go` files, and `terraform fmt` on your changed `.tf` files.
+- Do **not** run `make fmt` or `terraform fmt -recursive .` — they rewrite the whole repo and
+  strand unrelated files.
+
+**Check — run read-only, repo-wide (as CI does), and require no *new* failure from your diff:**
+1. **Lint** — `make lint-fix` (there is **no** `make lint` target), then `golangci-lint run`;
+   confirm your diff adds **no new issues** (CI's `only-new-issues: true` gates exactly this).
+   Note: `.golangci.yml` has no gofmt linter, so Go formatting isn't a CI gate — still format
+   for hygiene.
+2. **Terraform fmt** — `make tfcheck` (`terraform fmt -check -recursive .`). Ensure **your**
+   changed `.tf` files are clean; pre-existing drift elsewhere may keep the repo-wide check red
+   and is out of scope for this fix.
+3. **Vet** — `make vet` (must be green; not scoped to the diff).
+4. **Unit tests** — `make test` (must be green).
+5. **Compile-check acceptance tests** (never run them) — `go test -c -o /dev/null ./acceptance_tests/`.
+6. **Build** — the `CLAUDE.md` `go build` command.
+
+Fix every error your change causes and re-run until clean. **Do NOT run `make testacc`** — it
+creates live Capella resources and needs credentials this session does not have. If a check
+your change is responsible for cannot be made to pass, do not silently open the PR: lower
+confidence below 100% and add a **"Reviewer action required"** callout explaining it.
 
 ### Phase 5: Draft PR
 
