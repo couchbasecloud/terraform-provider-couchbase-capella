@@ -157,15 +157,19 @@ func initializeAllowedCIDRWithPlanAndId(plan providerschema.AppServiceCIDR, id s
 	return plan
 }
 
-// getAllowedCIDR is used to retrieve an existing allow list.
+// getAllowedCIDR fetches a single App Service allowed CIDR by its ID.
+// It uses the single-item GET endpoint rather than listing all CIDRs, which
+// avoids silently dropping resources from state when the CIDR count exceeds
+// the list endpoint's default page size.
 func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string) (*api.AppServiceAllowedCIDRResponse, error) {
 	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs/%s",
 		a.HostURL,
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
+		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := a.ClientV1.ExecuteWithRetry(
@@ -179,20 +183,13 @@ func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, pro
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
-	allowListResp := api.ListAppServiceAllowedCIDRResponse{}
+	allowListResp := api.AppServiceAllowedCIDRResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	for _, allowlist := range allowListResp.Data {
-		if allowlist.Id == allowListId {
-			// Found the allow list with the matching ID
-			return &allowlist, nil
-		}
-	}
-
-	return nil, errors.ErrNotFound
+	return &allowListResp, nil
 }
 
 // refreshAllowedCIDR is used to pass an existing Allowed CIDR to the refreshed state.
