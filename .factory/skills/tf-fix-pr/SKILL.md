@@ -86,7 +86,11 @@ Fix every error and re-run until all pass clean before opening the PR. Do NOT ru
 
 ### 4. Commit
 
+Stage the changed files explicitly (new test files are untracked, so `git commit -a` would
+miss them), then commit:
+
 ```bash
+git add <changed source files> <new/updated test files>   # e.g. internal/... acceptance_tests/...
 git commit -m "[<JIRA_KEY>] <fix description>"
 ```
 
@@ -119,16 +123,21 @@ The PR body **must** follow `.github/pull_request_template.md`. Fill every secti
 
 ### How was this change tested and do you have evidence?
 
-- [x] Acceptance tested
+<!-- Check the box that matches what ACTUALLY ran. Acceptance tests are only
+compile-checked here (no live Capella creds), so do NOT check "Acceptance tested"
+unless they were truly executed. Check "Unit tested" when `make test`/a unit test
+ran. -->
+- [x] Unit tested
 
 ### Testing
 
 <details open>
   <summary>Testing</summary>
 
-Added acceptance test `TestAcc<Feature>_AV_XXXXX`. Compile-checked with
-`go test -c ./acceptance_tests/`; not executed here (requires live Capella
-credentials). Unit tests / lint / build all pass.
+`make test` (unit), lint, and build all pass. Any acceptance test added
+(`TestAcc<Feature>_AV_XXXXX`) was **compile-checked only** with
+`go test -c ./acceptance_tests/` and **not executed** (requires live Capella
+credentials) — so "Acceptance tested" is intentionally left unchecked.
 
 </details>
 
@@ -148,7 +157,7 @@ Rules for the template:
 Add a comment to the ticket with the PR URL:
 
 ```bash
-curl -s -X POST "https://couchbasecloud.atlassian.net/rest/api/3/issue/<JIRA_KEY>/comment" \
+curl -fsS -X POST "https://couchbasecloud.atlassian.net/rest/api/3/issue/<JIRA_KEY>/comment" \
   -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"body":{"type":"doc","version":1,"content":[{"type":"paragraph","content":[

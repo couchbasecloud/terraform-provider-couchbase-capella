@@ -91,7 +91,7 @@ Signals it belongs elsewhere (**out of scope**):
 **Tier 3 — locate it in this repo (verification / tie-breaker).** Search this codebase for the
 resource, attribute, error text, or behavior the ticket describes:
 ```bash
-grep -ridE "<resource name|error phrase|attribute>" internal/ acceptance_tests/ docs/
+grep -rInE "<resource name|error phrase|attribute>" internal/ acceptance_tests/ docs/
 ```
 - Found a plausible owning code path here → **in scope.**
 - Nothing here plausibly owns the described behavior → **out of scope.**
@@ -110,15 +110,17 @@ git checkout main && git pull origin main
 git rev-parse HEAD   # capture COMMIT_SHA for stable GitHub permalinks
 ```
 
-Record `COMMIT_SHA`; every code reference in the report links to
-`.../blob/<COMMIT_SHA>/<path>#L<start>-L<end>` so line numbers stay stable.
+Record this base `COMMIT_SHA`. Use it to link **root-cause / pre-existing code** so line
+numbers stay stable. Link **code you added or changed in the fix** to the **fix branch's HEAD
+SHA** instead (the base SHA does not contain your changes, so a base-pinned link to new code
+is wrong). Capture the fix SHA after committing: `git rev-parse HEAD`.
 
 ### Phase 1: JIRA Ticket Ingestion
 
 The ticket key (`AV-XXXXX`) comes from the Slack invocation. Fetch the ticket:
 
 ```bash
-curl -s -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+curl -fsS -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
   "https://couchbasecloud.atlassian.net/rest/api/3/issue/<JIRA_KEY>?fields=summary,description,status,components,labels,issuetype,priority,comment"
 ```
 
@@ -249,7 +251,7 @@ Every piece of evidence you cite — in the report, the JIRA comment, and the PR
 
 | When you mention… | Link to | URL format |
 |---|---|---|
-| A **code reference** (file/function/line) | The exact lines on GitHub | `https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/<COMMIT_SHA>/<path>#L<start>-L<end>` — pin to the Phase 0 SHA (never `main`; lines drift). Include a short (≤15 line) snippet alongside the link. |
+| A **code reference** (file/function/line) | The exact lines on GitHub | `https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/<SHA>/<path>#L<start>-L<end>` — for **root-cause/existing code** use the Phase 0 base `COMMIT_SHA`; for **code added or changed by the fix** use the **fix branch HEAD SHA** (the base SHA won't contain it). Never use `main` (lines drift). Include a short (≤15 line) snippet alongside the link. |
 | A **JIRA ticket** (`AV-XXXXX`) | The issue | `https://couchbasecloud.atlassian.net/browse/<KEY>` |
 | A **pull request** | The PR | `https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/<N>` |
 | A **GitHub Actions run** | The run | `https://github.com/couchbasecloud/terraform-provider-couchbase-capella/actions/runs/<RUN_ID>` |
