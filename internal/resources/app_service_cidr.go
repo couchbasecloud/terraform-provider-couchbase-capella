@@ -168,24 +168,13 @@ func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, pro
 		appServiceId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
+
+	allowLists, err := api.GetPaginated[[]api.AppServiceAllowedCIDRResponse](ctx, a.ClientV1, a.Token, cfg, api.SortById)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
-	allowListResp := api.ListAppServiceAllowedCIDRResponse{}
-	err = json.Unmarshal(response.Body, &allowListResp)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
-	}
-
-	for _, allowlist := range allowListResp.Data {
+	for _, allowlist := range allowLists {
 		if allowlist.Id == allowListId {
 			// Found the allow list with the matching ID
 			return &allowlist, nil
