@@ -243,7 +243,91 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 			// Create and Read testing
 			{
 				Config:      testAccClusterResourceConfigWithAllFieldInvalidScenario(resourceName, cidr),
-				ExpectError: regexp.MustCompile("gp2.*invalid"),
+				ExpectError: regexp.MustCompile(`(?s)disk.*type.*value must be one of|Attribute.*type.*one of`),
+			},
+		},
+	})
+}
+
+func TestAccClusterResourceInvalidAvailabilityType(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_invalid_availability_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceInvalidAvailabilityTypeConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)availability.*type.*value must be one of|Attribute.*type.*one of`),
+			},
+		},
+	})
+}
+
+func TestAccClusterResourceInvalidCloudProviderType(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_invalid_cloud_provider_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceInvalidCloudProviderTypeConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)cloud_provider.*type.*value must be one of|Attribute.*type.*one of`),
+			},
+		},
+	})
+}
+
+func TestAccClusterResourceInvalidDiskType(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_invalid_disk_type_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceInvalidDiskTypeConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)disk.*type.*value must be one of|Attribute.*type.*one of`),
+			},
+		},
+	})
+}
+
+func TestAccClusterResourceEmptyServiceGroups(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_empty_service_groups_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceEmptyServiceGroupsConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)service_groups.*at least 1|service_groups.*minimum|Set.*service_groups`),
+			},
+		},
+	})
+}
+
+func TestAccClusterResourceEmptyServices(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_empty_services_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceEmptyServicesConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)services.*at least 1|services.*minimum|Set.*services`),
+			},
+		},
+	})
+}
+
+func TestAccClusterResourceNameTooLong(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_name_too_long_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceNameTooLongConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)name.*256|Attribute.*name.*length`),
 			},
 		},
 	})
@@ -482,6 +566,264 @@ resource "couchbase-capella_cluster" "%[4]s" {
   }
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
+}
+
+func testAccClusterResourceInvalidAvailabilityTypeConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	name            = "%[2]s"
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "10.21.0.0/20"
+	}
+
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					type    = "gp3"
+					storage = 50
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = ["data", "index", "query"]
+		}
+	]
+
+	availability = {
+		type = "triple"
+	}
+
+	support = {
+		plan     = "basic"
+		timezone = "PT"
+	}
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccClusterResourceInvalidCloudProviderTypeConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	name            = "%[2]s"
+
+	cloud_provider = {
+		type   = "oracle"
+		region = "us-east-1"
+		cidr   = "10.20.0.0/20"
+	}
+
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					type    = "gp3"
+					storage = 50
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = ["data", "index", "query"]
+		}
+	]
+
+	availability = {
+		type = "single"
+	}
+
+	support = {
+		plan     = "basic"
+		timezone = "PT"
+	}
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccClusterResourceInvalidDiskTypeConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	name            = "%[2]s"
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "10.24.0.0/20"
+	}
+
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					type    = "definitely-invalid-disk"
+					storage = 50
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = ["data", "index", "query"]
+		}
+	]
+
+	availability = {
+		type = "single"
+	}
+
+	support = {
+		plan     = "basic"
+		timezone = "PT"
+	}
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccClusterResourceEmptyServiceGroupsConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	name            = "%[2]s"
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "10.22.0.0/20"
+	}
+
+	service_groups = []
+
+	availability = {
+		type = "single"
+	}
+
+	support = {
+		plan     = "basic"
+		timezone = "PT"
+	}
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccClusterResourceEmptyServicesConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	name            = "%[2]s"
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "10.25.0.0/20"
+	}
+
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					type    = "gp3"
+					storage = 50
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = []
+		}
+	]
+
+	availability = {
+		type = "single"
+	}
+
+	support = {
+		plan     = "basic"
+		timezone = "PT"
+	}
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccClusterResourceNameTooLongConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+locals {
+	too_long_name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	name            = local.too_long_name
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "10.23.0.0/20"
+	}
+
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					type    = "gp3"
+					storage = 50
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = ["data", "index", "query"]
+		}
+	]
+
+	availability = {
+		type = "single"
+	}
+
+	support = {
+		plan     = "basic"
+		timezone = "PT"
+	}
+}
+`, globalProviderBlock, resourceName)
 }
 
 // testAccClusterResourceConfigWithConfigurationTypeFieldAdded generates a Terraform configuration string for testing an

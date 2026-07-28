@@ -29,7 +29,7 @@ func FreeTierClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "id", freeTierClusterBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "organization_id", freeTierClusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", freeTierClusterBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "name", freeTierClusterBuilder, stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "name", freeTierClusterBuilder, stringAttribute([]string{required}, validator.String(stringvalidator.LengthBetween(1, 256))))
 	capellaschema.AddAttr(attrs, "description", freeTierClusterBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "app_service_id", freeTierClusterBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "connection_string", freeTierClusterBuilder, stringAttribute([]string{computed}))

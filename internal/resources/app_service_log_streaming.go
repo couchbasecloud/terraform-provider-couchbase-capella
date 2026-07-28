@@ -134,6 +134,14 @@ func (r *AppServiceLogStreaming) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	// config_state and streaming_state are computed, so they are unknown in the
+	// plan. Give them known (null) values before persisting this interim state:
+	// if the wait or refresh below fails and we return early, Terraform must not
+	// find unknown values in the result, otherwise it raises a spurious "invalid
+	// result object" / "bug in the provider" error that masks the real cause.
+	plan.ConfigState = types.StringNull()
+	plan.StreamingState = types.StringNull()
+
 	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

@@ -20,14 +20,20 @@ var (
 	globalOrgId string
 
 	// these global variables are set by setup().
-	globalProjectId          string
-	globalClusterId          string
-	globalClusterName        = "tf_acc_test_cluster_common"
-	globalBucketName         = "default"
-	globalScopeName          = "_default"
-	globalCollectionName     = "_default"
-	globalBucketId           string
-	globalBucketCreated      bool
+	globalProjectId      string
+	globalClusterId      string
+	globalClusterName    = "tf_acc_test_cluster_common"
+	globalBucketName     = "default"
+	globalScopeName      = "_default"
+	globalCollectionName = "_default"
+	globalBucketId       string
+
+	// globalMetadataBucketName is a second bucket on the global cluster used as the metadata
+	// storage keyspace for eventing function tests. It must be a different keyspace from the
+	// event source (the global bucket's _default/_default).
+	globalMetadataBucketName = "metadata"
+	globalMetadataBucketId   string
+
 	globalAppServiceId       string
 	globalAppServiceName     = "tf_acc_test_app_service_common"
 	globalAppEndpointName    = "tf_acc_test_app_endpoint_common"
@@ -35,6 +41,12 @@ var (
 	globalProjectCreated     bool
 	globalClusterCreated     bool
 	globalAppServiceCreated  bool
+
+	// globalSkipAppService, set from ACC_SKIP_APP_SERVICE, makes TestMain skip
+	// the shared app service + app endpoint provisioning for runs that don't
+	// need them (e.g. private endpoint tests). Tests that require the shared app
+	// service must not be run with this set.
+	globalSkipAppService bool
 
 	// dmClusterId is a dedicated cluster for data management (bucket/scope/collection) tests,
 	// kept separate from the global cluster to avoid rebalance contention with app service tests.
@@ -106,7 +118,7 @@ var (
 	globalDeletedExternallyEPCollectionName = "tf_acc_ep_del_ext_col"
 	globalACFDeletedExtEPCollectionName     = "tf_acc_ep_acf_dex_col"
 	// Collections for currently-skipped tests — not provisioned while skipped, but
-	// named so the tests are ready to run once the underlying bugs are fixed. 
+	// named so the tests are ready to run once the underlying bugs are fixed.
 	globalCorsDisabledFalseEPCollectionName = "tf_acc_ep_cors_df_col"
 	globalMultipleOIDCEPCollectionName      = "tf_acc_ep_moidc_col"
 	globalRemoveCorsEPCollectionName        = "tf_acc_ep_rmcors_col"

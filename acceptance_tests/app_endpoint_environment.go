@@ -31,7 +31,12 @@ var appEndpointEnvironmentOnce struct {
 // ("internal server error", code 10000) on update/list. Bounding concurrency
 // keeps the suite mostly parallel while avoiding that contention. Tune if the
 // 500s persist (lower) or the suite is too slow (raise).
-const appEndpointCRUDConcurrency = 3
+//
+// Lowered from 3 to 2: at 3, a teardown DELETE (which is held under the same
+// slot as the test body, so it counts toward this bound) still occasionally hit
+// the transient 500 during post-test destroy, failing the run with dangling
+// resources.
+const appEndpointCRUDConcurrency = 2
 
 var appEndpointCRUDSem = make(chan struct{}, appEndpointCRUDConcurrency)
 

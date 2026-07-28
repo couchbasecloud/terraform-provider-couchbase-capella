@@ -101,6 +101,10 @@ func requiredNonEmptyStringAttribute() *schema.StringAttribute {
 	)
 }
 
+func requiredStringAttributeNoReplace() *schema.StringAttribute {
+	return stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1)))
+}
+
 // rfc3339Attribute is a variadic function which returns a string attribute with the requested fields set to true
 // if the string satisfies the rfc3339 format, otherwise an error is returned.
 func rfc3339Attribute(fields ...string) *schema.StringAttribute {

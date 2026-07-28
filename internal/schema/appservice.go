@@ -60,6 +60,10 @@ type AppService struct {
 	// IfMatch is a precondition header that specifies the entity tag of a resource.
 	IfMatch types.String `tfsdk:"if_match"`
 
+	// LoadBalancerCidr pins the CIDR block for the app service load balancer subnet (Azure only).
+	// When set, it is reserved at create time; when omitted, the CIDR is allocated dynamically.
+	LoadBalancerCidr types.String `tfsdk:"load_balancer_cidr"`
+
 	// Nodes is the number of nodes configured for the app service.
 	Nodes types.Int64 `tfsdk:"nodes"`
 }
@@ -101,6 +105,7 @@ func NewAppService(
 		Version:      types.StringValue(truncateToMajorMinor(appService.Version)),
 		Audit:        auditObject,
 		Etag:         types.StringValue(appService.Etag),
+		LoadBalancerCidr: types.StringPointerValue(appService.LoadBalancerCidr),
 	}
 	return &newAppService
 }
@@ -176,6 +181,9 @@ type AppServiceData struct {
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
 
+	// LoadBalancerCidr is the CIDR block reserved for the app service load balancer subnet (Azure only).
+	LoadBalancerCidr types.String `tfsdk:"load_balancer_cidr"`
+
 	// Nodes is the number of nodes configured for the app service.
 	Nodes types.Int64 `tfsdk:"nodes"`
 }
@@ -197,10 +205,11 @@ func NewAppServiceData(
 			Cpu: types.Int64Value(appService.Compute.Cpu),
 			Ram: types.Int64Value(appService.Compute.Ram),
 		},
-		ClusterId:    types.StringValue(appService.ClusterId),
-		CurrentState: types.StringValue(string(appService.CurrentState)),
-		Version:      types.StringValue(appService.Version),
-		Audit:        auditObject,
+		ClusterId:        types.StringValue(appService.ClusterId),
+		CurrentState:     types.StringValue(string(appService.CurrentState)),
+		Version:          types.StringValue(appService.Version),
+		Audit:            auditObject,
+		LoadBalancerCidr: types.StringPointerValue(appService.LoadBalancerCidr),
 	}
 	return &newAppService
 }

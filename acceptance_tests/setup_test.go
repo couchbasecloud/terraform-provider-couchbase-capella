@@ -96,6 +96,11 @@ func setup(ctx context.Context, client *api.Client) error {
 	if err := resolveBucket(ctx, client); err != nil {
 		return err
 	}
+
+	if err := resolveMetadataBucket(ctx, client); err != nil {
+		return err
+	}
+
 	// Bucket creation triggers a cluster rebalance; wait for the cluster to
 	// return to Healthy before creating dependent resources, otherwise
 	// createAppService races and fails with 412 "cluster is rebalancing".
@@ -106,6 +111,14 @@ func setup(ctx context.Context, client *api.Client) error {
 
 	// The data-management cluster is provisioned lazily by ensureDMCluster()
 	// from the first data_management_* test that runs, so non-DM runs skip it.
+
+	// The app service and app endpoint are the last things set up here, so runs
+	// that don't need them (e.g. private endpoint tests) can skip the slow
+	// provisioning entirely via ACC_SKIP_APP_SERVICE and return early.
+	if globalSkipAppService {
+		log.Print("ACC_SKIP_APP_SERVICE set; skipping app service and app endpoint setup")
+		return nil
+	}
 
 	// Create app service only if not provided via env var
 	if globalAppServiceId == "" {
@@ -165,12 +178,6 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 
 		if err := dmClusterWait(ctx, client, true); err != nil {
-			return err
-		}
-	}
-
-	if globalBucketCreated {
-		if err := destroyBucket(ctx, client); err != nil {
 			return err
 		}
 	}

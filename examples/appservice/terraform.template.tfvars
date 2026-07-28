@@ -7,6 +7,7 @@ app_service = {
   name        = "new-terraform-app-service"
   description = "My first test app service."
   nodes       = 2
+  # load_balancer_cidr = "10.1.0.0/24" # Azure App Services only
   compute = {
     cpu = 2
     ram = 4

@@ -24,6 +24,7 @@ var (
 		"app_endpoint_name": AppEndpointName,
 		"endpoint_id":       EndpointId,
 		"provider_id":       ProviderId,
+		"function_name":     FunctionName,
 	}
 )
 

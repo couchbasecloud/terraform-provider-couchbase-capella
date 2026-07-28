@@ -16,4 +16,5 @@ const (
 	EndpointId      Attr = "endpointId"
 	IndexName       Attr = "indexName"
 	ProviderId      Attr = "providerId"
+	FunctionName    Attr = "functionName"
 )

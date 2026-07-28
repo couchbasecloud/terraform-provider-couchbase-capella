@@ -23,6 +23,11 @@ var (
 // Clusters is the Clusters data source implementation.
 type Clusters struct {
 	*providerschema.Data
+
+	// FreeTierClusterFilter, when true, restricts the results to free-tier
+	// clusters. There is no list endpoint for free-tier clusters, so the
+	// free-tier clusters data source lists all clusters via /clusters and
+	// filters here on Support.Plan == "free".
 	FreeTierClusterFilter bool
 }
 
@@ -88,10 +93,8 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 
 	for i := range response {
 		cluster := response[i]
-		if d.FreeTierClusterFilter {
-			if cluster.Support.Plan != "free" {
-				continue
-			}
+		if d.FreeTierClusterFilter && cluster.Support.Plan != "free" {
+			continue
 		}
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 

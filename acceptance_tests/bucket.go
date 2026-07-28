@@ -107,11 +107,7 @@ func resolveBucket(ctx context.Context, client *api.Client) error {
 	if err := createBucket(ctx, client); err != nil {
 		return err
 	}
-	// Mark the bucket as created BEFORE waiting for it to become healthy. The
-	// POST has already succeeded so the bucket exists remotely; if bucketWait
-	// times out, cleanup must still delete it to avoid leaking the bucket
-	// across flaky runs.
-	globalBucketCreated = true
+
 	if err := bucketWait(ctx, client); err != nil {
 		return err
 	}
@@ -132,6 +128,87 @@ func destroyBucket(ctx context.Context, client *api.Client) error {
 	}
 	log.Printf("bucket destroyed: %s", globalBucketId)
 	return nil
+}
+
+func createMetadataBucket(ctx context.Context, client *api.Client) error {
+	bucketRequest := bucketapi.CreateBucketRequest{
+		Name: globalMetadataBucketName,
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	response, err := client.ExecuteWithRetry(ctx, cfg, bucketRequest, globalToken, nil)
+	if err != nil {
+		return err
+	}
+
+	bucketResponse := bucketapi.GetBucketResponse{}
+	if err = json.Unmarshal(response.Body, &bucketResponse); err != nil {
+		return err
+	}
+
+	globalMetadataBucketId = bucketResponse.Id
+	return nil
+}
+
+func resolveMetadataBucket(ctx context.Context, client *api.Client) error {
+	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
+	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
+	if err != nil {
+		return err
+	}
+	for _, bucket := range buckets {
+		if bucket.Name == globalMetadataBucketName {
+			globalMetadataBucketId = bucket.Id
+			log.Printf("Using existing metadata bucket: %s (%s)", globalMetadataBucketName, globalMetadataBucketId)
+			return nil
+		}
+	}
+
+	if err := createMetadataBucket(ctx, client); err != nil {
+		return err
+	}
+
+	if err := metadataBucketWait(ctx, client); err != nil {
+		return err
+	}
+	log.Printf("Created metadata bucket: %s (%s)", globalMetadataBucketName, globalMetadataBucketId)
+	return nil
+}
+
+func metadataBucketWait(ctx context.Context, client *api.Client) error {
+	const maxWaitTime = 5 * time.Minute
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, maxWaitTime)
+	defer cancel()
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ErrTimeoutWaitingForBucket
+		case <-ticker.C:
+			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, globalClusterId, globalMetadataBucketId)
+			cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+			_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+			if err == nil {
+				log.Print("metadata bucket created")
+				return nil
+			}
+
+			var apiError *api.Error
+			if !errors.As(err, &apiError) {
+				return err
+			}
+			if apiError.HttpStatusCode != http.StatusNotFound {
+				return err
+			}
+		}
+	}
 }
 
 func createDMBucket(ctx context.Context, client *api.Client) error {

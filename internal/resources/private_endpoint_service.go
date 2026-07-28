@@ -467,6 +467,18 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 	// would leave orphaned infra behind and skip state removal.
 	var lastTerminalFailure error
 
+	// transientFailure gates whether a terminal-failure status observed while
+	// sawInFlight is true gets returned right away or deferred once more. A
+	// single enableFailed/disableFailed sighting can be a transient blip
+	// (e.g. a timeout on the backend's side) that clears up on the backend's
+	// own automatic retry, so we don't want to fail the resource on it
+	// immediately. It starts true, so the first sighting is given the benefit
+	// of the doubt and just flips it to false; only if the same terminal
+	// status is still being reported on the next poll (after another
+	// pollInterval backoff) do we treat it as a real, non-transient failure
+	// and return the error.
+	var transientFailure = true
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -509,18 +521,32 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 			switch *response.Status {
 			case statusEnableFailed:
 				if sawInFlight {
-					return errors.ErrPrivateEndpointServiceEnableFailed
+					// Already given the benefit of the doubt once; seeing the
+					// same failure again means it wasn't a transient blip.
+					if !transientFailure {
+						return errors.ErrPrivateEndpointServiceEnableFailed
+					}
+					transientFailure = false
 				}
 				// Possibly-stale: defer, but remember it so a never-transitioning
 				// enableFailed is still routed to cleanup on timeout.
 				lastTerminalFailure = errors.ErrPrivateEndpointServiceEnableFailed
 			case statusDisableFailed:
 				if sawInFlight {
-					return errors.ErrPrivateEndpointServiceDisableFailed
+					// Already given the benefit of the doubt once; seeing the
+					// same failure again means it wasn't a transient blip.
+					if !transientFailure {
+						return errors.ErrPrivateEndpointServiceDisableFailed
+					}
+					transientFailure = false
 				}
 				lastTerminalFailure = errors.ErrPrivateEndpointServiceDisableFailed
 			case statusEnabling, statusDisabling, statusUnknown:
 				sawInFlight = true
+				// Reset so a future terminal-failure sighting is treated as a
+				// fresh, isolated one (needs to repeat again before we trust
+				// it) rather than immediately confirming a stale prior one.
+				transientFailure = true
 				// The backend progressed, so any earlier terminal status was
 				// genuinely stale; a later stall is a real transition timeout.
 				lastTerminalFailure = nil

@@ -94,6 +94,10 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 		appServiceRequest.Version = &version
 	}
 
+	if !plan.LoadBalancerCidr.IsNull() && !plan.LoadBalancerCidr.IsUnknown() {
+		appServiceRequest.LoadBalancerCidr = plan.LoadBalancerCidr.ValueStringPointer()
+	}
+
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
@@ -577,6 +581,9 @@ func initializePendingAppServiceWithPlanAndId(plan providerschema.AppService, id
 	}
 	if plan.Version.IsNull() || plan.Version.IsUnknown() {
 		plan.Version = types.StringNull()
+	}
+	if plan.LoadBalancerCidr.IsNull() || plan.LoadBalancerCidr.IsUnknown() {
+		plan.LoadBalancerCidr = types.StringNull()
 	}
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.Etag = types.StringNull()
