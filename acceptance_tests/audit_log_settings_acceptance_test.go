@@ -553,7 +553,6 @@ func testAccExistsAuditLogSettingsResource(t *testing.T, resourceReference strin
 }
 
 func TestAccAuditLogSettingsResourceDisableOnRemoval(t *testing.T) {
-	t.Skip("CBSE-23063: removing audit_log_settings does not disable audit logging on the cluster (Delete is a no-op); enable once Delete resets settings to disabled defaults")
 	clusterResourceName := randomStringWithPrefix("tf_acc_audit_rm_cluster_")
 	resourceName := randomStringWithPrefix("tf_acc_audit_rm_settings_")
 	cidr := generateRandomCIDR()
