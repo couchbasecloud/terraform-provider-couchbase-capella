@@ -39,7 +39,7 @@ resource "couchbase-capella_apikey" "new_apikey" {
 - `allowed_cidrs` (Set of String)
 - `description` (String) - Description for the API key.
  - **Default**: ``
-- `expiry` (Number) - Expiry of the API key in number of days. If set to -1, the token will not expire.
+- `expiry` (Number) - Expiry of the API key in number of days. Must be at least 0.01 days. If set to -1, the token will not expire.
  - **Default**: `180`
 - `resources` (Attributes Set) - Resources are the resource level permissions associated with the API key. To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
  - **Default**: `[]` (see [below for nested schema](#nestedatt--resources))
