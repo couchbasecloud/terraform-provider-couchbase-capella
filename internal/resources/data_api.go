@@ -120,7 +120,7 @@ func (d *DataApi) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	const errorMessageDuringCreate = "Data API configuration update has been processed, but encountered an error while checking the current" +
-		" state of the Data API. You can retry terraform apply at a later time."
+		" state of the Data API. You can retry `terraform apply` at a later time, unexpected error: "
 
 	refreshedState, err := d.checkDataApiStatus(ctx, organizationId, projectId, clusterId)
 	if err != nil {
