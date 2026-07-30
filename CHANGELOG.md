@@ -1,5 +1,36 @@
 # Changelog
 
+## [v1.10.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.10.0) (2026-07-30)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.9.1...v1.10.0)
+
+**Implemented enhancements:**
+
+- \[AV-136695\] Merge Data API feature branch \(feature/AV-136695-data-api-config-support\) in to main [\#715](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/715) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-128959\] Merge Capella Eventing support feature branch  [\#694](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/694) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-136360\] Expose service\_name on private\_endpoint\_service data source [\#690](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/690) ([divyanshjain2108](https://github.com/divyanshjain2108))
+- \[AV-131313\] Add load balancer CIDR support to app service [\#640](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/640) ([JRascagneres](https://github.com/JRascagneres))
+
+**Fixed bugs:**
+
+- \[AV-138536\] Stop unconfigured load balancer CIDR forcing app service replacement [\#728](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/728) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-138196\] Fix private\_endpoints data source crash on non-empty list [\#718](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/718) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-137114\] Retry once before treating enableFailed/disableFailed as terminal [\#701](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/701) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-137441\] Disable audit log settings [\#697](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/697) ([l0n3star](https://github.com/l0n3star))
+- \[AV-137141\] Log resource IDs in acceptance test creation messages [\#696](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/696) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-135369\] Allow App Service to be deployed with a specific version [\#671](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/671) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-128962\] Add cluster validation and free-tier acceptance tests [\#628](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/628) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
+**Closed issues:**
+
+- version should be a variable for app service [\#618](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/618)
+
+**Merged pull requests:**
+
+- \[AV-137114\] Revert "\[AV-137114\] Retry once before treating enableFailed/disableFailed as terminal" [\#723](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/723) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-138193\] Lower app endpoint CRUD test concurrency from 3 to 2 [\#717](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/717) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-138146\] Return known computed states on App Service Log Streaming create error path [\#716](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/716) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
 ## [v1.9.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.9.1) (2026-06-30)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.9.0...v1.9.1)
