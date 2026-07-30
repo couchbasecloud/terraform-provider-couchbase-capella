@@ -69,7 +69,7 @@ func (a *AppService) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequ
 		return
 	}
 
-	// Plan version is null, unknown, or the same as the App Service, so no error.
+	// Configured version is null, unknown, or the same as the App Service, so no error.
 	if config.Version.IsNull() || config.Version.IsUnknown() || config.Version.Equal(state.Version) {
 		return
 	}
