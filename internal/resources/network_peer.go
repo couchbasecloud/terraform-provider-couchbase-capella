@@ -22,9 +22,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &NetworkPeer{}
-	_ resource.ResourceWithConfigure   = &NetworkPeer{}
-	_ resource.ResourceWithImportState = &NetworkPeer{}
+	_ resource.Resource                   = &NetworkPeer{}
+	_ resource.ResourceWithConfigure      = &NetworkPeer{}
+	_ resource.ResourceWithImportState    = &NetworkPeer{}
+	_ resource.ResourceWithValidateConfig = &NetworkPeer{}
 )
 
 const errorMessageWhileNetworkPeerCreation = "There is an error during network peer creation. Please check in Capella to see if any hanging resources" +
@@ -44,6 +45,64 @@ func (n *NetworkPeer) Metadata(_ context.Context, req resource.MetadataRequest, 
 
 func (n *NetworkPeer) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = NetworkPeerSchema()
+}
+
+// ValidateConfig verifies that the populated provider_config block matches the declared
+// provider_type, so a mismatch (e.g. provider_type "azure" with aws_config) is rejected
+// at plan time instead of surfacing as a confusing CSP-specific API error.
+func (n *NetworkPeer) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.NetworkPeer
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Defer validation until Terraform resolves the expressions these values come from.
+	if config.ProviderType.IsNull() || config.ProviderType.IsUnknown() || config.ProviderConfig == nil {
+		return
+	}
+
+	if err := validateProviderConfigMatchesProviderType(config.ProviderType.ValueString(), config.ProviderConfig); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("provider_config"),
+			"Invalid Provider Config",
+			err.Error(),
+		)
+	}
+}
+
+// validateProviderConfigMatchesProviderType checks that exactly one provider_config block is
+// set and that it corresponds to the declared provider_type.
+func validateProviderConfigMatchesProviderType(providerType string, providerConfig *providerschema.ProviderConfig) error {
+	configuredBlocks := make([]string, 0, 3)
+	if providerConfig.AWSConfig != nil {
+		configuredBlocks = append(configuredBlocks, "aws_config")
+	}
+	if providerConfig.GCPConfig != nil {
+		configuredBlocks = append(configuredBlocks, "gcp_config")
+	}
+	if providerConfig.AzureConfig != nil {
+		configuredBlocks = append(configuredBlocks, "azure_config")
+	}
+
+	expectedBlock := strings.ToLower(providerType) + "_config"
+
+	switch {
+	case len(configuredBlocks) == 0:
+		return errors.ErrProviderConfigCannotBeEmpty
+	case len(configuredBlocks) > 1:
+		return fmt.Errorf(
+			"only one of aws_config, gcp_config or azure_config may be set in provider_config, but got: %s",
+			strings.Join(configuredBlocks, ", "),
+		)
+	case configuredBlocks[0] != expectedBlock:
+		return fmt.Errorf(
+			"provider_type %q requires provider_config.%s, but provider_config.%s was configured",
+			providerType, expectedBlock, configuredBlocks[0],
+		)
+	}
+
+	return nil
 }
 
 // Create a network peer for the CSP.
@@ -415,6 +474,12 @@ func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer)
 	}
 	if plan.ClusterId.IsNull() {
 		return errors.ErrClusterIdMissing
+	}
+
+	if plan.ProviderConfig != nil {
+		if err := validateProviderConfigMatchesProviderType(plan.ProviderType.ValueString(), plan.ProviderConfig); err != nil {
+			return err
+		}
 	}
 
 	if plan.ProviderConfig != nil && plan.ProviderConfig.AzureConfig != nil {
