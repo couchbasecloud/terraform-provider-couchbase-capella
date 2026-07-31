@@ -324,7 +324,12 @@ func (d *DataApi) checkDataApiStatus(
 
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out while waiting for data API to reach the desired state: %w", ctx.Err())
+			return nil, fmt.Errorf(
+				"timed out while waiting for data API to reach the desired state (desired data API state: %s, desired network peering state: %s): %w",
+				desiredStateForDataAPI,
+				desiredStateForNetworkPeering,
+				ctx.Err(),
+			)
 		case <-ticker.C:
 		}
 	}
