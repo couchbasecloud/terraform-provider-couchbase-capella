@@ -107,8 +107,12 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 				),
 			},
 			{
-				// Changing the major.minor version is not supported and must be rejected at apply time.
+				// Changing the major.minor version of a deployed app service is not supported and must be
+				// rejected while planning. Asserting at plan time keeps the assertion on the provider's guard:
+				// an apply-time assertion also passes when Terraform recreates the app service instead of
+				// updating it, in which case the API rejects "1.0" and the provider message never appears.
 				Config:      testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, "1.0", 3, 4, 8),
+				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`(?s)version as this is not supported`),
 			},
 		},

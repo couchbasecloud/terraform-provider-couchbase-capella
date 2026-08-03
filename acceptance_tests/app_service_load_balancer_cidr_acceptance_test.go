@@ -11,16 +11,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TestAccAppServiceLoadBalancerCIDR tests the load_balancer_cidr attribute on the
-// app service resource and data source against a dedicated Azure cluster.
-func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
-	t.Skip("provisions a dedicated Azure cluster which is slow and unreliable; run manually to verify load_balancer_cidr")
+// load_balancer_cidr is Azure only, so this file provisions its own Azure cluster. The
+// 192.168.x.0/24 load balancer ranges must not overlap the random 10.x.y.0/23 cluster CIDR.
 
-	// load_balancer_cidr is Azure only and must be a valid IPv4 /24 network address.
-	// The global cluster is AWS, so this test stands up its own Azure cluster. The
-	// 192.168.x.0/24 ranges cannot overlap the random 10.x.y.0/23 cluster CIDR, and
-	// the control plane adds the /24 as an extra VNet address space, so the app
-	// service deploys cleanly.
+// malformedLoadBalancerCIDRs must be values no control plane can accept, so the create
+// always fails and cannot leave a billable App Service behind. 192.168.0.0/16,
+// 192.168.0.5/24 and "" are excluded for that reason: the API may accept or normalise
+// them. They belong here as PlanOnly steps once AV-138729 adds a validator.
+var malformedLoadBalancerCIDRs = []string{
+	"192.168.0.0/244",    // prefix length above 32
+	"999.999.999.999/24", // octets out of range
+	"not-a-cidr",         // not an address
+	"2001:db8::/24",      // IPv6, not IPv4
+	"192.168.0.0",        // missing prefix length
+}
+
+// TestAccAppServiceLoadBalancerCIDR covers the attribute end to end on Azure. It is one
+// test so that all steps share a single cluster: both config builders emit the same
+// cluster block, so it is created once and reused. Rejection cases run first, while no
+// app service exists, so each is a clean create failure rather than a replace-then-fail.
+func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
 	const (
 		loadBalancerCIDR        = "192.168.0.0/24"
 		loadBalancerCIDRChanged = "192.168.1.0/24"
@@ -34,88 +44,147 @@ func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
 	appServiceName := randomStringWithPrefix("tf_acc_app_svc_lb_")
 	clusterCIDR := generateRandomCIDR()
 
-	// This test uses its own cluster and app service (no shared global resources),
-	// so it can run in parallel.
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing, plus data source coverage.
-			{
-				Config: testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDR),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "load_balancer_cidr", loadBalancerCIDR),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "Azure"),
-					resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
-					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
-					resource.TestCheckResourceAttrSet(resourceReference, "id"),
-					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
-					resource.TestCheckResourceAttrSet(resourceReference, "current_state"),
-					resource.TestCheckResourceAttrSet(resourceReference, "version"),
-					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
-					testAccCheckAppServicesDataSourceLoadBalancerCIDR(dataSourceReference, resourceReference, loadBalancerCIDR),
-				),
-			},
-			// ImportState testing confirms the API round-trips load_balancer_cidr:
-			// on import there is no prior state, so the value comes from the API.
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateAppServiceImportId(resourceReference),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// load_balancer_cidr is create-only, so changing it must force a
-			// replace. Plan checks require an apply step, so this recreates the
-			// app service with the new CIDR.
-			{
-				Config: testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDRChanged),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionReplace),
-					},
+	steps := make([]resource.TestStep, 0, len(malformedLoadBalancerCIDRs)+4)
+
+	// Asserted as "the create must fail" rather than "the plan must fail" so it holds
+	// both now, where only the API rejects these, and after AV-138729 adds a validator.
+	for _, cidr := range malformedLoadBalancerCIDRs {
+		steps = append(steps, resource.TestStep{
+			Config: testAccAppServiceLoadBalancerCIDRMalformedConfig(resourceName, clusterName, appServiceName, clusterCIDR, cidr),
+			// Matches the provider's create wrapper, not API wording, but still pins the
+			// failure to the app service rather than the cluster.
+			ExpectError: regexp.MustCompile(`(?s)error during app service creation`),
+		})
+	}
+
+	steps = append(steps,
+		// Create and Read. The data source reads the org-wide list endpoint while the
+		// resource reads the single-resource GET, so this checks the two agree.
+		resource.TestStep{
+			Config: testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDR, 2),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "load_balancer_cidr", loadBalancerCIDR),
+				resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "Azure"),
+				resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
+				resource.TestCheckResourceAttr(resourceReference, "nodes", "2"),
+				resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
+				resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
+				resource.TestCheckResourceAttrSet(resourceReference, "id"),
+				resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
+				resource.TestCheckResourceAttrSet(resourceReference, "current_state"),
+				resource.TestCheckResourceAttrSet(resourceReference, "version"),
+				resource.TestCheckResourceAttrSet(resourceReference, "etag"),
+				testAccCheckAppServicesDataSourceLoadBalancerCIDR(dataSourceReference, resourceReference, loadBalancerCIDR),
+			),
+		},
+		// On import there is no prior state, so the value must come from the API.
+		resource.TestStep{
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateAppServiceImportId(resourceReference),
+			ImportState:       true,
+			ImportStateVerify: true,
+		},
+		// Scaling with load_balancer_cidr unchanged must be in place, not a replacement.
+		// Regression guard for AV-138536, fixed in da49090.
+		resource.TestStep{
+			Config: testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDR, 3),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "load_balancer_cidr", loadBalancerCIDRChanged),
-				),
 			},
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "nodes", "3"),
+				resource.TestCheckResourceAttr(resourceReference, "load_balancer_cidr", loadBalancerCIDR),
+				resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
+				resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
+				resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
+			),
 		},
-	})
-}
-
-// TestAccAppServiceLoadBalancerCIDRAzureOnly verifies the API rejects a requested
-// load balancer CIDR on a non-Azure cluster and that the provider surfaces the error.
-// The global cluster is AWS, and the Azure-only check runs before the "app service
-// already exists" check, so the global cluster's existing app service is irrelevant.
-func TestAccAppServiceLoadBalancerCIDRAzureOnly(t *testing.T) {
-	const loadBalancerCIDR = "192.168.0.0/24"
-
-	resourceName := randomStringWithPrefix("tf_acc_app_svc_lb_aws_")
-	appServiceName := randomStringWithPrefix("tf_acc_app_svc_lb_aws_")
+		// load_balancer_cidr is create-only, so changing it must force a replace.
+		resource.TestStep{
+			Config: testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDRChanged, 3),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionReplace),
+				},
+			},
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "load_balancer_cidr", loadBalancerCIDRChanged),
+			),
+		},
+	)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAppServiceLoadBalancerCIDRAzureOnlyConfig(resourceName, appServiceName, loadBalancerCIDR),
-				ExpectError: regexp.MustCompile(`(?s)only supported for Azure App Services`),
-			},
-		},
+		Steps:                    steps,
 	})
 }
 
-func testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDR string) string {
+// testAccAppServiceLoadBalancerCIDRConfig adds the app service and data source to the
+// shared Azure cluster.
+func testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDR string, nodes int) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_cluster" "%[5]s" {
+%[10]s
+
+resource "couchbase-capella_app_service" "%[4]s" {
+  organization_id    = "%[2]s"
+  project_id         = "%[3]s"
+  cluster_id         = couchbase-capella_cluster.%[5]s.id
+  name               = "%[6]s"
+  nodes              = %[9]d
+  load_balancer_cidr = "%[8]s"
+  compute = {
+    cpu = 2
+    ram = 4
+  }
+}
+
+data "couchbase-capella_app_services" "%[7]s" {
   organization_id = "%[2]s"
-  project_id      = "%[3]s"
-  name            = "%[5]s"
+
+  depends_on = [couchbase-capella_app_service.%[4]s]
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, appServiceName, dataSourceName, loadBalancerCIDR, nodes,
+		testAccAzureClusterForAppServiceConfig(clusterName, clusterCIDR))
+}
+
+// testAccAppServiceLoadBalancerCIDRMalformedConfig omits the data source, for steps
+// where the app service is never created.
+func testAccAppServiceLoadBalancerCIDRMalformedConfig(resourceName, clusterName, appServiceName, clusterCIDR, loadBalancerCIDR string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+%[7]s
+
+resource "couchbase-capella_app_service" "%[4]s" {
+  organization_id    = "%[2]s"
+  project_id         = "%[3]s"
+  cluster_id         = couchbase-capella_cluster.%[5]s.id
+  name               = "%[6]s"
+  load_balancer_cidr = "%[8]s"
+  compute = {
+    cpu = 2
+    ram = 4
+  }
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, appServiceName,
+		testAccAzureClusterForAppServiceConfig(clusterName, clusterCIDR), loadBalancerCIDR)
+}
+
+func testAccAzureClusterForAppServiceConfig(clusterName, clusterCIDR string) string {
+	return fmt.Sprintf(`
+resource "couchbase-capella_cluster" "%[3]s" {
+  organization_id = "%[1]s"
+  project_id      = "%[2]s"
+  name            = "%[3]s"
   description     = "Terraform Acceptance Test app service load balancer CIDR"
   cloud_provider = {
     type   = "azure"
     region = "eastus"
-    cidr   = "%[7]s"
+    cidr   = "%[4]s"
   }
   service_groups = [
     {
@@ -141,47 +210,11 @@ resource "couchbase-capella_cluster" "%[5]s" {
     timezone = "PT"
   }
 }
-
-resource "couchbase-capella_app_service" "%[4]s" {
-  organization_id    = "%[2]s"
-  project_id         = "%[3]s"
-  cluster_id         = couchbase-capella_cluster.%[5]s.id
-  name               = "%[6]s"
-  load_balancer_cidr = "%[8]s"
-  compute = {
-    cpu = 2
-    ram = 4
-  }
+`, globalOrgId, globalProjectId, clusterName, clusterCIDR)
 }
 
-data "couchbase-capella_app_services" "%[9]s" {
-  organization_id = "%[2]s"
-
-  depends_on = [couchbase-capella_app_service.%[4]s]
-}
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, appServiceName, clusterCIDR, loadBalancerCIDR, dataSourceName)
-}
-
-func testAccAppServiceLoadBalancerCIDRAzureOnlyConfig(resourceName, appServiceName, loadBalancerCIDR string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "couchbase-capella_app_service" "%[5]s" {
-  organization_id    = "%[2]s"
-  project_id         = "%[3]s"
-  cluster_id         = "%[4]s"
-  name               = "%[6]s"
-  load_balancer_cidr = "%[7]s"
-  compute = {
-    cpu = 2
-    ram = 4
-  }
-}
-`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName, appServiceName, loadBalancerCIDR)
-}
-
-// testAccCheckAppServicesDataSourceLoadBalancerCIDR finds the app service by id in
-// the app_services data source list and asserts its load_balancer_cidr.
+// testAccCheckAppServicesDataSourceLoadBalancerCIDR asserts the app service's
+// load_balancer_cidr as reported by the org-wide list endpoint.
 func testAccCheckAppServicesDataSourceLoadBalancerCIDR(dataSourceReference, resourceReference, wantCIDR string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		appService, ok := state.RootModule().Resources[resourceReference]

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -203,6 +204,25 @@ func TestAccClusterResourceGCP(t *testing.T) {
 			},
 			{
 				Config: testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, cidr),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// Guards the AV-138536 class of defect for clusters: couchbase_server
+						// is Optional+Computed with no Default, so omitting it from config —
+						// as this config does — makes the framework mark it unknown on every
+						// update plan. It is safe today only because it also carries
+						// UseStateForUnknown, which restores the planned value to the state
+						// value so Terraform ignores the requires-replace path.
+						//
+						// Drop that modifier and this scale silently becomes a cluster
+						// destroy-and-recreate. Asserting the action here costs nothing, since
+						// this step already performs an in-place scale.
+						//
+						// TestSchemasAvoidReplaceOnUnknown in internal/resources catches the
+						// same regression at the schema level in milliseconds; this is the
+						// end-to-end backstop.
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
