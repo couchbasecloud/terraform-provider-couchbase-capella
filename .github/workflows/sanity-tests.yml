@@ -33,15 +33,14 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v4 # this action has caching built in
+        # Built-in caching keys on go.sum and covers the build cache as well as
+        # ~/go/pkg/mod, so it restores across runs. A hand-rolled actions/cache
+        # step keyed on github.run_id never would.
+        uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-          cache: false
+          cache: true
         id: go
-      - uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: cache-${{ github.run_id }}
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.14.9

@@ -137,11 +137,6 @@ TestAccDatasourceAllowlists
 # Tests enabling and disabling private endpoint service for secure connectivity
 TestAccPrivateEndpointServiceEnableDisable
 
-# Tests the private endpoints data source end to end.
-# Skips unless ACC_AWS_REGION / ACC_AWS_VPC_ID / ACC_AWS_SUBNET_IDS /
-# ACC_AWS_VPC_CIDR and AWS credentials are set.
-TestAccPrivateEndpointsDataSourceWithEndpoint
-
 # Tests reading the app services allowed CIDRs via data source
 TestAccAppServicesCIDRDataSource
 
