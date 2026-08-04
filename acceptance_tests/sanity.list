@@ -77,8 +77,9 @@ TestAccClusterDeletionProtectionResource
 # ----------------------------------------
 # 5. FREE TIER CLUSTER
 # ----------------------------------------
-# Tests free tier cluster create, update, on/off and delete
-TestAccFreeTierClusterLifecycle
+# EXCLUDED FROM THE PR GATE: TestAccFreeTierClusterLifecycle is sequential and
+# builds a free tier cluster, bucket, app service and an on/off cycle. It runs
+# in the full suite on main.
 
 # ----------------------------------------
 # 6. DATA MANAGEMENT (Bucket / Scope / Collection)
@@ -134,8 +135,8 @@ TestAccAllowListWithRequiredFields
 # Tests listing allowlists via data source
 TestAccDatasourceAllowlists
 
-# Tests enabling and disabling private endpoint service for secure connectivity
-TestAccPrivateEndpointServiceEnableDisable
+# EXCLUDED FROM THE PR GATE: TestAccPrivateEndpointServiceEnableDisable is
+# sequential and each enable/disable is a cluster-level operation. Runs on main.
 
 # Tests reading the app services allowed CIDRs via data source
 TestAccAppServicesCIDRDataSource
@@ -161,11 +162,11 @@ TestAccDatasourceUsers
 # ----------------------------------------
 # 11. APP SERVICES (Data Sync)
 # ----------------------------------------
-# Tests app service creation (non-parallel test)
-TestAppServiceResource
-
-# Tests app service creation with optional fields and scaling
-TestAccAppServiceResourceOptionalFieldsAndScale
+# EXCLUDED FROM THE PR GATE: TestAppServiceResource and
+# TestAccAppServiceResourceOptionalFieldsAndScale are sequential and each
+# provisions a cluster plus an app service (the second also scales it), which
+# together dominated the gate's wall clock. Both run on main.
+# The log streaming test below still covers the app service API surface.
 
 # Tests listing app services via data source
 TestAccDatasourceAppServices
@@ -279,8 +280,8 @@ TestAccDatasourceAuditLogEventIDs
 # ----------------------------------------
 # 17. DATA API
 # ----------------------------------------
-# Tests data API resource and data source
-TestAccDataApiResource
+# EXCLUDED FROM THE PR GATE: TestAccDataApiResource is sequential and drives
+# enable -> peering -> disable transitions on the shared cluster. Runs on main.
 
 # ----------------------------------------
 # 18. EVENTS
