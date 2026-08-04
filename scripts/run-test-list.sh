@@ -38,7 +38,12 @@ echo "=========================================="
 echo "Test pattern: $TEST_PATTERN"
 echo ""
 
+# Matches the timeout used by `make testacc`. The sanity list provisions real
+# clusters and app services, so a short timeout panics mid-run rather than
+# failing a test.
+TEST_TIMEOUT="${TEST_TIMEOUT:-180m}"
+
 # Run the tests
-CAPELLA_OPENAPI_SPEC_PATH="$(pwd)/openapi.generated.yaml" \
+CAPELLA_OPENAPI_SPEC_PATH="${CAPELLA_OPENAPI_SPEC_PATH:-$(pwd)/openapi.generated.yaml}" \
 TF_ACC=1 \
-go test -timeout=30m -v ./acceptance_tests/ -run "^(${TEST_PATTERN})$"
+go test -timeout="${TEST_TIMEOUT}" -v ./acceptance_tests/ -run "^(${TEST_PATTERN})$"

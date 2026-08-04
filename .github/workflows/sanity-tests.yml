@@ -1,22 +1,27 @@
-name: Acceptance Tests
+name: Sanity Tests
 
-# The full acceptance suite. Pull requests are gated by the P0 subset in
-# sanity-tests.yml instead: running both against the same Capella organization
-# duplicates cost and lets the two runs collide on shared test fixtures.
-# Use workflow_dispatch to run the full suite against a branch on demand.
+# Runs the P0 acceptance test suite (acceptance_tests/sanity.list) as the
+# pull request gate. The full acceptance suite lives in acceptance-tests.yml.
+# No paths filter: the sanity suite gates every pull request.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'acceptance_tests/**'
-      - 'internal/**'
+  pull_request:
+
+# Serialize per PR so two runs of the same branch do not provision against the
+# shared Capella organization at once. cancel-in-progress stays false on
+# purpose: cancelling mid-run orphans real clusters and app services.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    name: Build
+  sanity:
+    name: P0 Sanity Suite
     runs-on: ubuntu-latest
+    timeout-minutes: 200
 
     env:
       TF_VAR_auth_token: ${{ secrets.CAPELLA_AUTH_TOKEN }}
@@ -41,5 +46,5 @@ jobs:
         with:
           terraform_version: 1.14.9
           terraform_wrapper: false
-      - name: Run acceptance tests
-        run: make testacc
+      - name: Run sanity tests
+        run: make testacc-sanity

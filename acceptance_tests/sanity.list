@@ -1,9 +1,17 @@
 # ========================================
-# Sanity Test Suite - Critical Path Tests
+# Sanity Test Suite - P0 / Critical Path Tests
 # ========================================
-# This list contains essential smoke tests that verify core functionality
+# This list contains the P0 tests: the primary happy-path (create/read/update/
+# import/delete) test for every resource and data source the provider exposes.
+# Negative/validation-only tests (invalid UUIDs, missing required fields, bad
+# enums) are P1+ and deliberately excluded, as are tests that unconditionally
+# t.Skip (open bugs or manual-only runs).
+#
 # Run with: make testacc-list (or ./scripts/run-test-list.sh acceptance_tests/sanity.list)
 # Lines starting with # are comments and will be ignored
+#
+# NOTE: names are matched with an anchored regex (^(...)$) by
+# scripts/run-test-list.sh, so a typo silently runs nothing. Keep names exact.
 # ========================================
 
 # ----------------------------------------
@@ -18,23 +26,95 @@ TestAccReadOrganization
 # Tests basic project creation with required fields only
 TestAccProjectCreateWithReqFields
 
+# Tests full project lifecycle: create, import and update
+TestAccProjectResource
+
+# Tests reading a single project via data source
+TestAccReadProject
+
+# Tests listing projects via data source
+TestAccDatasourceProjects
+
 # ----------------------------------------
 # 3. CLUSTER (Critical Resource)
 # ----------------------------------------
 # Tests AWS cluster creation with only required fields - most common use case
 TestAccClusterResourceWithOnlyReqFieldAWS
 
+# Tests AWS cluster creation with optional fields populated
+TestAccClusterResourceWithOptionalFieldAWS
+
 # Tests GCP cluster creation and horizontal scaling
 TestAccClusterResourceGCP
 
+# Tests Azure disk auto-expansion feature
+TestAccClusterResourceAzureDiskAutoExpansion
+
+# Tests reading a single cluster via data source
+TestAccReadClusterDatasource
+
+# Tests reading cluster stats via data source
+TestAccDatasourceClusterStats
+
+# Tests reading the cluster certificate via data source
+TestAccDatasourceCertificate
+
 # ----------------------------------------
-# 4. BUCKET (Data Layer)
+# 4. CLUSTER LIFECYCLE (On/Off, Deletion Protection)
 # ----------------------------------------
+# Tests turning a cluster off and on on demand
+TestAccClusterOnOffOnDemandResource
+
+# Tests scheduled cluster on/off windows
+TestAccClusterOnOffScheduleResource
+
+# Tests reading the cluster on/off schedule via data source
+TestAccDatasourceClusterOnOffSchedule
+
+# Tests cluster deletion protection
+TestAccClusterDeletionProtectionResource
+
+# ----------------------------------------
+# 5. FREE TIER CLUSTER
+# ----------------------------------------
+# Tests free tier cluster create, update, on/off and delete
+TestAccFreeTierClusterLifecycle
+
+# ----------------------------------------
+# 6. DATA MANAGEMENT (Bucket / Scope / Collection)
+# ----------------------------------------
+# Tests bucket creation with required fields only
+TestAccBucketResourceRequiredOnly
+
+# Tests updating a bucket in place
+TestAccBucketResourceUpdate
+
+# Tests listing buckets via data source
+TestAccDatasourceBuckets
+
+# Tests flushing a bucket
+TestAccFlushBucketResource
+
+# Tests scope creation
+TestAccScopeResource
+
+# Tests listing scopes via data source
+TestAccDatasourceScopes
+
+# Tests collection creation without a TTL
+TestAccCollectionResourceNoTTL
+
+# Tests listing collections via data source
+TestAccDatasourceCollections
+
 # Tests sample bucket creation (travel-sample)
 TestAccSampleBucket
 
+# Tests listing sample buckets via data source
+TestAccDatasourceSampleBuckets
+
 # ----------------------------------------
-# 5. DATABASE CREDENTIALS (Access Control)
+# 7. DATABASE CREDENTIALS (Access Control)
 # ----------------------------------------
 # Tests creating database credentials with required fields
 TestAccDatabaseCredentialWithReqFields
@@ -42,56 +122,182 @@ TestAccDatabaseCredentialWithReqFields
 # Tests creating database credentials with optional password field
 TestAccDatabaseCredentialWithOptionalFields
 
+# Tests listing database credentials via data source
+TestAccDatasourceDatabaseCredentials
+
 # ----------------------------------------
-# 6. SECURITY & NETWORKING
+# 8. SECURITY & NETWORKING
 # ----------------------------------------
 # Tests IP allowlist creation with required fields
 TestAccAllowListWithRequiredFields
 
-# Tests enabling private endpoint service for secure connectivity
-TestAccPrivateEndpointServiceEnable
+# Tests listing allowlists via data source
+TestAccDatasourceAllowlists
+
+# Tests enabling and disabling private endpoint service for secure connectivity
+TestAccPrivateEndpointServiceEnableDisable
+
+# Tests the private endpoints data source end to end.
+# Skips unless ACC_AWS_REGION / ACC_AWS_VPC_ID / ACC_AWS_SUBNET_IDS /
+# ACC_AWS_VPC_CIDR and AWS credentials are set.
+TestAccPrivateEndpointsDataSourceWithEndpoint
+
+# Tests reading the app services allowed CIDRs via data source
+TestAccAppServicesCIDRDataSource
 
 # ----------------------------------------
-# 7. API KEYS (Authentication)
+# 9. API KEYS (Authentication)
 # ----------------------------------------
 # Tests API key creation with only required fields
 TestAccApiKeyResourceWithOnlyReqField
 
+# Tests listing API keys via data source
+TestAccDatasourceApiKeys
+
 # ----------------------------------------
-# 8. USERS (Access Management)
+# 10. USERS (Access Management)
 # ----------------------------------------
 # Tests user creation, import, and update operations
 TestAccUserResource
 
+# Tests listing users via data source
+TestAccDatasourceUsers
+
 # ----------------------------------------
-# 9. APP SERVICES (Data Sync)
+# 11. APP SERVICES (Data Sync)
 # ----------------------------------------
 # Tests app service creation (non-parallel test)
 TestAppServiceResource
 
-# Tests app endpoint creation
+# Tests app service creation with optional fields and scaling
+TestAccAppServiceResourceOptionalFieldsAndScale
+
+# Tests listing app services via data source
+TestAccDatasourceAppServices
+
+# Tests app service log streaming resource and data source
+TestAccAppServiceLogStreaming
+
+# ----------------------------------------
+# 12. APP ENDPOINTS
+# ----------------------------------------
+# Tests app endpoint creation (includes resync and logging config steps)
 TestAccAppEndpoint
 
 # Tests app endpoint activation status management
 TestAccAppEndpointActivationStatus
 
+# Tests reading a single app endpoint via data source
+TestAccAppEndpointDataSource
+
+# Tests the filtered app endpoints list data source
+# (the unfiltered TestAccAppEndpointsDataSource is skipped under AV-130079)
+TestAccAppEndpointsDataSourceFiltered
+
+# Tests reading app endpoint activation status via data source
+TestAccAppEndpointActivationStatusDataSource
+
+# Tests app endpoint access control function
+TestAccAppEndpointAccessControlFunction
+
+# Tests app endpoint OIDC provider configuration
+TestAccAppEndpointOidcProvider
+
+# Tests app endpoint CORS configuration
+TestAccAppEndpointCorsResource
+
+# Tests app endpoint import filter
+TestAccAppEndpointImportFilter
+
 # ----------------------------------------
-# 10. QUERY INDEXES (Performance)
+# 13. QUERY INDEXES (Performance)
 # ----------------------------------------
 # Tests GSI (Global Secondary Index) creation
 TestAccGSI
 
+# Tests listing query indexes via data source
+TestAccDatasourceQueryIndexes
+
+# Tests the query index monitor data source against a ready index
+TestAccDatasourceQueryIndexMonitorReady
+
 # ----------------------------------------
-# 11. BACKUP & RECOVERY
+# 14. EVENTING
 # ----------------------------------------
+# Tests eventing function creation with required fields only
+TestAccEventingFunctionResourceRequiredOnly
+
+# Tests reading a single eventing function via data source
+TestAccDatasourceEventingFunction
+
+# Tests listing eventing functions via data source
+TestAccDatasourceEventingFunctions
+
+# Tests exporting an eventing function via data source
+TestAccDatasourceEventingFunctionExport
+
+# ----------------------------------------
+# 15. BACKUP & RECOVERY
+# ----------------------------------------
+# Tests on-demand backup creation
+TestAccBackupResource
+
+# Tests backup schedule configuration
+TestAccBackupScheduleResource
+
 # Tests snapshot backup creation
 TestAccSnapshotBackupResource
 
 # Tests snapshot backup schedule configuration
 TestAccSnapshotBackupScheduleResource
 
+# Tests reading a single cloud snapshot backup via data source
+TestAccCloudSnapshotBackupDatasource
+
+# Tests listing cloud snapshot backups for a cluster via data source
+TestAccCloudSnapshotBackupsDatasource
+
+# Tests listing cloud snapshot backups for a project via data source
+TestAccCloudProjectSnapshotBackupsDatasource
+
+# Tests reading the cloud snapshot backup schedule via data source
+TestAccDatasourceCloudSnapshotBackupSchedule
+
+# Tests reading a single cloud snapshot restore via data source
+TestAccDatasourceCloudSnapshotRestore
+
+# Tests listing cloud snapshot restores via data source
+TestAccDatasourceCloudSnapshotRestores
+
 # ----------------------------------------
-# 12. AZURE-SPECIFIC FEATURES
+# 16. AUDIT LOGGING
 # ----------------------------------------
-# Tests Azure disk auto-expansion feature
-TestAccClusterResourceAzureDiskAutoExpansion
+# Tests audit log settings resource
+TestAccAuditLogSettingsResource
+
+# Tests reading audit log settings via data source
+TestAccDatasourceAuditLogSettings
+
+# Tests reading audit log event IDs via data source
+TestAccDatasourceAuditLogEventIDs
+
+# ----------------------------------------
+# 17. DATA API
+# ----------------------------------------
+# Tests data API resource and data source
+TestAccDataApiResource
+
+# ----------------------------------------
+# 18. EVENTS
+# ----------------------------------------
+# Tests listing organization events via data source
+TestAccDatasourceEvents
+
+# Tests reading a single organization event via data source
+TestAccDatasourceEvent
+
+# Tests listing project events via data source
+TestAccDatasourceProjectEvents
+
+# Tests reading a single project event via data source
+TestAccDatasourceProjectEvent
