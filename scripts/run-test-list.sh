@@ -77,17 +77,32 @@ if [ -n "$UNKNOWN_NAMES" ]; then
     exit 1
 fi
 
+# Matches the timeout used by `make testacc`. The sanity list provisions real
+# clusters and app services, so a short timeout panics mid-run rather than
+# failing a test.
+TEST_TIMEOUT="${TEST_TIMEOUT:-180m}"
+
+# `go test -parallel` defaults to GOMAXPROCS, which is the wrong dimension here:
+# these tests are almost entirely spent polling Capella while it provisions
+# clusters, not burning CPU. Left at the default, a 4-vCPU CI runner gets 4 lanes
+# for ~60 parallel tests while a 14-core laptop gets 14, so CI is several times
+# slower than a local run. Set it explicitly instead.
+#
+# The practical ceiling is the Capella organization's quota and rate limits, not
+# the machine - raise with care and watch for 429s and quota errors.
+TEST_PARALLELISM="${TEST_PARALLELISM:-16}"
+
 echo "=========================================="
 echo "Running Sanity Tests from: $TEST_LIST_FILE"
 echo "=========================================="
 echo "Tests requested: $EXPECTED_COUNT"
 echo "Test pattern: $TEST_PATTERN"
 echo ""
-
-# Matches the timeout used by `make testacc`. The sanity list provisions real
-# clusters and app services, so a short timeout panics mid-run rather than
-# failing a test.
-TEST_TIMEOUT="${TEST_TIMEOUT:-180m}"
+# Logged because wall-clock is dominated by how many tests run at once, and the
+# available core count differs sharply between a laptop and a CI runner.
+echo "Parallelism: $TEST_PARALLELISM lanes (cores available: $(getconf _NPROCESSORS_ONLN 2>/dev/null || echo unknown))"
+echo "Timeout: $TEST_TIMEOUT"
+echo ""
 
 TEST_LOG="$(mktemp)"
 trap 'rm -f "$TEST_LOG"' EXIT
@@ -96,7 +111,7 @@ trap 'rm -f "$TEST_LOG"' EXIT
 set +e
 CAPELLA_OPENAPI_SPEC_PATH="${CAPELLA_OPENAPI_SPEC_PATH:-$REPO_ROOT/openapi.generated.yaml}" \
 TF_ACC=1 \
-go test -timeout="${TEST_TIMEOUT}" -v ./acceptance_tests/ -run "^(${TEST_PATTERN})$" 2>&1 | tee "$TEST_LOG"
+go test -timeout="${TEST_TIMEOUT}" -parallel "${TEST_PARALLELISM}" -v ./acceptance_tests/ -run "^(${TEST_PATTERN})$" 2>&1 | tee "$TEST_LOG"
 TEST_STATUS="${PIPESTATUS[0]}"
 set -e
 
