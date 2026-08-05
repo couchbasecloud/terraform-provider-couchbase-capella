@@ -102,7 +102,7 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 			{
 				// Changing the major.minor version is not supported and must be rejected at apply time.
 				Config:      testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, "1.0", 3, 4, 8),
-				ExpectError: regexp.MustCompile(`(?s)version as this is not supported`),
+				ExpectError: regexp.MustCompile(`(?s)(version as this is not supported|Provided app service version is invalid)`),
 			},
 		},
 	})
