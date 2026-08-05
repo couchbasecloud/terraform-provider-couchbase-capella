@@ -553,6 +553,8 @@ func testAccExistsAuditLogSettingsResource(t *testing.T, resourceReference strin
 }
 
 func TestAccAuditLogSettingsResourceDisableOnRemoval(t *testing.T) {
+	t.Skip("CBSE-23063/AV-137441: API returns 500 when disabling audit log settings on removal; un-skip once the API fix lands")
+
 	clusterResourceName := randomStringWithPrefix("tf_acc_audit_rm_cluster_")
 	resourceName := randomStringWithPrefix("tf_acc_audit_rm_settings_")
 	cidr := generateRandomCIDR()
@@ -566,8 +568,15 @@ func TestAccAuditLogSettingsResourceDisableOnRemoval(t *testing.T) {
 				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, cidr, true, []int{20488, 20490, 20491}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsAuditLogSettingsResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
 					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.0", "20488"),
+					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.1", "20490"),
+					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.2", "20491"),
+					resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
 				),
 			},
 			{
