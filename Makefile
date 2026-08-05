@@ -103,19 +103,6 @@ docs-lint: ## Lint documentation
 TEST_FILES ?= $$(go list ./... | grep -v acceptance_tests)
 TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 
-# `go test -parallel` defaults to GOMAXPROCS, which caps concurrency by core
-# count. Acceptance tests are I/O bound - they spend their time polling Capella
-# while it provisions clusters - so the default hands a 4-vCPU CI runner 4 lanes
-# where a 14-core laptop gets 14, making CI several times slower for no reason.
-#
-# The real ceiling is the Capella organization's quota and rate limits, not the
-# machine: raise with care and watch for 429s and quota errors.
-#
-# Exported so scripts/run-test-list.sh picks up the same override, keeping
-# `make testacc` and `make testacc-sanity` on one knob.
-TEST_PARALLELISM ?= 16
-export TEST_PARALLELISM
-
 .PHONY: test
 test: ## Run unit tests
 	@go test $(TEST_FILES) $(TEST_FLAGS)
@@ -125,7 +112,7 @@ testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VA
 	@[ "${TF_VAR_auth_token}" ] || ( echo "ERROR: export TF_VAR_auth_token before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_host}" ] || ( echo "ERROR: export TF_VAR_host before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_organization_id}" ] || ( echo "ERROR: export TF_VAR_organization_id before running acceptance tests"; exit 1 )
-	@TF_ACC=1 go test -timeout=240m -parallel $(TEST_PARALLELISM) -v ./acceptance_tests/
+	@TF_ACC=1 go test -timeout=240m -v ./acceptance_tests/
 
 TEST_LIST ?= acceptance_tests/sanity.list
 
