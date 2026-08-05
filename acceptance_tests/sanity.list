@@ -3,15 +3,7 @@
 # ========================================
 # This list contains the P0 tests: the primary happy-path (create/read/update/
 # import/delete) test for every resource and data source the provider exposes.
-# Negative/validation-only tests (invalid UUIDs, missing required fields, bad
-# enums) are P1+ and deliberately excluded, as are tests that unconditionally
-# t.Skip (open bugs or manual-only runs).
 #
-# Run with: make testacc-list (or ./scripts/run-test-list.sh acceptance_tests/sanity.list)
-# Lines starting with # are comments and will be ignored
-#
-# NOTE: names are matched with an anchored regex (^(...)$) by
-# scripts/run-test-list.sh, so a typo silently runs nothing. Keep names exact.
 # ========================================
 
 # ----------------------------------------
@@ -135,9 +127,6 @@ TestAccAllowListWithRequiredFields
 # Tests listing allowlists via data source
 TestAccDatasourceAllowlists
 
-# EXCLUDED FROM THE PR GATE: TestAccPrivateEndpointServiceEnableDisable is
-# sequential and each enable/disable is a cluster-level operation. Runs on main.
-
 # Tests reading the app services allowed CIDRs via data source
 TestAccAppServicesCIDRDataSource
 
@@ -162,11 +151,6 @@ TestAccDatasourceUsers
 # ----------------------------------------
 # 11. APP SERVICES (Data Sync)
 # ----------------------------------------
-# EXCLUDED FROM THE PR GATE: TestAppServiceResource and
-# TestAccAppServiceResourceOptionalFieldsAndScale are sequential and each
-# provisions a cluster plus an app service (the second also scales it), which
-# together dominated the gate's wall clock. Both run on main.
-# The log streaming test below still covers the app service API surface.
 
 # Tests listing app services via data source
 TestAccDatasourceAppServices

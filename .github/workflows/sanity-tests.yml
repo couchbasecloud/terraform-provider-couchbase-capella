@@ -1,15 +1,11 @@
 name: Sanity Tests
 
 # Runs the P0 acceptance test suite (acceptance_tests/sanity.list) as the
-# pull request gate. The full acceptance suite lives in acceptance-tests.yml.
-# No paths filter: the sanity suite gates every pull request.
+# pull request gate.
 on:
   workflow_dispatch:
   pull_request:
 
-# Serialize per PR so two runs of the same branch do not provision against the
-# shared Capella organization at once. cancel-in-progress stays false on
-# purpose: cancelling mid-run orphans real clusters and app services.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
@@ -33,9 +29,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
       - name: Set up Go
-        # Built-in caching keys on go.sum and covers the build cache as well as
-        # ~/go/pkg/mod, so it restores across runs. A hand-rolled actions/cache
-        # step keyed on github.run_id never would.
+        
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'

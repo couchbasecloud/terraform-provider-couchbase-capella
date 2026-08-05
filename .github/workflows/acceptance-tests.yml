@@ -1,9 +1,5 @@
 name: Acceptance Tests
 
-# The full acceptance suite. Pull requests are gated by the P0 subset in
-# sanity-tests.yml instead: running both against the same Capella organization
-# duplicates cost and lets the two runs collide on shared test fixtures.
-# Use workflow_dispatch to run the full suite against a branch on demand.
 on:
   workflow_dispatch:
   push:
