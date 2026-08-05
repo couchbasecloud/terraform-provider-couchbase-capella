@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -80,6 +81,12 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 			},
 			{
 				Config: testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, version, 3, 4, 8),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// Verify that scaling happens in place
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
@@ -100,9 +107,17 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 				),
 			},
 			{
-				// Changing the major.minor version is not supported and must be rejected at apply time.
+				// Changing the major.minor version is not supported and must be rejected at plan time.
 				Config:      testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, "1.0", 3, 4, 8),
-				ExpectError: regexp.MustCompile(`(?s)(version as this is not supported|Provided app service version is invalid)`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`(?s)version as this is not supported`),
+			},
+			{
+				// The rejection must also apply when the app service is being replaced for another reason, as the replacement would otherwise be created with the new version.
+				// This test will need modifying when AV-65838 is fixed, as name will no longer be tagged with requires replace.
+				Config:      testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName+"_renamed", description, "1.0", 3, 4, 8),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`(?s)version as this is not supported`),
 			},
 		},
 	})

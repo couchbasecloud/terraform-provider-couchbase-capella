@@ -19,6 +19,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
   cluster_id      = "<cluster_id>"
   name            = "MyAppSyncService"
   description     = "My app sync service."
+  version         = "4.0"
   nodes           = 2
   compute = {
     cpu = 2
@@ -51,8 +52,10 @@ resource "couchbase-capella_app_service" "new_app_service" {
 
 - `description` (String) - A short description of the App Service.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `load_balancer_cidr` (String)
+- `load_balancer_cidr` (String) - Optional. Pins the CIDR block used for the App Service load balancer subnet. Supported for Azure App Services only and rejected for other providers. When omitted, the CIDR is allocated dynamically.
+ - **Constraints**: Pattern: `^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$`
 - `nodes` (Number) - Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12.
+- `version` (String) - The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 ### Read-Only
 
@@ -62,7 +65,6 @@ resource "couchbase-capella_app_service" "new_app_service" {
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
 - `id` (String) - The ID of the App Service created.
  - **Format**: UUID (GUID4)
-- `version` (String) - The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 <a id="nestedatt--compute"></a>
 ### Nested Schema for `compute`
