@@ -50,6 +50,7 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 - `storage_backend` (String)
 - `time_to_live_in_seconds` (Number)
 - `type` (String)
+- `vbuckets` (Number)
 
 <a id="nestedatt--stats"></a>
 ### Nested Schema for `stats`
