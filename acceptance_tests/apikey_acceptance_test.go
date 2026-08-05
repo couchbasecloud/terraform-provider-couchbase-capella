@@ -509,9 +509,10 @@ func generateApiKeyImportIdForResource(resourceReference string) resource.Import
 func TestAccApiKeyResourceInvalidExpiryDirectAPI(t *testing.T) {
 	data := newTestClient(t)
 
+	name := randomStringWithPrefix("tf_acc_apikey_expiry_direct_")
 	expiry := float32(0)
 	req := api.CreateApiKeyRequest{
-		Name:              "tf_acc_apikey_expiry_direct_test",
+		Name:              name,
 		OrganizationRoles: []string{"organizationMember"},
 		Expiry:            &expiry,
 	}
@@ -521,13 +522,16 @@ func TestAccApiKeyResourceInvalidExpiryDirectAPI(t *testing.T) {
 
 	_, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, req, data.Token, nil)
 	if err == nil {
-		t.Error("unexpected success: API accepted expiry=0, but it should be rejected")
-		return
+		t.Fatal("unexpected success: API accepted expiry=0, but it should be rejected")
 	}
 
 	var apiErr *api.Error
-	if errors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusInternalServerError {
-		t.Errorf(
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected api.Error, got %T: %v", err, err)
+	}
+
+	if apiErr.HttpStatusCode == http.StatusInternalServerError {
+		t.Fatalf(
 			"CBSE-23222 regression: API returns 500 for invalid expiry (0). "+
 				"Expected a proper validation error (e.g. 422), got: %s",
 			apiErr.Error(),
