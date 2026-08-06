@@ -11,13 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// load_balancer_cidr is Azure only, so this file provisions its own Azure cluster. The
-// 192.168.x.0/24 load balancer ranges must not overlap the random 10.x.y.0/23 cluster CIDR.
 
-// malformedLoadBalancerCIDRs must be values no control plane can accept, so the create
-// always fails and cannot leave a billable App Service behind. 192.168.0.0/16,
-// 192.168.0.5/24 and "" are excluded for that reason: the API may accept or normalise
-// them. They belong here as PlanOnly steps once AV-138729 adds a validator.
 var malformedLoadBalancerCIDRs = []string{
 	"192.168.0.0/244",    // prefix length above 32
 	"999.999.999.999/24", // octets out of range
@@ -26,10 +20,6 @@ var malformedLoadBalancerCIDRs = []string{
 	"192.168.0.0",        // missing prefix length
 }
 
-// TestAccAppServiceLoadBalancerCIDR covers the attribute end to end on Azure. It is one
-// test so that all steps share a single cluster: both config builders emit the same
-// cluster block, so it is created once and reused. Rejection cases run first, while no
-// app service exists, so each is a clean create failure rather than a replace-then-fail.
 func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
 	const (
 		loadBalancerCIDR        = "192.168.0.0/24"
