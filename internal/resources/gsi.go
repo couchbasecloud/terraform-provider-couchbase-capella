@@ -402,7 +402,11 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		state.BucketName = types.StringValue(bucketName)
 		state.ScopeName = types.StringValue(scopeName)
 		state.CollectionName = types.StringValue(collectionName)
-		state.IsPrimary = types.BoolValue(index.IsPrimary)
+		// configs omit is_primary for secondary indexes, so import false as
+		// null to avoid a spurious diff.
+		if index.IsPrimary {
+			state.IsPrimary = types.BoolValue(true)
+		}
 		state.IndexName = types.StringValue(indexName)
 		state.Status = types.StringValue(index.Status)
 
@@ -423,10 +427,18 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 
 		state.IndexKeys = keyList
 		// TODO:  set partition by.
-		state.Where = types.StringValue(index.Where)
+		// where is empty for indexes without a WHERE clause; import it as
+		// null since where requires replacement when changed.
+		if index.Where != "" {
+			state.Where = types.StringValue(index.Where)
+		}
 		state.With = &providerschema.WithOptions{}
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
-		state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
+		// num_partition is 0 for non-partitioned indexes, which is invalid
+		// per the schema validator (at least 1), so import it as null.
+		if index.NumPartition > 0 {
+			state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
