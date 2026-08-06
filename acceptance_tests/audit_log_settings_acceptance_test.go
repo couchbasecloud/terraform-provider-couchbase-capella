@@ -553,8 +553,6 @@ func testAccExistsAuditLogSettingsResource(t *testing.T, resourceReference strin
 }
 
 func TestAccAuditLogSettingsResourceDisableOnRemoval(t *testing.T) {
-	t.Skip("CBSE-23063/AV-137441: API returns 500 when disabling audit log settings on removal; un-skip once the API fix lands")
-
 	clusterResourceName := randomStringWithPrefix("tf_acc_audit_rm_cluster_")
 	resourceName := randomStringWithPrefix("tf_acc_audit_rm_settings_")
 	cidr := generateRandomCIDR()
