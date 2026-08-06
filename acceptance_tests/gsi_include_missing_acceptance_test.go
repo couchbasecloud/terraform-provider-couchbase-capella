@@ -8,13 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TestAccGSIIncludeMissingImport reproduces CBSE-23077 / AV-134985: importing a
+// TestAccGSIIncludeMissingImport verifies CBSE-23077 / AV-134985: importing a
 // query index whose key uses INCLUDE MISSING must preserve the modifier in
-// index_keys, otherwise the next plan forces a destroy-and-recreate. Skipped
-// until AV-134985 (import reads the CREATE INDEX DDL) lands on main; un-skip to
-// reproduce the bug or to verify the fix.
+// index_keys, otherwise the next plan forces a destroy-and-recreate.
 func TestAccGSIIncludeMissingImport(t *testing.T) {
-	t.Skip("CBSE-23077/AV-134985: import drops INCLUDE MISSING from index_keys; un-skip once the import fix lands")
 
 	const includeMissingKey = "`name` INCLUDE MISSING"
 	name := randomStringWithPrefix("tf_acc_gsi_incmiss_")
