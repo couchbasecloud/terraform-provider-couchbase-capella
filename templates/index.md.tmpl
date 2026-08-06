@@ -411,4 +411,14 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
 * [Manage Free Tier Cluster On/Off](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/free_tier_cluster_on_off):
 
-  Turn your free tier operational cluster on or off on demand to optimize resource usage. Turning the free tier cluster on or off will also turn on or off any linked App Services. 
+  Turn your free tier operational cluster on or off on demand to optimize resource usage. Turning the free tier cluster on or off will also turn on or off any linked App Services.
+
+* [Configure the Data API](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/data_api):
+
+  Enable or disable the Data API and its network peering for a Capella operational cluster.
+  You can also retrieve the current Data API and network peering status using the `couchbase-capella_data_api` datasource.
+
+* [Create & Manage Eventing Functions](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/eventing_function):
+
+  Create and manage eventing functions on a Capella operational cluster, including the JavaScript code, source and metadata keyspaces, runtime settings, bindings, and deployment state.
+  You can retrieve a single function using the `couchbase-capella_eventing_function` datasource, or list all the eventing functions in a cluster, optionally filtered by state, using the `couchbase-capella_eventing_functions` datasource.
