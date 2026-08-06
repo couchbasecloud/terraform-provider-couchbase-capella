@@ -1,18 +1,23 @@
-name: Acceptance Tests
+name: Sanity Tests
 
+# Runs the P0 acceptance test suite (acceptance_tests/sanity.list) as the
+# pull request gate.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'acceptance_tests/**'
-      - 'internal/**'
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    name: Build
+  sanity:
+    name: P0 Sanity Suite
     runs-on: ubuntu-latest
+    timeout-minutes: 200
 
     env:
       TF_VAR_auth_token: ${{ secrets.CAPELLA_AUTH_TOKEN }}
@@ -24,18 +29,15 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v4 # this action has caching built in
+        
+        uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-          cache: false
+          cache: true
         id: go
-      - uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: cache-${{ github.run_id }}
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.14.9
           terraform_wrapper: false
-      - name: Run acceptance tests
-        run: make testacc
+      - name: Run sanity tests
+        run: make testacc-sanity

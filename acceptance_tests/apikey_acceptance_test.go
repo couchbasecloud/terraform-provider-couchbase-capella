@@ -503,9 +503,18 @@ func generateApiKeyImportIdForResource(resourceReference string) resource.Import
 
 // TestAccApiKeyResourceInvalidExpiryDirectAPI hits the API directly with an
 // invalid expiry (0) to verify CBSE-23222 / AV-137404: the API must return a
-// proper validation error (HTTP 422), not a generic 500/code 10000. Fails
-// against a tenant that predates the AV-137404 fix (v2.2.283); passes once the
-// tenant has it.
+// proper validation error (HTTP 422) with a specific expiry message, not a
+// generic 500/code 10000. Fails against a tenant that predates the AV-137404
+// fix (v2.2.283); passes once the tenant has it.
+//
+// Expected error response when the fix is present:
+//
+//	{
+//	  "code": 422,
+//	  "hint": "Please review your request and ensure that all required parameters are correctly provided.",
+//	  "httpStatusCode": 422,
+//	  "message": "APIKey token expiry must be greater or equal to .01."
+//	}
 func TestAccApiKeyResourceInvalidExpiryDirectAPI(t *testing.T) {
 	data := newTestClient(t)
 
@@ -530,11 +539,29 @@ func TestAccApiKeyResourceInvalidExpiryDirectAPI(t *testing.T) {
 		t.Fatalf("expected api.Error, got %T: %v", err, err)
 	}
 
-	if apiErr.HttpStatusCode == http.StatusInternalServerError {
+	// Exact validation of the expected error response:
+	//   {"code":422, "hint":"Please review your request ...", "httpStatusCode":422,
+	//    "message":"APIKey token expiry must be greater or equal to .01."}
+	if apiErr.HttpStatusCode != http.StatusUnprocessableEntity {
+		if apiErr.HttpStatusCode == http.StatusInternalServerError {
+			t.Fatalf(
+				"CBSE-23222 regression: API returns 500 for invalid expiry (0). "+
+					"Expected HTTP 422 with message about expiry being too small. Got: %s",
+				apiErr.Error(),
+			)
+		}
 		t.Fatalf(
-			"CBSE-23222 regression: API returns 500 for invalid expiry (0). "+
-				"Expected a proper validation error (e.g. 422), got: %s",
-			apiErr.Error(),
+			"unexpected HTTP status for invalid expiry: got %d, want %d. Body: %s",
+			apiErr.HttpStatusCode, http.StatusUnprocessableEntity, apiErr.Error(),
 		)
+	}
+	if apiErr.Code != 422 {
+		t.Fatalf("unexpected error code: got %d, want 422. Body: %s", apiErr.Code, apiErr.Error())
+	}
+	if apiErr.Message == "" {
+		t.Fatal("expected a non-empty error message about expiry validation")
+	}
+	if apiErr.Hint == "" {
+		t.Fatal("expected a non-empty error hint about required parameters")
 	}
 }
