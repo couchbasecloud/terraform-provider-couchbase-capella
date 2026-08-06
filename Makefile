@@ -112,7 +112,17 @@ testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VA
 	@[ "${TF_VAR_auth_token}" ] || ( echo "ERROR: export TF_VAR_auth_token before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_host}" ] || ( echo "ERROR: export TF_VAR_host before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_organization_id}" ] || ( echo "ERROR: export TF_VAR_organization_id before running acceptance tests"; exit 1 )
-	@TF_ACC=1 go test -timeout=180m -v ./acceptance_tests/
+	@TF_ACC=1 go test -timeout=240m -v ./acceptance_tests/
+
+TEST_LIST ?= acceptance_tests/sanity.list
+
+.PHONY: testacc-list
+testacc-list: ## Run only the acceptance tests named in TEST_LIST (default: acceptance_tests/sanity.list)
+	@./scripts/run-test-list.sh $(TEST_LIST)
+
+.PHONY: testacc-sanity
+testacc-sanity: ## Run the P0 sanity acceptance test suite
+	@$(MAKE) testacc-list TEST_LIST=acceptance_tests/sanity.list
 
 # ============================================================================
 # Documentation
