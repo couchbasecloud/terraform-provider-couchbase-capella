@@ -100,11 +100,11 @@ func NewAppService(
 			Cpu: types.Int64Value(appService.Compute.Cpu),
 			Ram: types.Int64Value(appService.Compute.Ram),
 		},
-		ClusterId:    types.StringValue(appService.ClusterId),
-		CurrentState: types.StringValue(string(appService.CurrentState)),
-		Version:      types.StringValue(truncateToMajorMinor(appService.Version)),
-		Audit:        auditObject,
-		Etag:         types.StringValue(appService.Etag),
+		ClusterId:        types.StringValue(appService.ClusterId),
+		CurrentState:     types.StringValue(string(appService.CurrentState)),
+		Version:          types.StringValue(truncateToMajorMinor(appService.Version)),
+		Audit:            auditObject,
+		Etag:             types.StringValue(appService.Etag),
 		LoadBalancerCidr: types.StringPointerValue(appService.LoadBalancerCidr),
 	}
 	return &newAppService

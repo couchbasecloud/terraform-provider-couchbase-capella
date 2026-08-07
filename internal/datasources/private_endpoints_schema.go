@@ -19,10 +19,6 @@ func PrivateEndpointsSchema() schema.Schema {
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "organization_id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "project_id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "cluster_id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "cloud_provider", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "status", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "service_name", privateEndpointsBuilder, computedString())
 

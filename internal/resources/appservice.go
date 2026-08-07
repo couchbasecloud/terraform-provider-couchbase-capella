@@ -23,6 +23,7 @@ var (
 	_ resource.Resource                = &AppService{}
 	_ resource.ResourceWithConfigure   = &AppService{}
 	_ resource.ResourceWithImportState = &AppService{}
+	_ resource.ResourceWithModifyPlan  = &AppService{}
 )
 
 const errorMessageAfterAppServiceCreationInitiation = "App Service creation is initiated, but encountered an error while checking the current" +
@@ -52,6 +53,35 @@ func (a *AppService) Metadata(_ context.Context, req resource.MetadataRequest, r
 // Schema defines the schema for the AppService resource.
 func (a *AppService) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = AppServiceSchema()
+}
+
+// ModifyPlan rejects a version change on a deployed app service including when the plan calls for a force replacement.
+func (a *AppService) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Either a create or destroy, so no version check needed.
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var config, state providerschema.AppService
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Configured version is null, unknown, or the same as the App Service, so no error.
+	if config.Version.IsNull() || config.Version.IsUnknown() || config.Version.Equal(state.Version) {
+		return
+	}
+
+	resp.Diagnostics.AddAttributeError(
+		path.Root("version"),
+		"Error updating app service",
+		"Could not update app service ID "+state.Id.String()+" version as this is not supported. "+
+			"To fix, destroy the App Service and create a new one with the desired version, "+
+			"update the version in the plan to the current version ("+state.Version.ValueString()+") to keep it pinned, "+
+			"or omit version from the plan completely.",
+	)
 }
 
 // Create creates a new AppService.
@@ -257,17 +287,6 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		resp.Diagnostics.AddError(
 			"Error updating app service",
 			"Could not update app service id "+state.Id.String()+" unexpected error: "+errors.ErrUnableToUpdateAppServiceName.Error(),
-		)
-		return
-	}
-
-	if !plan.Version.IsNull() && !plan.Version.IsUnknown() && !plan.Version.Equal(state.Version) {
-		resp.Diagnostics.AddError(
-			"Error updating app service",
-			"Could not update app service ID "+state.Id.String()+" version as this is not supported. "+
-				"To fix, destroy the App Service and create a new one with the desired version, "+
-				"update the version in the plan to the current version ("+state.Version.ValueString()+"), "+
-				"or omit version from the plan completely.",
 		)
 		return
 	}
