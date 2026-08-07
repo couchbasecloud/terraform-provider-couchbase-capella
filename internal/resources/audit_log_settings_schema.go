@@ -19,7 +19,9 @@ func AuditLogSettingsSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", auditLogSettingsBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", auditLogSettingsBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", auditLogSettingsBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "audit_enabled", auditLogSettingsBuilder, boolAttribute(computed, optional))
+	// useStateForUnknown: audit_enabled goes into UpdateClusterAuditSettingsRequest, and
+	// without it an unconfigured one is sent as false, disabling auditing.
+	capellaschema.AddAttr(attrs, "audit_enabled", auditLogSettingsBuilder, boolAttribute(computed, optional, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "enabled_event_ids", auditLogSettingsBuilder, &schema.SetAttribute{
 		Computed:    true,
 		Optional:    true,
