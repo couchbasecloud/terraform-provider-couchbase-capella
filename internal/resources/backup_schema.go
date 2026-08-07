@@ -72,7 +72,7 @@ func BackupSchema() schema.Schema {
 	capellaschema.AddAttr(restoreAttrs, "include_data", backupBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(restoreAttrs, "exclude_data", backupBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(restoreAttrs, "map_data", backupBuilder, stringAttribute([]string{optional}))
-	capellaschema.AddAttr(restoreAttrs, "replace_ttl", backupBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(restoreAttrs, "replace_ttl", backupBuilder, stringAttribute([]string{optional}), "CreateOnDemandRestoreRequest")
 	capellaschema.AddAttr(restoreAttrs, "replace_ttl_with", backupBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(restoreAttrs, "status", backupBuilder, stringAttribute([]string{computed}))
 
