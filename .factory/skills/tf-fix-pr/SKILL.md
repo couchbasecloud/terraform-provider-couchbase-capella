@@ -87,11 +87,13 @@ Fix every error and re-run until all pass clean before opening the PR. Do NOT ru
 ### 4. Commit
 
 Stage the changed files explicitly (new test files are untracked, so `git commit -a` would
-miss them), then commit:
+miss them), then commit. **Commits must be signed** — this repo signs commits, and branch
+protection may reject unsigned ones. Locally `git commit -S` inherits your signing config; in
+headless/CI runs, ensure a signing key (GPG or SSH) is configured first.
 
 ```bash
 git add <changed source files> <new/updated test files>   # e.g. internal/... acceptance_tests/...
-git commit -m "[<JIRA_KEY>] <fix description>"
+git commit -S -m "[<JIRA_KEY>] <fix description>"
 ```
 
 ### 5. Push & open a DRAFT PR
