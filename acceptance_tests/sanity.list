@@ -207,8 +207,15 @@ TestAccDatasourceQueryIndexMonitorReady
 # Tests eventing function creation with required fields only
 TestAccEventingFunctionResourceRequiredOnly
 
+# Tests eventing function creation with every optional field populated
+# (deployed on create, all binding types)
+TestAccEventingFunctionResourceFullPayload
+
 # Tests reading a single eventing function via data source
 TestAccDatasourceEventingFunction
+
+# Tests reading a fully populated eventing function via data source
+TestAccDatasourceEventingFunctionFullPayload
 
 # Tests listing eventing functions via data source
 TestAccDatasourceEventingFunctions
