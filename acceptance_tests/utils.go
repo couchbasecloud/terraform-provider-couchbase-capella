@@ -10,6 +10,7 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/mutex"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -67,10 +68,11 @@ func newTestClient(t *testing.T) *providerschema.Data {
 	}
 
 	providerData := &providerschema.Data{
-		HostURL:  globalHost,
-		Token:    globalToken,
-		ClientV1: api.NewClient(timeout),
-		ClientV2: clientV2,
+		HostURL:        globalHost,
+		Token:          globalToken,
+		ClientV1:       api.NewClient(timeout),
+		ClientV2:       clientV2,
+		AllowlistMutex: mutex.NewKeyMutex(),
 	}
 	return providerData
 }

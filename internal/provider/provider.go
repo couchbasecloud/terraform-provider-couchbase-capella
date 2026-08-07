@@ -11,6 +11,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/mutex"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"
@@ -213,10 +214,11 @@ func (p *capellaProvider) Configure(
 		return
 	}
 	providerData := &providerschema.Data{
-		HostURL:  host,
-		Token:    authenticationToken,
-		ClientV1: clientV1,
-		ClientV2: clientV2,
+		HostURL:        host,
+		Token:          authenticationToken,
+		ClientV1:       clientV1,
+		ClientV2:       clientV2,
+		AllowlistMutex: mutex.NewKeyMutex(),
 	}
 
 	// Make the Capella client available during DataSource and Resource
