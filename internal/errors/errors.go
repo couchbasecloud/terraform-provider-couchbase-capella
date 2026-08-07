@@ -254,6 +254,20 @@ var (
 	// disableFailed state for the private endpoint service. This is not retried by polling.
 	ErrPrivateEndpointServiceDisableFailed = errors.New("private endpoint service disable failed")
 
+	// ErrAppServicePrivateEndpointServiceTimeout is returned when waiting for an App Service's
+	// private endpoint service to reach the desired state times out after initiation.
+	ErrAppServicePrivateEndpointServiceTimeout = errors.New("changing app service private endpoint service state timed out after initiation")
+
+	// ErrAppServicePrivateEndpointServiceEnableFailed is returned when the backend reports a
+	// terminal failed state, with targetState enabled, for an App Service's private endpoint
+	// service. This is not retried by polling.
+	ErrAppServicePrivateEndpointServiceEnableFailed = errors.New("app service private endpoint service enablement failed")
+
+	// ErrAppServicePrivateEndpointServiceDisableFailed is returned when the backend reports a
+	// terminal failed state, with targetState disabled, for an App Service's private endpoint
+	// service. This is not retried by polling.
+	ErrAppServicePrivateEndpointServiceDisableFailed = errors.New("app service private endpoint service disable failed")
+
 	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
 
 	ErrSnapshotBackupCreationStatusTimeout = errors.New("snapshot backup creation status transition timed out after initiation")
