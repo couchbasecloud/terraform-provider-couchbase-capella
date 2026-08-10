@@ -49,9 +49,21 @@ func createCluster(ctx context.Context, client *api.Client) error {
 				Services: &[]clusterapi.Service{
 					clusterapi.Service("data"),
 					clusterapi.Service("index"),
-					clusterapi.Service("query"),
-					clusterapi.Service("eventing")},
+					clusterapi.Service("query")},
 				NumOfNodes: ptr.To(3),
+			},
+			{
+				// Eventing runs on its own service group / dedicated nodes so the eventing acceptance tests are not throttled by data/index/query load (which caused list-read and activation timeouts).
+				Node: &clusterapi.Node{
+					Compute: clusterapi.Compute{
+						Cpu: 4,
+						Ram: 16,
+					},
+					Disk: node.Disk,
+				},
+				Services: &[]clusterapi.Service{
+					clusterapi.Service("eventing")},
+				NumOfNodes: ptr.To(2),
 			},
 		},
 		Support: clusterapi.Support{
