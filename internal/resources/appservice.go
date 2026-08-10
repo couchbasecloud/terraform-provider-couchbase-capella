@@ -172,10 +172,11 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	case err == nil:
 	case stderrors.Is(err, errors.ErrAppServiceFailedState):
 		// Fall through to record the current state alongside the error
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"App Service creation failed",
 			"App Service has been created but is in a failed state. "+
 				"Please contact Couchbase Capella support for further guidance. "+
+				"Additionally, run `terraform apply --refresh-only` to get the latest App Service state from the remote. "+
 				"Error: "+api.ParseError(err),
 		)
 	default:

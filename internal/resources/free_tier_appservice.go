@@ -98,10 +98,10 @@ func (f *FreeTierAppService) Create(ctx context.Context, request resource.Create
 	case err == nil:
 	case stderrors.Is(err, errors.ErrAppServiceFailedState):
 		// Fall through to record the current state alongside the error
-		response.Diagnostics.AddError(
+		response.Diagnostics.AddWarning(
 			"Free tier app service creation failed",
 			"Free tier app service has been created but is in a failed state. "+
-				"Please contact Couchbase Capella support for further guidance. "+
+				"Run `terraform apply --refresh-only` to get the latest App Service state from the remote. "+
 				"Error: "+api.ParseError(err),
 		)
 	default:
