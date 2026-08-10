@@ -54,3 +54,17 @@ func IsFinalState(state State) bool {
 	}
 	return slices.Contains(finalStates, state)
 }
+
+// IsFailureState reports whether the App Service state is a final failure state.
+// All states here must also be in IsFinalState
+func IsFailureState(state State) bool {
+	failureStates := []State{
+		DeploymentFailed,
+		DestroyFailed,
+		ScaleFailed,
+		UpgradeFailed,
+		TurnOnFailed,
+		TurnOffFailed,
+	}
+	return slices.Contains(failureStates, state)
+}
