@@ -33,25 +33,36 @@ func randomStringWithPrefix(prefix string) string {
 	return prefix + randomString()
 }
 
-// generateRandomCIDR generates a random /23 CIDR block in the 10.0.0.0/8 private range
-// to avoid conflicts with existing clusters in the organization.
-// Format: 10.X.Y.0/23 where X is 0-255 and Y is an even number (0, 2, 4, ..., 254)
+// generateRandomCIDR generates a random CIDR block across all three RFC 1918
+// private ranges to avoid conflicts with existing clusters in the shared test
+// organization. It randomly picks one of:
+//
+//	10.A.B.0/23    (A: 0-255, B: even 0-254)  → 32,768 blocks
+//	172.C.D.0/21   (C: 16-31, D: multiple of 8) → 512 blocks
+//	192.168.E.0/24 (E: 0-255)                  → 256 blocks
 func generateRandomCIDR() string {
 	// Use crypto/rand for cryptographically secure randomness
-	buf := make([]byte, 2)
+	buf := make([]byte, 3)
 	if _, err := cryptorand.Read(buf); err != nil {
 		// If crypto/rand fails, this indicates a serious system issue.
 		// For test utilities, it's appropriate to panic rather than continue with weak randomness.
 		panic(fmt.Sprintf("failed to generate random CIDR: crypto/rand.Read failed: %v", err))
 	}
 
-	// Second octet: 0-255
-	secondOctet := int(buf[0])
-
-	// Third octet: must be even for /23 CIDR (0, 2, 4, ..., 254)
-	thirdOctet := int(buf[1]) & 0xFE // Clear the last bit to make it even
-
-	return fmt.Sprintf("10.%d.%d.0/23", secondOctet, thirdOctet)
+	// Pick one of three RFC 1918 ranges weighted roughly by address space.
+	switch int(buf[0]) % 3 {
+	case 0: // 10.A.B.0/23 — most common, largest pool
+		secondOctet := int(buf[1])
+		thirdOctet := int(buf[2]) & 0xFE // even for /23
+		return fmt.Sprintf("10.%d.%d.0/23", secondOctet, thirdOctet)
+	case 1: // 172.C.D.0/21
+		secondOctet := 16 + int(buf[1])%16    // 16..31
+		thirdOctet := (int(buf[2]) % 32) * 8  // 0, 8, 16, ..., 248
+		return fmt.Sprintf("172.%d.%d.0/21", secondOctet, thirdOctet)
+	default: // 192.168.E.0/24
+		thirdOctet := int(buf[2])
+		return fmt.Sprintf("192.168.%d.0/24", thirdOctet)
+	}
 }
 
 func newTestClient(t *testing.T) *providerschema.Data {
