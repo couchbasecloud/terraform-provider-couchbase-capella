@@ -1,12 +1,18 @@
 package acceptance_tests
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	re "regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 func TestAccAppEndpoint(t *testing.T) {
@@ -140,6 +146,68 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		userXattr,
 		deltaSync,
 	)
+}
+
+// TestAccAppEndpoint_AV_138291 verifies that destroying an app endpoint actually
+// removes it from Capella. Deleting an endpoint forces a Sync Gateway
+// reconfiguration, during which the API returns a transient 500 (code 10000); the
+// provider used to fail the destroy outright, leaving the endpoint dangling. The
+// CheckDestroy below is what catches a regression — the destroy step itself would
+// pass if the endpoint were merely dropped from state.
+func TestAccAppEndpoint_AV_138291(t *testing.T) {
+	ensureFixtureCollection(t, globalDeleteRetryEPCollectionName)
+
+	resourceName := randomStringWithPrefix("tf_acc_ep_del_rtry_")
+	resourceReference := "couchbase-capella_app_endpoint." + resourceName
+	epName := randomStringWithPrefix("tf_acc_endpoint_")
+
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckAppEndpointDestroyed(epName),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppEndpointResourceConfig(
+					resourceName, epName, globalDeleteRetryEPCollectionName, "syncFnXattr", true,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "name", epName),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppEndpointDestroyed asserts the named app endpoint is gone from
+// Capella after destroy. The App Endpoint API answers 403 rather than 404 for an
+// endpoint that no longer exists, so both statuses count as deleted.
+func testAccCheckAppEndpointDestroyed(endpointName string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		endpointURL := fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+			globalHost,
+			globalOrgId,
+			globalProjectId,
+			appEndpointClusterId,
+			appEndpointAppServiceId,
+			url.PathEscape(endpointName),
+		)
+		cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+		_, err := globalClient.ExecuteWithRetry(context.Background(), cfg, nil, globalToken, nil)
+		if err == nil {
+			return fmt.Errorf("app endpoint %s still exists after destroy", endpointName)
+		}
+
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) &&
+			(apiErr.HttpStatusCode == http.StatusNotFound || apiErr.HttpStatusCode == http.StatusForbidden) {
+			return nil
+		}
+		return fmt.Errorf("failed to confirm app endpoint %s was destroyed: %w", endpointName, err)
+	}
 }
 
 // TestAccAppEndpointNoCors verifies that creating an app endpoint without a

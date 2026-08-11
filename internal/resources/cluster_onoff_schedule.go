@@ -3,10 +3,8 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -579,48 +577,10 @@ func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context,
 	return refreshedState, nil
 }
 
+// scheduleRequestWithRetry writes an on/off schedule, riding out the transient Capella
+// 500 that appears for minutes after a previous schedule write while the backend
+// propagates state.
 func (c *ClusterOnOffSchedule) scheduleRequestWithRetry(ctx context.Context, cfg api.EndpointCfg, scheduleRequest any) error {
-	const (
-		maxRetryWindow = 5 * time.Minute
-		retryInterval  = 15 * time.Second
-	)
-	deadline := time.Now().Add(maxRetryWindow)
-	var lastErr error
-	for {
-		_, err := c.ClientV1.ExecuteWithRetry(ctx, cfg, scheduleRequest, c.Token, nil)
-		if err == nil {
-			return nil
-		}
-		if ctx.Err() != nil {
-			cause := lastErr
-			if cause == nil {
-				cause = err
-			}
-			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, cause)
-		}
-		// Only retry the specific Capella transient backend error (code 10000:
-		// "Something went wrong on our end. We are actively investigating the issue.").
-		// This 500 appears for ~minutes after a previous schedule write while the
-		// backend propagates state. Other 500s likely indicate real failures and
-		// should surface immediately rather than burn the retry window.
-		var apiErr *api.Error
-		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError || apiErr.Code != 10000 {
-			return err
-		}
-		lastErr = err
-		remaining := time.Until(deadline)
-		if remaining <= 0 {
-			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
-		}
-		tflog.Debug(ctx, "schedule create returned 500; retrying", map[string]interface{}{"err": err})
-		sleep := retryInterval
-		if sleep > remaining {
-			sleep = remaining
-		}
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
-		case <-time.After(sleep):
-		}
-	}
+	_, err := executeWithTransientRetry(ctx, c.ClientV1, c.Token, "schedule create", cfg, scheduleRequest)
+	return err
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -79,8 +78,8 @@ func checkAppEndpointDeletedOrForbidden(
 }
 
 // handleAppEndpointForbidden checks whether err is a 403, and if so determines
-// whether the App Endpoint was deleted externally. Returns (true, nil) when the
-// endpoint was confirmed deleted and removed from state — the caller should return.
+// whether the App Endpoint no longer exists. Returns (true, nil) when the endpoint was
+// confirmed gone — the caller should remove the resource from state and return.
 // Returns (false, error) when the error is a 403 but the endpoint still exists or
 // the check failed. Returns (false, nil) when the error is not a 403 and the
 // caller should continue with its own error handling.
@@ -88,7 +87,6 @@ func handleAppEndpointForbidden(
 	ctx context.Context,
 	err error,
 	data *providerschema.Data,
-	resp *resource.ReadResponse,
 	organizationId, projectId, clusterId, appServiceId, appEndpointName string,
 ) (bool, error) {
 	if !api.IsForbiddenError(err) {
@@ -98,8 +96,7 @@ func handleAppEndpointForbidden(
 	result, msg := checkAppEndpointDeletedOrForbidden(ctx, data, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	switch result {
 	case appEndpointDeleted:
-		tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
-		resp.State.RemoveResource(ctx)
+		tflog.Info(ctx, "App Endpoint no longer exists, removing from state")
 		return true, nil
 	default:
 		return false, fmt.Errorf("%s", msg)

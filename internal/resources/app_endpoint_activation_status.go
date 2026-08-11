@@ -203,7 +203,8 @@ func (r *AppEndpointActivationStatus) Read(ctx context.Context, req resource.Rea
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, r.Data, resp, organizationId, projectId, clusterId, appServiceId, appEndpointName); handled {
+		if deleted, forbiddenErr := handleAppEndpointForbidden(ctx, err, r.Data, organizationId, projectId, clusterId, appServiceId, appEndpointName); deleted {
+			resp.State.RemoveResource(ctx)
 			return
 		} else if forbiddenErr != nil {
 			resp.Diagnostics.AddError("Error parsing read app endpoint activation request", forbiddenErr.Error())

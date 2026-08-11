@@ -32,11 +32,11 @@ var appEndpointEnvironmentOnce struct {
 // keeps the suite mostly parallel while avoiding that contention. Tune if the
 // 500s persist (lower) or the suite is too slow (raise).
 //
-// Lowered from 3 to 2: at 3, a teardown DELETE (which is held under the same
-// slot as the test body, so it counts toward this bound) still occasionally hit
-// the transient 500 during post-test destroy, failing the run with dangling
-// resources.
-const appEndpointCRUDConcurrency = 2
+// Restored from 2 to 3 (AV-138291): the bound was lowered because a teardown
+// DELETE hitting the transient 500 failed the run with dangling resources. The
+// provider now retries that 500 in AppEndpoint.Delete, so the extra headroom is
+// no longer needed to keep teardown reliable.
+const appEndpointCRUDConcurrency = 3
 
 var appEndpointCRUDSem = make(chan struct{}, appEndpointCRUDConcurrency)
 

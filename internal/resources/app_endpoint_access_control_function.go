@@ -133,7 +133,8 @@ func (a *AccessControlFunction) Read(ctx context.Context, req resource.ReadReque
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, resp, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], IDs["appEndpointName"]); handled {
+		if deleted, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], IDs["appEndpointName"]); deleted {
+			resp.State.RemoveResource(ctx)
 			return
 		} else if forbiddenErr != nil {
 			resp.Diagnostics.AddError("Error Reading Capella Access Function", forbiddenErr.Error())

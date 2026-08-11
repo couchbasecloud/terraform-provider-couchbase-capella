@@ -111,3 +111,57 @@ func Test_CheckResourceNotFound(t *testing.T) {
 		})
 	}
 }
+
+func Test_IsTransientInternalServerError(t *testing.T) {
+	transient500 := Error{
+		HttpStatusCode: http.StatusInternalServerError,
+		Code:           transientInternalServerErrorCode,
+		Message:        "An internal server error occurred.",
+	}
+
+	type test struct {
+		err     error
+		name    string
+		expBool bool
+	}
+
+	tests := []test{
+		{
+			name:    "Transient 500 received from Capella V4 Api",
+			err:     &transient500,
+			expBool: true,
+		},
+		{
+			name:    "Wrapped transient 500 received from Capella V4 Api",
+			err:     fmt.Errorf("received error: %w", &transient500),
+			expBool: true,
+		},
+		{
+			name: "500 with a different error code is not transient",
+			err: &Error{
+				HttpStatusCode: http.StatusInternalServerError,
+				Code:           9999,
+			},
+			expBool: false,
+		},
+		{
+			name: "Forbidden error carrying the transient code is not transient",
+			err: &Error{
+				HttpStatusCode: http.StatusForbidden,
+				Code:           transientInternalServerErrorCode,
+			},
+			expBool: false,
+		},
+		{
+			name:    "Error other than received from Capella V4 Api",
+			err:     internalerrors.ErrAllowListIdCannotBeEmpty,
+			expBool: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expBool, IsTransientInternalServerError(test.err))
+		})
+	}
+}

@@ -170,7 +170,8 @@ func (f *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, f.Data, resp, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], IDs["appEndpointName"]); handled {
+		if deleted, forbiddenErr := handleAppEndpointForbidden(ctx, err, f.Data, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], IDs["appEndpointName"]); deleted {
+			resp.State.RemoveResource(ctx)
 			return
 		} else if forbiddenErr != nil {
 			resp.Diagnostics.AddError("Error Reading Import Filter", forbiddenErr.Error())

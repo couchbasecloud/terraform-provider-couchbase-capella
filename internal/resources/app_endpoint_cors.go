@@ -266,7 +266,8 @@ func (c *Cors) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, c.Data, resp, organizationId, projectId, clusterId, appServiceId, appEndpointName); handled {
+		if deleted, forbiddenErr := handleAppEndpointForbidden(ctx, err, c.Data, organizationId, projectId, clusterId, appServiceId, appEndpointName); deleted {
+			resp.State.RemoveResource(ctx)
 			return
 		} else if forbiddenErr != nil {
 			resp.Diagnostics.AddError("Error Reading CORS Configuration", forbiddenErr.Error())

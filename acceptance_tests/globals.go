@@ -117,6 +117,9 @@ var (
 	// that removes resources from state when the App Endpoint is deleted outside TF.
 	globalDeletedExternallyEPCollectionName = "tf_acc_ep_del_ext_col"
 	globalACFDeletedExtEPCollectionName     = "tf_acc_ep_acf_dex_col"
+	// Collection for AV-138291 — asserts destroy actually removes the endpoint
+	// rather than leaving it dangling after a transient 500.
+	globalDeleteRetryEPCollectionName = "tf_acc_ep_del_rtry_col"
 	// Collections for currently-skipped tests — not provisioned while skipped, but
 	// named so the tests are ready to run once the underlying bugs are fixed.
 	globalCorsDisabledFalseEPCollectionName = "tf_acc_ep_cors_df_col"

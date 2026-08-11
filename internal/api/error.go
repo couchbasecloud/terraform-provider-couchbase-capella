@@ -71,3 +71,18 @@ func IsForbiddenError(err error) bool {
 	var apiError *Error
 	return errors.As(err, &apiError) && apiError.HttpStatusCode == http.StatusForbidden
 }
+
+// transientInternalServerErrorCode is the Capella error code carried by the transient
+// backend 500 ("Something went wrong on our end. We are actively investigating the issue.").
+const transientInternalServerErrorCode = 10000
+
+// IsTransientInternalServerError checks whether the given error is an api.Error with
+// HTTP status 500 and the transient backend error code. Capella returns this while it
+// finishes propagating state after a write, and it clears on its own within minutes, so
+// callers may retry it. Other 500s indicate real failures and should surface immediately.
+func IsTransientInternalServerError(err error) bool {
+	var apiError *Error
+	return errors.As(err, &apiError) &&
+		apiError.HttpStatusCode == http.StatusInternalServerError &&
+		apiError.Code == transientInternalServerErrorCode
+}

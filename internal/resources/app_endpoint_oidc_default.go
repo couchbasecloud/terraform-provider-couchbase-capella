@@ -117,7 +117,8 @@ func (r *AppEndpointDefaultOidcProvider) Read(ctx context.Context, req resource.
 
 	selected, err := r.getDefaultProvider(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName])
 	if err != nil {
-		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, r.Data, resp, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName]); handled {
+		if deleted, forbiddenErr := handleAppEndpointForbidden(ctx, err, r.Data, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName]); deleted {
+			resp.State.RemoveResource(ctx)
 			return
 		} else if forbiddenErr != nil {
 			resp.Diagnostics.AddError("Error Reading Default OIDC Provider", forbiddenErr.Error())

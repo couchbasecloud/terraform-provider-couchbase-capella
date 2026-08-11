@@ -339,7 +339,8 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, resp, organizationId, projectId, clusterId, appServiceId, endpointName); handled {
+		if deleted, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, organizationId, projectId, clusterId, appServiceId, endpointName); deleted {
+			resp.State.RemoveResource(ctx)
 			return
 		} else if forbiddenErr != nil {
 			resp.Diagnostics.AddError("Error refreshing App Endpoint", forbiddenErr.Error())
@@ -485,18 +486,27 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 	)
 	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 
-	_, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
+	// Deleting an endpoint forces a Sync Gateway reconfiguration, during which Capella
+	// returns a transient 500 even though the delete usually lands. Retry it rather than
+	// failing the destroy and leaving the endpoint dangling.
+	_, err := executeWithTransientRetry(ctx, a.ClientV1, a.Token, "app endpoint delete", cfg, nil)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			resp.State.RemoveResource(ctx)
+			return
+		}
+		// A retried delete can land on an endpoint the first attempt already removed,
+		// and this API answers 403 rather than 404 for an endpoint that no longer exists.
+		if deleted, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, organizationId, projectId, clusterId, appServiceId, endpointName); deleted {
+			resp.State.RemoveResource(ctx)
+			return
+		} else if forbiddenErr != nil {
+			resp.Diagnostics.AddError(
+				"Error deleting App Endpoint",
+				fmt.Sprintf("Could not delete App Endpoint %s: %s", endpointName, forbiddenErr.Error()),
+			)
 			return
 		}
 		resp.Diagnostics.AddError(
