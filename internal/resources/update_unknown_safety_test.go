@@ -77,7 +77,15 @@ func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
 }
 
 // resolvesUnknownToState reports whether an unconfigured value (null config, unknown
-// plan) is restored to prior state, either by a Default or by the plan modifiers.
+// plan) is restored to prior state by the plan modifiers.
+//
+// An attribute with a Default is exempt: a Default is a value the practitioner declared
+// in the schema, so transmitting it is what the configuration asks for. That is not the
+// same as transmitting a zero value because an unknown got unwrapped.
+//
+// Each modifier sees the plan value the previous one produced, matching the framework
+// (fwserver.AttributeModifyPlan) - a modifier that runs after one which resolved the
+// unknown must observe a known plan value, or the result here does not reflect reality.
 func resolvesUnknownToState(t *testing.T, attr schema.Attribute) bool {
 	t.Helper()
 
@@ -88,46 +96,49 @@ func resolvesUnknownToState(t *testing.T, attr schema.Attribute) bool {
 		if a.Default != nil {
 			return true
 		}
-		resp := planmodifier.StringResponse{PlanValue: types.StringUnknown()}
 		req := planmodifier.StringRequest{
 			StateValue:  types.StringValue("prior"),
 			PlanValue:   types.StringUnknown(),
 			ConfigValue: types.StringNull(),
 		}
 		for _, m := range a.PlanModifiers {
+			resp := planmodifier.StringResponse{PlanValue: req.PlanValue}
 			m.PlanModifyString(ctx, req, &resp)
+			req.PlanValue = resp.PlanValue
 		}
-		return resp.PlanValue.Equal(types.StringValue("prior"))
+		return req.PlanValue.Equal(types.StringValue("prior"))
 
 	case *schema.Int64Attribute:
 		if a.Default != nil {
 			return true
 		}
-		resp := planmodifier.Int64Response{PlanValue: types.Int64Unknown()}
 		req := planmodifier.Int64Request{
 			StateValue:  types.Int64Value(42),
 			PlanValue:   types.Int64Unknown(),
 			ConfigValue: types.Int64Null(),
 		}
 		for _, m := range a.PlanModifiers {
+			resp := planmodifier.Int64Response{PlanValue: req.PlanValue}
 			m.PlanModifyInt64(ctx, req, &resp)
+			req.PlanValue = resp.PlanValue
 		}
-		return resp.PlanValue.Equal(types.Int64Value(42))
+		return req.PlanValue.Equal(types.Int64Value(42))
 
 	case *schema.BoolAttribute:
 		if a.Default != nil {
 			return true
 		}
-		resp := planmodifier.BoolResponse{PlanValue: types.BoolUnknown()}
 		req := planmodifier.BoolRequest{
 			StateValue:  types.BoolValue(true),
 			PlanValue:   types.BoolUnknown(),
 			ConfigValue: types.BoolNull(),
 		}
 		for _, m := range a.PlanModifiers {
+			resp := planmodifier.BoolResponse{PlanValue: req.PlanValue}
 			m.PlanModifyBool(ctx, req, &resp)
+			req.PlanValue = resp.PlanValue
 		}
-		return resp.PlanValue.Equal(types.BoolValue(true))
+		return req.PlanValue.Equal(types.BoolValue(true))
 
 	default:
 		t.Fatalf("unhandled attribute type %T - extend resolvesUnknownToState", attr)
