@@ -93,7 +93,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 
 	// Initialize Data so the data attribute is set even when no cluster
 	// matches. A nil slice becomes a null list in state, which fails checks
-	// on data.# (AV-134714).
+	// on data.#.
 	state.Data = make([]providerschema.ClusterData, 0, len(response))
 
 	for i := range response {
