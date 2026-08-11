@@ -7,30 +7,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccFreeTierClusters_AV_134714 verifies that the free-tier clusters
-// datasource lists free-tier clusters via the dedicated /clusters/freeTier
-// endpoint instead of filtering the regular clusters list, which always
-// produced an empty (and previously state-breaking) result. See AV-134714.
-func TestAccFreeTierClusters_AV_134714(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_free_tier_clusters_ds_")
-	resourceReference := "data.couchbase-capella_free_tier_clusters." + resourceName
+// TestAccFreeTierClustersDatasourceEmptyResult verifies that the free-tier
+// clusters data source always sets the data attribute, even when no free-tier
+// cluster matches. It previously left data as a nil slice, which lands in state
+// as a null list and fails "Attribute 'data.#' expected to be set". See
+// AV-134714.
+//
+// Listing free-tier clusters themselves is not asserted here: the Capella v4
+// API has no free-tier cluster list endpoint (only the free-tier buckets have
+// one), so the data source can only filter the general /clusters list.
+func TestAccFreeTierClustersDatasourceEmptyResult(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_free_tier_clusters_ds_")
+	dsRef := "data.couchbase-capella_free_tier_clusters." + dsName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFreeTierClustersDatasourceConfig(resourceName),
+				Config: testAccFreeTierClustersDatasourceConfig(dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttrSet(resourceReference, "data.#"),
+					resource.TestCheckResourceAttr(dsRef, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dsRef, "project_id", globalProjectId),
+					resource.TestCheckResourceAttrSet(dsRef, "data.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccFreeTierClustersDatasourceConfig(resourceName string) string {
+func testAccFreeTierClustersDatasourceConfig(dsName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -38,5 +43,5 @@ data "couchbase-capella_free_tier_clusters" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName)
+`, globalProviderBlock, globalOrgId, globalProjectId, dsName)
 }

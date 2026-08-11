@@ -23,6 +23,12 @@ var (
 // Clusters is the Clusters data source implementation.
 type Clusters struct {
 	*providerschema.Data
+
+	// FreeTierClusterFilter, when true, restricts the results to free-tier
+	// clusters. There is no list endpoint for free-tier clusters, so the
+	// free-tier clusters data source lists all clusters via /clusters and
+	// filters here on Support.Plan == "free".
+	FreeTierClusterFilter bool
 }
 
 // NewClusters is a helper function to simplify the provider implementation.
@@ -85,8 +91,16 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
+	// Initialize Data so the data attribute is set even when no cluster
+	// matches. A nil slice becomes a null list in state, which fails checks
+	// on data.# (AV-134714).
+	state.Data = make([]providerschema.ClusterData, 0, len(response))
+
 	for i := range response {
 		cluster := response[i]
+		if d.FreeTierClusterFilter && cluster.Support.Plan != "free" {
+			continue
+		}
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
@@ -95,6 +109,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 				"Error Reading Capella Clusters",
 				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, errors.ErrUnableToConvertAuditData),
 			)
+			return
 		}
 
 		newClusterData, err := providerschema.NewClusterData(&cluster, organizationId, projectId, auditObj)
@@ -103,6 +118,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 				"Error Reading Capella Clusters",
 				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
 			)
+			return
 		}
 		state.Data = append(state.Data, *newClusterData)
 	}
