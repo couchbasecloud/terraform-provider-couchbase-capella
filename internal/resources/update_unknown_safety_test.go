@@ -4,18 +4,17 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // TestUpdateBodyAttributesResolveUnknownsToState covers the Optional+Computed attributes
-// that Update methods read into a request body.
-//
-// The framework marks a null-in-config Computed attribute as unknown unless it has a
-// Default, and ValueString()/ValueInt64()/ValueBool() unwrap an unknown to "" / 0 / false.
-// Such an attribute must therefore resolve back to prior state at plan time, via
-// useStateForUnknown, or the provider transmits a zero value nobody asked for.
+// that Update methods read into a request body. The framework marks a null-in-config
+// Computed attribute as unknown unless it has a Default, and ValueString()/ValueInt64()/
+// ValueBool() unwrap an unknown to "" / 0 / false, so such an attribute must resolve back
+// to prior state via useStateForUnknown or the provider transmits an unrequested zero.
 //
 // Adding an Optional+Computed attribute to an Update request body means adding it here.
 func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
@@ -45,9 +44,10 @@ func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
 		},
 		{
 			// UpdateClusterAuditSettingsRequest. A false audit_enabled disables auditing.
+			// The sets are read into native slices, which cannot hold an unknown.
 			name:       "audit_log_settings",
 			attributes: AuditLogSettingsSchema().Attributes,
-			attrNames:  []string{"audit_enabled"},
+			attrNames:  []string{"audit_enabled", "enabled_event_ids", "disabled_users"},
 		},
 	}
 
@@ -76,16 +76,12 @@ func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
 	}
 }
 
-// resolvesUnknownToState reports whether an unconfigured value (null config, unknown
-// plan) is restored to prior state by the plan modifiers.
+// resolvesUnknownToState reports whether an unconfigured value (null config, unknown plan)
+// is restored to prior state by the plan modifiers. A Default is exempt: it is a value
+// declared in the schema, not a zero value from an unwrapped unknown.
 //
-// An attribute with a Default is exempt: a Default is a value the practitioner declared
-// in the schema, so transmitting it is what the configuration asks for. That is not the
-// same as transmitting a zero value because an unknown got unwrapped.
-//
-// Each modifier sees the plan value the previous one produced, matching the framework
-// (fwserver.AttributeModifyPlan) - a modifier that runs after one which resolved the
-// unknown must observe a known plan value, or the result here does not reflect reality.
+// Each modifier sees the plan value the previous one produced, matching
+// fwserver.AttributeModifyPlan.
 func resolvesUnknownToState(t *testing.T, attr schema.Attribute) bool {
 	t.Helper()
 
@@ -140,8 +136,39 @@ func resolvesUnknownToState(t *testing.T, attr schema.Attribute) bool {
 		}
 		return req.PlanValue.Equal(types.BoolValue(true))
 
+	case *schema.SetAttribute:
+		if a.Default != nil {
+			return true
+		}
+		return setResolvesUnknownToState(ctx, a.ElementType, a.PlanModifiers)
+
+	case *schema.SetNestedAttribute:
+		if a.Default != nil {
+			return true
+		}
+		return setResolvesUnknownToState(ctx, a.NestedObject.Type(), a.PlanModifiers)
+
 	default:
 		t.Fatalf("unhandled attribute type %T - extend resolvesUnknownToState", attr)
 		return false
 	}
+}
+
+// setResolvesUnknownToState is the set case of resolvesUnknownToState. Prior state is an
+// empty set, which is representable for any element type including nested objects.
+func setResolvesUnknownToState(ctx context.Context, elementType attr.Type, modifiers []planmodifier.Set) bool {
+	priorState := types.SetValueMust(elementType, nil)
+
+	req := planmodifier.SetRequest{
+		StateValue:  priorState,
+		PlanValue:   types.SetUnknown(elementType),
+		ConfigValue: types.SetNull(elementType),
+	}
+	for _, m := range modifiers {
+		resp := planmodifier.SetResponse{PlanValue: req.PlanValue}
+		m.PlanModifySet(ctx, req, &resp)
+		req.PlanValue = resp.PlanValue
+	}
+
+	return req.PlanValue.Equal(priorState)
 }

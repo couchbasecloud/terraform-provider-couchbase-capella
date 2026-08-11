@@ -5,6 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -22,6 +24,8 @@ func AuditLogSettingsSchema() schema.Schema {
 	// useStateForUnknown: audit_enabled goes into UpdateClusterAuditSettingsRequest, and
 	// without it an unconfigured one is sent as false, disabling auditing.
 	capellaschema.AddAttr(attrs, "audit_enabled", auditLogSettingsBuilder, boolAttribute(computed, optional, useStateForUnknown))
+	// useStateForUnknown: enabled_event_ids goes into UpdateClusterAuditSettingsRequest as a
+	// native slice, which cannot hold an unknown, so an unconfigured one breaks the update.
 	capellaschema.AddAttr(attrs, "enabled_event_ids", auditLogSettingsBuilder, &schema.SetAttribute{
 		Computed:    true,
 		Optional:    true,
@@ -29,17 +33,24 @@ func AuditLogSettingsSchema() schema.Schema {
 		Validators: []validator.Set{
 			setvalidator.ValueInt64sAre(int64validator.AtLeast(1)),
 		},
+		PlanModifiers: []planmodifier.Set{
+			setplanmodifier.UseStateForUnknown(),
+		},
 	})
 
 	disabledUserAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(disabledUserAttrs, "domain", auditLogSettingsBuilder, stringAttribute([]string{required}, stringvalidator.LengthAtLeast(1)))
 	capellaschema.AddAttr(disabledUserAttrs, "name", auditLogSettingsBuilder, stringAttribute([]string{required}, stringvalidator.LengthAtLeast(1)))
 
+	// useStateForUnknown: same as enabled_event_ids.
 	capellaschema.AddAttr(attrs, "disabled_users", auditLogSettingsBuilder, &schema.SetNestedAttribute{
 		Computed: true,
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: disabledUserAttrs,
+		},
+		PlanModifiers: []planmodifier.Set{
+			setplanmodifier.UseStateForUnknown(),
 		},
 	})
 
