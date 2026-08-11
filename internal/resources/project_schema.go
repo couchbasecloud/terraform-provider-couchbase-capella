@@ -17,7 +17,9 @@ func ProjectSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "id", projectBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "organization_id", projectBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(attrs, "description", projectBuilder, stringAttribute([]string{optional, computed}))
+	// useStateForUnknown: description goes into PutProjectRequest, and without it an
+	// unconfigured one is sent as "", wiping the existing description.
+	capellaschema.AddAttr(attrs, "description", projectBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "if_match", projectBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(attrs, "etag", projectBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "audit", projectBuilder, computedAuditAttribute())

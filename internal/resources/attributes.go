@@ -146,13 +146,13 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 			var planModifiers = []planmodifier.Bool{
 				boolplanmodifier.RequiresReplace(),
 			}
-			attribute.PlanModifiers = planModifiers
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 
 		case useStateForUnknown:
 			var planModifiers = []planmodifier.Bool{
 				boolplanmodifier.UseStateForUnknown(),
 			}
-			attribute.PlanModifiers = planModifiers
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		}
 	}
 

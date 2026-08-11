@@ -22,7 +22,9 @@ func BucketSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", bucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "type", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "storage_backend", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "memory_allocation_in_mb", bucketBuilder, int64Attribute(optional, computed))
+	// useStateForUnknown on the four attributes below: they go into PutBucketRequest, and
+	// without it an unconfigured one reaches Update as unknown and is sent as "" or 0.
+	capellaschema.AddAttr(attrs, "memory_allocation_in_mb", bucketBuilder, int64Attribute(optional, computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "vbuckets", bucketBuilder, &schema.Int64Attribute{
 		Optional: true,
 		Computed: true,
@@ -35,10 +37,10 @@ func BucketSchema() schema.Schema {
 		},
 	})
 	capellaschema.AddAttr(attrs, "bucket_conflict_resolution", bucketBuilder, stringDefaultAttribute("seqno", computed, optional, requiresReplace, useStateForUnknown))
-	capellaschema.AddAttr(attrs, "durability_level", bucketBuilder, stringAttribute([]string{computed, optional}))
-	capellaschema.AddAttr(attrs, "replicas", bucketBuilder, int64Attribute(optional, computed))
+	capellaschema.AddAttr(attrs, "durability_level", bucketBuilder, stringAttribute([]string{computed, optional, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "replicas", bucketBuilder, int64Attribute(optional, computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "flush", bucketBuilder, boolDefaultAttribute(false, optional, computed))
-	capellaschema.AddAttr(attrs, "time_to_live_in_seconds", bucketBuilder, int64Attribute(optional, computed))
+	capellaschema.AddAttr(attrs, "time_to_live_in_seconds", bucketBuilder, int64Attribute(optional, computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "eviction_policy", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
 
 	statsAttrs := make(map[string]schema.Attribute)
