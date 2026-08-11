@@ -91,6 +91,11 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
+	// Initialize Data so the data attribute is set even when no cluster
+	// matches. A nil slice becomes a null list in state, which fails checks
+	// on data.#.
+	state.Data = make([]providerschema.ClusterData, 0, len(response))
+
 	for i := range response {
 		cluster := response[i]
 		if d.FreeTierClusterFilter && cluster.Support.Plan != "free" {
@@ -104,6 +109,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 				"Error Reading Capella Clusters",
 				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, errors.ErrUnableToConvertAuditData),
 			)
+			return
 		}
 
 		newClusterData, err := providerschema.NewClusterData(&cluster, organizationId, projectId, auditObj)
@@ -112,6 +118,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 				"Error Reading Capella Clusters",
 				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
 			)
+			return
 		}
 		state.Data = append(state.Data, *newClusterData)
 	}

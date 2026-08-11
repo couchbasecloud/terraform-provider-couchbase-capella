@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-
 var malformedLoadBalancerCIDRs = []string{
 	"192.168.0.0/244",    // prefix length above 32
 	"999.999.999.999/24", // octets out of range
@@ -36,10 +35,9 @@ func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
 
 	steps := make([]resource.TestStep, 0, len(malformedLoadBalancerCIDRs)+4)
 
-
 	for _, cidr := range malformedLoadBalancerCIDRs {
 		steps = append(steps, resource.TestStep{
-			Config: testAccAppServiceLoadBalancerCIDRMalformedConfig(resourceName, clusterName, appServiceName, clusterCIDR, cidr),
+			Config:      testAccAppServiceLoadBalancerCIDRMalformedConfig(resourceName, clusterName, appServiceName, clusterCIDR, cidr),
 			ExpectError: regexp.MustCompile(`(?s)error during app service creation`),
 		})
 	}

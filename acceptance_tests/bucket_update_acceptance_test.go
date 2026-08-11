@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
-
 func TestAccBucketUpdateSendsPlanValues(t *testing.T) {
 
 	resourceName := randomStringWithPrefix("tf_acc_bucket_upd_")
