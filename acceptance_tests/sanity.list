@@ -259,11 +259,9 @@ TestAccDatasourceCloudSnapshotRestores
 # ----------------------------------------
 # 16. AUDIT LOGGING
 # ----------------------------------------
-# Tests audit log settings resource
-TestAccAuditLogSettingsResource
-
-# Tests reading audit log settings via data source
-TestAccDatasourceAuditLogSettings
+# Tests audit log settings resource and data source as sequential subtests
+# against the shared global cluster
+TestAccAuditLog
 
 # Tests reading audit log event IDs via data source
 TestAccDatasourceAuditLogEventIDs
