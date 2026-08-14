@@ -257,8 +257,15 @@ func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
+				// Create the deferred index on its own first: it must apply
+				// cleanly (no ExpectError) so it lands in state and the
+				// framework's automatic destroy cleans it up, even though the
+				// next step's monitor read is expected to error.
+				Config: testAccQueryIndexOnlyConfigWithDeferBuild(idxName, "deferred_field", true),
+			},
+			{
 				Config:      testAccQueryIndexMonitorDeferredConfig(idxName, monitorName),
-				ExpectError: regexp.MustCompile(`(?i)Error monitoring query indexes`),
+				ExpectError: regexp.MustCompile(`(?is)Error monitoring query indexes.*is in Deferred state and will not become Ready without a BUILD INDEX statement`),
 			},
 		},
 	})
@@ -349,6 +356,10 @@ data "couchbase-capella_query_index_monitor" "%[2]s" {
 // resource, without a dependent datasource, so tests can create the index and
 // let PreConfig sleep before reading it back through a datasource in a later step.
 func testAccQueryIndexOnlyConfig(idxName, indexKey string) string {
+	return testAccQueryIndexOnlyConfigWithDeferBuild(idxName, indexKey, false)
+}
+
+func testAccQueryIndexOnlyConfigWithDeferBuild(idxName, indexKey string, deferBuild bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -362,11 +373,11 @@ resource "couchbase-capella_query_indexes" "%[2]s" {
   index_name      = "%[2]s"
   index_keys      = ["%[9]s"]
   with = {
-    defer_build = false
+    defer_build = %[10]t
   }
 }
 `, globalProviderBlock, idxName, globalOrgId, globalProjectId, globalClusterId,
-		globalBucketName, globalScopeName, globalCollectionName, indexKey)
+		globalBucketName, globalScopeName, globalCollectionName, indexKey, deferBuild)
 }
 
 func testAccQueryIndexesDatasourceConfig(idxName, dsName string) string {
