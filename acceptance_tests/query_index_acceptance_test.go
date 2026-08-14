@@ -264,8 +264,10 @@ func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
 				Config: testAccQueryIndexOnlyConfigWithDeferBuild(idxName, "deferred_field", true),
 			},
 			{
-				Config:      testAccQueryIndexMonitorDeferredConfig(idxName, monitorName),
-				ExpectError: regexp.MustCompile(`(?is)Error monitoring query indexes.*is in Deferred state and will not become Ready without a BUILD INDEX statement`),
+				Config: testAccQueryIndexMonitorDeferredConfig(idxName, monitorName),
+				// terraform's diagnostic renderer word-wraps the message at the terminal width, so
+				// whitespace between words (e.g. "BUILD INDEX\nstatement") can become a newline.
+				ExpectError: regexp.MustCompile(`(?is)Error\s+monitoring\s+query\s+indexes.*is\s+in\s+Deferred\s+state\s+and\s+will\s+not\s+become\s+Ready\s+without\s+a\s+BUILD\s+INDEX\s+statement`),
 			},
 		},
 	})
