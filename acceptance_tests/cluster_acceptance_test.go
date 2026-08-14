@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -203,6 +204,11 @@ func TestAccClusterResourceGCP(t *testing.T) {
 			},
 			{
 				Config: testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, cidr),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),

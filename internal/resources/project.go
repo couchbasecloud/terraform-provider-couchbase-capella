@@ -198,27 +198,27 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 // Update updates the project.
 func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state providerschema.Project
-	diags := req.Plan.Get(ctx, &state)
+	var plan providerschema.Project
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	IDs, err := state.Validate()
+	IDs, err := plan.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Could not update Capella project ID "+plan.Id.String()+": "+err.Error(),
 		)
 		return
 	}
 
-	if err := r.validateProjectAttributesTrimmed(state); err != nil {
+	if err := r.validateProjectAttributesTrimmed(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Could not update Capella project ID "+plan.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -229,13 +229,13 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	)
 
 	projectRequest := api.PutProjectRequest{
-		Description: state.Description.ValueString(),
-		Name:        state.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+		Name:        plan.Name.ValueString(),
 	}
 
 	var headers = make(map[string]string)
-	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		headers["If-Match"] = state.IfMatch.ValueString()
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		headers["If-Match"] = plan.IfMatch.ValueString()
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
@@ -256,7 +256,7 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		}
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Projects",
-			"Could not update Capella project ID "+state.Id.String()+": "+errString,
+			"Could not update Capella project ID "+plan.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -276,8 +276,8 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		currentState.IfMatch = state.IfMatch
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		currentState.IfMatch = plan.IfMatch
 	}
 
 	// Set state to fully populated data

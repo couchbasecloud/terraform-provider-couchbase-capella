@@ -1,12 +1,18 @@
 package acceptance_tests
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 func TestAccApiKeyResource(t *testing.T) {
@@ -493,5 +499,57 @@ func generateApiKeyImportIdForResource(resourceReference string) resource.Import
 			}
 		}
 		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], globalOrgId), nil
+	}
+}
+
+// TestAccApiKeyResourceInvalidExpiryDirectAPI hits the API directly with an
+// invalid expiry (0) to verify CBSE-23222 / AV-137404: the API must return a
+// proper validation error (HTTP 422) with an expiry-specific message, not a
+// generic 500/code 10000.
+func TestAccApiKeyResourceInvalidExpiryDirectAPI(t *testing.T) {
+	data := newTestClient(t)
+
+	name := randomStringWithPrefix("tf_acc_apikey_expiry_direct_")
+	expiry := float32(0)
+	req := api.CreateApiKeyRequest{
+		Name:              name,
+		OrganizationRoles: []string{"organizationMember"},
+		Expiry:            &expiry,
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys", data.HostURL, globalOrgId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+
+	_, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, req, data.Token, nil)
+	if err == nil {
+		t.Fatal("unexpected success: API accepted expiry=0, but it should be rejected")
+	}
+
+	var apiErr *api.Error
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected api.Error, got %T: %v", err, err)
+	}
+
+	if apiErr.HttpStatusCode == http.StatusInternalServerError {
+		t.Fatalf(
+			"CBSE-23222 regression: API returns 500 for invalid expiry (0). "+
+				"Expected HTTP 422 with message about expiry being too small. Got: %s",
+			apiErr.Error(),
+		)
+	}
+	if apiErr.HttpStatusCode != http.StatusUnprocessableEntity {
+		t.Fatalf(
+			"unexpected HTTP status for invalid expiry: got %d, want %d. Body: %s",
+			apiErr.HttpStatusCode, http.StatusUnprocessableEntity, apiErr.Error(),
+		)
+	}
+	if apiErr.Code != 422 {
+		t.Fatalf("unexpected error code: got %d, want 422. Body: %s", apiErr.Code, apiErr.Error())
+	}
+	if !strings.Contains(apiErr.Message, "expiry") {
+		t.Fatalf("expected expiry validation message, got: %s", apiErr.Message)
+	}
+	if apiErr.Hint == "" {
+		t.Fatal("expected a non-empty error hint about required parameters")
 	}
 }

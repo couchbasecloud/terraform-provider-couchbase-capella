@@ -119,11 +119,21 @@ func (d *DataApi) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	refreshedState, err := d.checkDataApiStatus(ctx, organizationId, projectId, clusterId)
+	const errorMessageDuringCreate = "Data API configuration update has been processed, but encountered an error while checking the current" +
+		" state of the Data API. You can retry `terraform apply` at a later time, unexpected error: "
+
+	refreshedState, err := d.checkDataApiStatus(
+		ctx,
+		organizationId,
+		projectId,
+		clusterId,
+		data_api.DesiredState(plan.EnableDataApi.ValueBool()),
+		data_api.DesiredState(plan.EnableNetworkPeering.ValueBool()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating Data API configuration",
-			errorMessageAfterDataApiUpdate+api.ParseError(err),
+			errorMessageDuringCreate+api.ParseError(err),
 		)
 		return
 	}
@@ -215,7 +225,14 @@ func (d *DataApi) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	refreshedState, err := d.checkDataApiStatus(ctx, organizationId, projectId, clusterId)
+	refreshedState, err := d.checkDataApiStatus(
+		ctx,
+		organizationId,
+		projectId,
+		clusterId,
+		data_api.DesiredState(plan.EnableDataApi.ValueBool()),
+		data_api.DesiredState(plan.EnableNetworkPeering.ValueBool()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating Data API configuration",
@@ -267,10 +284,14 @@ func (d *DataApi) updateDataApi(ctx context.Context, plan providerschema.DataApi
 	return err
 }
 
-// checkDataApiStatus polls the Data API status until both the Data API and its network peering reach a final state,
-// then returns the refreshed resource state.
+// checkDataApiStatus polls the Data API status until both the Data API and its network peering reach the desired
+// states from the plan, then returns the refreshed resource state.
 // Polls up to 30 minutes, with a 15-second interval between polls to allow for the asynchronous operation to complete.
-func (d *DataApi) checkDataApiStatus(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.DataApi, error) {
+func (d *DataApi) checkDataApiStatus(
+	ctx context.Context,
+	organizationId, projectId, clusterId string,
+	desiredStateForDataAPI, desiredStateForNetworkPeering data_api.State,
+) (*providerschema.DataApi, error) {
 	const timeout = time.Minute * 30
 
 	var cancel context.CancelFunc
@@ -288,14 +309,14 @@ func (d *DataApi) checkDataApiStatus(ctx context.Context, organizationId, projec
 				return nil, err
 			}
 			tflog.Info(ctx, "retrying after error polling Data API status", map[string]interface{}{"error": err.Error()})
-		case data_api.IsFinalState(statusResp.State) && data_api.IsFinalState(statusResp.StateForNetworkPeering):
-			tflog.Debug(ctx, "data api has reached a final state", map[string]interface{}{
+		case statusResp.State == desiredStateForDataAPI && statusResp.StateForNetworkPeering == desiredStateForNetworkPeering:
+			tflog.Debug(ctx, "data api has reached the desired state", map[string]interface{}{
 				"state_for_data_api":        statusResp.State,
 				"state_for_network_peering": statusResp.StateForNetworkPeering,
 			})
 			return providerschema.NewDataApi(organizationId, projectId, clusterId, statusResp), nil
 		default:
-			tflog.Info(ctx, "waiting for Data API to finish transitioning to a final state", map[string]interface{}{
+			tflog.Info(ctx, "waiting for Data API to reach the desired state", map[string]interface{}{
 				"state_for_data_api":        statusResp.State,
 				"state_for_network_peering": statusResp.StateForNetworkPeering,
 			})
@@ -303,7 +324,12 @@ func (d *DataApi) checkDataApiStatus(ctx context.Context, organizationId, projec
 
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out while waiting for data API state to finish transitioning to a final state: %w", ctx.Err())
+			return nil, fmt.Errorf(
+				"timed out while waiting for data API to reach the desired state (desired data API state: %s, desired network peering state: %s): %w",
+				desiredStateForDataAPI,
+				desiredStateForNetworkPeering,
+				ctx.Err(),
+			)
 		case <-ticker.C:
 		}
 	}

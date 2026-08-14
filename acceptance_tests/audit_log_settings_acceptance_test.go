@@ -551,3 +551,103 @@ func testAccExistsAuditLogSettingsResource(t *testing.T, resourceReference strin
 		return err
 	}
 }
+
+func TestAccAuditLogSettingsResourceDisableOnRemoval(t *testing.T) {
+	clusterResourceName := randomStringWithPrefix("tf_acc_audit_rm_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_audit_rm_settings_")
+	cidr := generateRandomCIDR()
+	clusterReference := "couchbase-capella_cluster." + clusterResourceName
+	resourceReference := "couchbase-capella_audit_log_settings." + resourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, cidr, true, []int{20488, 20490, 20491}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsAuditLogSettingsResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
+					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20490"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20491"),
+					resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
+				),
+			},
+			{
+				Config: testAccAuditClusterOnlyConfig(clusterResourceName, cidr),
+				Check:  testAccCheckAuditLogSettingsDisabled(t, clusterReference),
+			},
+		},
+	})
+}
+
+func testAccAuditClusterOnlyConfig(clusterResourceName, cidr string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	name            = "%[2]s"
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "%[5]s"
+	}
+
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					storage = 50
+					type    = "io2"
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = ["data", "index", "query"]
+		}
+	]
+
+	availability = {
+		type = "multi"
+	}
+
+	support = {
+		plan     = "enterprise"
+		timezone = "PT"
+	}
+}
+`, globalProviderBlock, clusterResourceName, globalOrgId, globalProjectId, cidr)
+}
+
+func testAccCheckAuditLogSettingsDisabled(t *testing.T, clusterReference string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[clusterReference]
+		if !ok {
+			return fmt.Errorf("cluster %s not found in state", clusterReference)
+		}
+		clusterId := rs.Primary.Attributes["id"]
+		data := newTestClient(t)
+		settings, err := retrieveAuditLogSettingsFromServer(data, globalOrgId, globalProjectId, clusterId)
+		if err != nil {
+			return err
+		}
+		if settings.AuditEnabled {
+			return fmt.Errorf("expected audit logging disabled after resource removal, got auditEnabled=true")
+		}
+		if len(settings.EnabledEventIDs) != 0 {
+			return fmt.Errorf("expected no enabled event ids after removal, got %d", len(settings.EnabledEventIDs))
+		}
+		return nil
+	}
+}

@@ -363,18 +363,18 @@ func (c *Bucket) retrieveBucket(
 
 // Update updates the bucket.
 func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state providerschema.Bucket
-	diags := req.Plan.Get(ctx, &state)
+	var plan providerschema.Bucket
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	IDs, err := state.Validate()
+	IDs, err := plan.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Bucket in Capella",
-			"Could not read Capella Bucket with ID "+state.Id.String()+": "+err.Error(),
+			"Could not read Capella Bucket with ID "+plan.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -386,12 +386,14 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		bucketId       = IDs[providerschema.Id]
 	)
 
+	// Plan values. Each field relies on useStateForUnknown in the schema to have already
+	// resolved an unconfigured value back to prior state; without it this sends "" or 0.
 	bucketUpdateRequest := bucketapi.PutBucketRequest{
-		MemoryAllocationInMb: state.MemoryAllocationInMB.ValueInt64(),
-		DurabilityLevel:      state.DurabilityLevel.ValueString(),
-		Replicas:             state.Replicas.ValueInt64(),
-		Flush:                state.Flush.ValueBool(),
-		TimeToLiveInSeconds:  state.TimeToLiveInSeconds.ValueInt64(),
+		MemoryAllocationInMb: plan.MemoryAllocationInMB.ValueInt64(),
+		DurabilityLevel:      plan.DurabilityLevel.ValueString(),
+		Replicas:             plan.Replicas.ValueInt64(),
+		Flush:                plan.Flush.ValueBool(),
+		TimeToLiveInSeconds:  plan.TimeToLiveInSeconds.ValueInt64(),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)

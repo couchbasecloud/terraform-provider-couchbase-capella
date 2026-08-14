@@ -26,14 +26,15 @@ import (
 )
 
 const (
-	optional           = "optional"
-	computed           = "computed"
-	required           = "required"
-	sensitive          = "sensitive"
-	requiresReplace    = "requiresReplace"
-	useStateForUnknown = "useStateForUnknown"
-	deprecated         = "deprecated"
-	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
+	optional                    = "optional"
+	computed                    = "computed"
+	required                    = "required"
+	sensitive                   = "sensitive"
+	requiresReplace             = "requiresReplace"
+	requiresReplaceIfConfigured = "requiresReplaceIfConfigured"
+	useStateForUnknown          = "useStateForUnknown"
+	deprecated                  = "deprecated"
+	deprecationMessage          = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
 var uuidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
@@ -59,6 +60,11 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 		case requiresReplace:
 			var planModifiers = []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case requiresReplaceIfConfigured:
+			var planModifiers = []planmodifier.String{
+				stringplanmodifier.RequiresReplaceIfConfigured(),
 			}
 			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		case useStateForUnknown:
@@ -140,13 +146,13 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 			var planModifiers = []planmodifier.Bool{
 				boolplanmodifier.RequiresReplace(),
 			}
-			attribute.PlanModifiers = planModifiers
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 
 		case useStateForUnknown:
 			var planModifiers = []planmodifier.Bool{
 				boolplanmodifier.UseStateForUnknown(),
 			}
-			attribute.PlanModifiers = planModifiers
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		}
 	}
 
