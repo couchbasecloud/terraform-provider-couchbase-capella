@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -361,18 +362,44 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		indexName      = attrs[providerschema.IndexName]
 	)
 
-	index, err := g.getQueryIndex(
-		ctx,
-		organizationID,
-		projectID,
-		clusterID,
-		bucketName,
-		scopeName,
-		collectionName,
-		indexName,
+	// The index-by-name lookup can transiently 404 for a few seconds right after
+	// CREATE INDEX under concurrent DDL load, before the query service's catalog
+	// converges across nodes. Retry a bounded number of times (mirroring the same
+	// tolerance WatchIndexes gives consecutive 404s) before treating the index as
+	// genuinely gone, so a Terraform refresh run moments after apply doesn't wipe
+	// state and report a spurious recreate.
+	const (
+		notFoundRetries = 3
+		notFoundDelay   = 3 * time.Second
 	)
+
+	var index *api.IndexDefinitionResponse
+	var resourceNotFound bool
+	var errString string
+
+	for attempt := 0; ; attempt++ {
+		index, err = g.getQueryIndex(
+			ctx,
+			organizationID,
+			projectID,
+			clusterID,
+			bucketName,
+			scopeName,
+			collectionName,
+			indexName,
+		)
+		if err == nil {
+			break
+		}
+
+		resourceNotFound, errString = api.CheckResourceNotFoundError(err)
+		if !resourceNotFound || attempt >= notFoundRetries {
+			break
+		}
+		time.Sleep(notFoundDelay)
+	}
+
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			resp.State.RemoveResource(ctx)
