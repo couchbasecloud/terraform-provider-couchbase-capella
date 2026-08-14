@@ -266,6 +266,8 @@ var (
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 
+	ErrIndexDropPending = errors.New("index cannot be dropped yet as it is still being created in the background")
+
 	ErrTimeoutWaitingForClientResponse = errors.New("timeout waiting for index build")
 
 	ErrorMessageWhileFreeTierBucketCreation = errors.New("There is an error during free tier bucket creation. Please check in Capella to see if any hanging resources")

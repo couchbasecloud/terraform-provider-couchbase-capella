@@ -550,14 +550,52 @@ func (g *GSI) Delete(ctx context.Context, req resource.DeleteRequest, resp *reso
 		state.CollectionName.ValueString(),
 	)
 
-	if err := g.executeGsiDdl(ctx, &state, ddl); err != nil {
-		resp.Diagnostics.AddError(
-			"An error occurred while executing index DDL",
-			"Error during index DDL execution: "+err.Error(),
+	// The index-drop retry mirrors the tolerance already given to a transient
+	// not-found on Read: a non-deferred index's CREATE can still be finishing in
+	// the background under concurrent DDL load, and the API rejects a DROP of an
+	// index it hasn't finished creating yet with ErrIndexDropPending.
+	const (
+		dropPendingRetries = 3
+		dropPendingDelay   = 3 * time.Second
+	)
+
+	var err error
+	for attempt := 0; ; attempt++ {
+		err = g.executeGsiDdl(ctx, &state, ddl)
+		if err == nil {
+			return
+		}
+
+		if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+			// already gone: deleting a nonexistent index is a no-op success.
+			return
+		}
+
+		if !errors.Is(err, internalerrors.ErrIndexDropPending) || attempt >= dropPendingRetries {
+			break
+		}
+		time.Sleep(dropPendingDelay)
+	}
+
+	if errors.Is(err, internalerrors.ErrIndexDropPending) {
+		resp.Diagnostics.AddWarning(
+			"Index deletion is pending",
+			fmt.Sprintf(
+				"Could not drop index %s in %s.%s.%s as its creation is still finishing in the background. "+
+					`Please run "terraform apply --refresh-only" after some time to confirm removal.`,
+				indexName,
+				state.BucketName.ValueString(),
+				state.ScopeName.ValueString(),
+				state.CollectionName.ValueString(),
+			),
 		)
 		return
 	}
 
+	resp.Diagnostics.AddError(
+		"An error occurred while executing index DDL",
+		"Error during index DDL execution: "+err.Error(),
+	)
 }
 
 // Importstate is used to import an index on the data plane cluster.
@@ -705,6 +743,12 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 			strings.Contains(strings.ToLower(apiError.Message), "concurrent create index request") {
 
 			return internalerrors.ErrConcurrentIndexCreation
+		}
+
+		// DROP INDEX on an index whose CREATE is still finishing in the background
+		// (a non-deferred index build the indexer hasn't caught up on yet).
+		if strings.Contains(strings.ToLower(apiError.Message), "scheduled for background creation") {
+			return internalerrors.ErrIndexDropPending
 		}
 
 		// Some other error from the API server.
