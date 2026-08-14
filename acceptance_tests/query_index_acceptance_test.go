@@ -4,9 +4,17 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+// queryIndexCatalogPropagationDelay gives the query service's index-list catalog
+// time to converge after a CREATE INDEX, so the query_indexes datasource doesn't
+// race a freshly created index under concurrent DDL load on the shared cluster
+// (the DDL and single-index read endpoints confirm the index immediately, but the
+// list endpoint used by the datasource lags behind under load).
+const queryIndexCatalogPropagationDelay = 15 * time.Second
 
 func TestAccDatasourceQueryIndexes(t *testing.T) {
 	idxName := randomStringWithPrefix("tf_acc_qi_ds_idx_")
@@ -18,7 +26,7 @@ func TestAccDatasourceQueryIndexes(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryIndexesDatasourceConfig(idxName, dsName),
+				Config: testAccQueryIndexOnlyConfig(idxName, "f1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(idxReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(idxReference, "project_id", globalProjectId),
@@ -27,7 +35,12 @@ func TestAccDatasourceQueryIndexes(t *testing.T) {
 					resource.TestCheckResourceAttr(idxReference, "scope_name", globalScopeName),
 					resource.TestCheckResourceAttr(idxReference, "collection_name", globalCollectionName),
 					resource.TestCheckResourceAttr(idxReference, "index_name", idxName),
-
+				),
+			},
+			{
+				PreConfig: func() { time.Sleep(queryIndexCatalogPropagationDelay) },
+				Config:    testAccQueryIndexesDatasourceConfig(idxName, dsName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
@@ -52,7 +65,11 @@ func TestAccDatasourceQueryIndexesBucketLevelOnly(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryIndexesDatasourceBucketOnlyConfig(idxName, dsName),
+				Config: testAccQueryIndexOnlyConfig(idxName, "bkt_field"),
+			},
+			{
+				PreConfig: func() { time.Sleep(queryIndexCatalogPropagationDelay) },
+				Config:    testAccQueryIndexesDatasourceBucketOnlyConfig(idxName, dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
@@ -76,7 +93,11 @@ func TestAccDatasourceQueryIndexesScopeOnly(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryIndexesDatasourceScopeOnlyConfig(idxName, dsName),
+				Config: testAccQueryIndexOnlyConfig(idxName, "scope_field"),
+			},
+			{
+				PreConfig: func() { time.Sleep(queryIndexCatalogPropagationDelay) },
+				Config:    testAccQueryIndexesDatasourceScopeOnlyConfig(idxName, dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
@@ -322,6 +343,30 @@ data "couchbase-capella_query_index_monitor" "%[2]s" {
 			},
 		},
 	})
+}
+
+// testAccQueryIndexOnlyConfig returns the HCL config for just the query_indexes
+// resource, without a dependent datasource, so tests can create the index and
+// let PreConfig sleep before reading it back through a datasource in a later step.
+func testAccQueryIndexOnlyConfig(idxName, indexKey string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_query_indexes" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  bucket_name     = "%[6]s"
+  scope_name      = "%[7]s"
+  collection_name = "%[8]s"
+  index_name      = "%[2]s"
+  index_keys      = ["%[9]s"]
+  with = {
+    defer_build = false
+  }
+}
+`, globalProviderBlock, idxName, globalOrgId, globalProjectId, globalClusterId,
+		globalBucketName, globalScopeName, globalCollectionName, indexKey)
 }
 
 func testAccQueryIndexesDatasourceConfig(idxName, dsName string) string {
