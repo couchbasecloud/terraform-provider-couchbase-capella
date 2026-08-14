@@ -140,7 +140,8 @@ func WatchIndexes(
 					return err
 				}
 
-				if status.Status == "Deferred" {
+				// AV-135211: a defer_build=true index reports "Created", not "Deferred", so both count as deferred.
+				if status.Status == "Created" || status.Status == "Deferred" {
 					return internalerrors.ErrIndexDeferred
 				}
 
