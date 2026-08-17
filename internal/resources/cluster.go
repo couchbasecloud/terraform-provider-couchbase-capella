@@ -650,9 +650,8 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	const sleep = time.Second * 3
-
-	timer := time.NewTimer(2 * time.Minute)
+	timer := time.NewTicker(1 * time.Minute)
+	defer timer.Stop()
 
 	for {
 		select {
@@ -662,15 +661,19 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 			clusterResp, err = c.getCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
+				if clusterResp.CurrentState.Equal(clusterapi.Healthy) {
 					return nil
 				}
+
+				if clusterapi.IsTerminalState(clusterResp.CurrentState) {
+					return fmt.Errorf("cluster %s operation failed, current state is %s", clusterResp.Id, clusterResp.CurrentState)
+				}
+
 				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
 				return err
 			}
-			timer.Reset(sleep)
 		}
 	}
 }
