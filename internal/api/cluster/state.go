@@ -1,6 +1,9 @@
 package cluster
 
-import "slices"
+import (
+	"slices"
+	"strings"
+)
 
 const (
 	Degraded         State = "degraded"
@@ -28,6 +31,10 @@ const (
 
 // State is the state that a cluster can have based on the fact if deployment of the cluster was successful or not.
 type State string
+
+func (s1 State) Equal(s2 State) bool {
+	return strings.EqualFold(string(s1), string(s2))
+}
 
 // IsFinalState checks whether cluster is successfully deployed/updated or not while creation/updation
 // TODO: Degraded, draft, peeringFailed, turningOffFailed, and turningOnFailed are not known when it occurs and What happens if rebalancing fails? Will it retry?".
