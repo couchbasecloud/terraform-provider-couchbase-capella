@@ -922,6 +922,11 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
+
+	if plan.DeletionProtection.IsNull() || plan.DeletionProtection.IsUnknown() {
+		plan.DeletionProtection = types.BoolNull()
+	}
+
 	plan.AppServiceId = types.StringNull()
 	plan.ConnectionString = types.StringNull()
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
