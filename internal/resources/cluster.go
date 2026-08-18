@@ -538,41 +538,14 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		return
 	}
 
-	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	err = r.checkClusterDeletionStatus(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella Cluster",
-				"Could not delete cluster id "+state.Id.String()+": "+errString,
-			)
-			return
-		}
-		// resourceNotFound as expected
-		return
-	}
-
-	// This case will only occur when cluster deletion has failed,
-	// and the cluster record still exists in the cp metadata. Therefore,
-	// no error will be returned when performing a GET call.
-	cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+errString,
+			"Could not delete cluster id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
-	resp.Diagnostics.AddError(
-		"Error deleting cluster",
-		fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
-	)
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.
@@ -674,6 +647,42 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 			default:
 				return err
 			}
+		}
+	}
+}
+
+// checkClusterDeletionStatus polls the cluster after a delete has been accepted until the GET
+// returns a 404, which means the cluster record is gone and deletion completed. It returns an
+// error if the cluster lands in destroyFailed, if polling encounters an unexpected error, or if
+// the operation times out.
+func (c *Cluster) checkClusterDeletionStatus(ctx context.Context, organizationId, projectId, clusterId string) error {
+	// Assuming 60 minutes is the max time deletion takes, can change after discussion
+	const timeout = time.Minute * 60
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cluster deletion status transition timed out after initiation")
+		case <-ticker.C:
+			clusterResp, err := c.getCluster(ctx, organizationId, projectId, clusterId)
+			if err != nil {
+				if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+					return nil
+				}
+				continue
+			}
+			if clusterResp.CurrentState.Equal(clusterapi.DestroyFailed) {
+				return fmt.Errorf("cluster %s destroy failed", clusterResp.Id)
+			}
+
+			tflog.Info(ctx, "waiting for cluster destory to complete")
 		}
 	}
 }
