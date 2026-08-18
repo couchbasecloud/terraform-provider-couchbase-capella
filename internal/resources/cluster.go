@@ -682,7 +682,7 @@ func (c *Cluster) checkClusterDeletionStatus(ctx context.Context, organizationId
 				return fmt.Errorf("cluster %s destroy failed", clusterResp.Id)
 			}
 
-			tflog.Info(ctx, "waiting for cluster destory to complete")
+			tflog.Info(ctx, "waiting for cluster destroy to complete")
 		}
 	}
 }
