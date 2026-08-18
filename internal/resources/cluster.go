@@ -213,7 +213,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddWarning(
+		resp.Diagnostics.AddError(
 			"Error creating cluster",
 			errorMessageAfterClusterCreationInitiation+api.ParseError(err),
 		)

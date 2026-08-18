@@ -99,7 +99,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 
 	clusterResp, err := f.checkFreeTierClusterStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
 	if err != nil {
-		response.Diagnostics.AddWarning(
+		response.Diagnostics.AddError(
 			"error getting cluster status",
 			"failed to get cluster status, please refresh state later "+api.ParseError(err),
 		)
