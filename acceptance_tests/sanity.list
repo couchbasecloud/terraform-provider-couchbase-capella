@@ -118,6 +118,10 @@ TestAccDatabaseCredentialWithOptionalFields
 # Tests listing database credentials via data source
 TestAccDatasourceDatabaseCredentials
 
+# Tests that credential configs still reach a plan, guarding the schema attribute
+# types against drifting from what the provider reads back (AV-139978)
+TestAccDatabaseCredentialPlanOnly
+
 # ----------------------------------------
 # 8. SECURITY & NETWORKING
 # ----------------------------------------
