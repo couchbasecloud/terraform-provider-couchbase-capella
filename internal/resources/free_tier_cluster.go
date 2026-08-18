@@ -96,7 +96,8 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	clusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
+
+	clusterResp, err := f.checkFreeTierClusterStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
 	if err != nil {
 		response.Diagnostics.AddWarning(
 			"error getting cluster status",
@@ -272,7 +273,6 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		clusterId      = resourceIDs[providerschema.Id]
 	)
 
-	// Delete existing Cluster.
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = f.ClientV1.ExecuteWithRetry(
@@ -296,26 +296,13 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	freeTierClusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-
+	err = f.checkFreeTierClusterDeletionStatus(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			response.Diagnostics.AddError(
-				"Error Deleting Capella Cluster",
-				"Could not delete cluster id "+state.Id.String()+": "+errString,
-			)
-			return
-		}
-		// resourceNotFound as expected.
-		return
-	}
-
-	if freeTierClusterResp.CurrentState == clusterapi.DestroyFailed {
 		response.Diagnostics.AddError(
 			"Error Deleting Free Tier Cluster",
-			"Could not delete cluster id "+state.Id.String()+": cluster in destroy failed state",
+			"Could not delete cluster id "+state.Id.String()+": "+api.ParseError(err),
 		)
+		return
 	}
 }
 
@@ -366,7 +353,7 @@ func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierC
 // organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
 // function and waits until the cluster reaches a final state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
-func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*clusterapi.GetClusterResponse, error) {
+func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*clusterapi.GetClusterResponse, error) {
 	var (
 		clusterResp *clusterapi.GetClusterResponse
 		err         error
@@ -379,7 +366,8 @@ func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Conte
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
 
 	for {
 		select {
@@ -389,15 +377,53 @@ func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Conte
 			clusterResp, err = f.getFreeTierCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
-					tflog.Info(ctx, "cluster status is in final state")
+				if (clusterResp.CurrentState).Equal(clusterapi.Healthy) {
 					return clusterResp, nil
 				}
-				const msg = "waiting for cluster to complete the execution"
+				if clusterapi.IsTerminalState(clusterResp.CurrentState) {
+					return nil, fmt.Errorf("free tier cluster %s deploy failed, current state is %s", clusterResp.Id, clusterResp.CurrentState)
+				}
+
+				const msg = "waiting for free tier cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
 				return clusterResp, err
 			}
+		}
+	}
+}
+
+// checkFreeTierClusterDeletionStatus polls the free tier cluster after a delete has been
+// accepted until the GET returns a 404, which means the cluster record is gone and deletion
+// completed. It returns an error if the cluster lands in destroyFailed or if the operation
+// times out.
+func (f *FreeTierCluster) checkFreeTierClusterDeletionStatus(ctx context.Context, organizationId, projectId, clusterId string) error {
+	// Assuming 60 minutes is the max time deletion takes, can change after discussion.
+	const timeout = time.Minute * 60
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("cluster deletion status transition timed out after initiation")
+		case <-ticker.C:
+			clusterResp, err := f.getFreeTierCluster(ctx, organizationId, projectId, clusterId)
+			if err != nil {
+				if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+					return nil
+				}
+				continue
+			}
+			if clusterResp.CurrentState.Equal(clusterapi.DestroyFailed) {
+				return fmt.Errorf("free tier cluster destroy failed")
+			}
+			tflog.Info(ctx, "waiting for free tier cluster destroy to complete")
 		}
 	}
 }
