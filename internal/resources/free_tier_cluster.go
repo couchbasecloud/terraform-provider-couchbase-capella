@@ -77,46 +77,34 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	)
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error creating cluster",
-			errors.ErrorMessageWhileFreeTierClusterCreation.Error()+api.ParseError(err),
+			"Error initiating free tier cluster create request",
+			fmt.Sprintf("Could not initiate free tier cluster create request. error: %v", api.ParseError(err)),
 		)
 		return
 	}
 	freeTierClusterResponse := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(res.Body, &freeTierClusterResponse)
+	if err = json.Unmarshal(res.Body, &freeTierClusterResponse); err != nil {
+		response.Diagnostics.AddError(
+			"Error unmarshalling free tier cluster response",
+			fmt.Sprintf("Could not unmarshal response. error: %v", err.Error()),
+		)
+		return
+	}
+
+	clusterResp, err := f.checkForFreeTierClusterStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error unmarshalling the response",
-			errors.ErrorMessageWhileFreeTierClusterCreation.Error()+"error during unmarshalling:"+err.Error(),
-		)
-		return
-	}
-	diags = response.State.Set(ctx, initializePendingFreeTierClusterWithPlanAndId(plan, freeTierClusterResponse.Id.String()))
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	clusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
-	if err != nil {
-		response.Diagnostics.AddWarning(
-			"error getting cluster status",
-			"failed to get cluster status, please refresh state later "+api.ParseError(err),
+			"Error creating free tier cluster",
+			fmt.Sprintf("Could not create free tier cluster. error: %v", api.ParseError(err)),
 		)
 		return
 	}
 
-	if clusterResp.CurrentState != clusterapi.Healthy {
-		response.Diagnostics.AddWarning(
-			"Error creating cluster",
-			fmt.Sprintf("Could not create cluster id %s, as current Cluster state: %s", clusterResp.Id, clusterResp.CurrentState),
-		)
-
-	}
 	morphedState, err := f.morphFreeTierClusterRespToTerraformObj(ctx, organizationId, projectId, clusterResp)
 	if err != nil {
-		response.Diagnostics.AddWarning(
-			"Error fetching the cluster info",
-			errors.ErrorMessageAfterFreeTierClusterCreationInitiation.Error()+api.ParseError(err),
+		response.Diagnostics.AddError(
+			"Error morphing free tier cluster response",
+			fmt.Sprintf("Could not morph response to terraform object. error: %v", err.Error()),
 		)
 		return
 	}
@@ -169,10 +157,6 @@ func (f *FreeTierCluster) Read(ctx context.Context, request resource.ReadRequest
 
 	diags = response.State.Set(ctx, &refreshedState)
 	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 }
 
 func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -296,8 +280,7 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	freeTierClusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-
+	_, err = f.checkForFreeTierClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if !resourceNotFound {
@@ -309,13 +292,6 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		}
 		// resourceNotFound as expected.
 		return
-	}
-
-	if freeTierClusterResp.CurrentState == clusterapi.DestroyFailed {
-		response.Diagnostics.AddError(
-			"Error Deleting Free Tier Cluster",
-			"Could not delete cluster id "+state.Id.String()+": cluster in destroy failed state",
-		)
 	}
 }
 
@@ -339,34 +315,11 @@ func (f *FreeTierCluster) Configure(_ context.Context, request resource.Configur
 	f.Data = data
 }
 
-// initializePendingClusterWithPlanAndId initializes an instance of providerschema.Cluster.
-// with the specified plan and ID. It marks all computed fields as null and state as pending.
-func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierCluster, id string) providerschema.FreeTierCluster {
-	plan.Id = types.StringValue(id)
-	plan.CurrentState = types.StringValue("pending")
-	if plan.Description.IsNull() || plan.Description.IsUnknown() {
-		plan.Description = types.StringNull()
-	}
-
-	plan.EnablePrivateDNSResolution = types.BoolNull()
-	plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
-	plan.AppServiceId = types.StringNull()
-	plan.ConnectionString = types.StringNull()
-	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
-	plan.Availability = types.ObjectNull(providerschema.Availability{}.AttributeTypes())
-	plan.CmekId = types.StringNull()
-
-	plan.ServiceGroups = types.SetNull(types.ObjectType{}.WithAttributeTypes(providerschema.ServiceGroupAttributeTypes()))
-	plan.Support = types.ObjectNull(providerschema.Support{}.AttributeTypes())
-	plan.Etag = types.StringNull()
-	return plan
-}
-
 // checkFreeTierClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified,
 // organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
 // function and waits until the cluster reaches a final state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
-func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*clusterapi.GetClusterResponse, error) {
+func (f *FreeTierCluster) checkForFreeTierClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*clusterapi.GetClusterResponse, error) {
 	var (
 		clusterResp *clusterapi.GetClusterResponse
 		err         error
@@ -379,24 +332,31 @@ func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Conte
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return clusterResp, fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
+			return clusterResp, fmt.Errorf("free tier cluster creation status transition timed out after initiation, unexpected error: %w", err)
 		case <-ticker.C:
 			clusterResp, err = f.getFreeTierCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
-					tflog.Info(ctx, "cluster status is in final state")
+				if clusterResp.CurrentState.Equal(clusterapi.Healthy) {
 					return clusterResp, nil
 				}
-				const msg = "waiting for cluster to complete the execution"
+
+				if clusterapi.IsTerminalState(clusterResp.CurrentState) {
+					return nil, fmt.Errorf(
+						"free tier cluster operation failed, current state is %s", clusterResp.CurrentState,
+					)
+				}
+
+				const msg = "waiting for free tier cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
-				return clusterResp, err
+				return nil, err
 			}
 		}
 	}
