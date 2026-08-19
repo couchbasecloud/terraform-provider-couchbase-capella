@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -50,6 +51,8 @@ func testAccAppEndpointResync(t *testing.T) []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "last_error", ""),
 				resource.TestCheckResourceAttrSet(resourceReference, "docs_changed"),
 				resource.TestCheckResourceAttrSet(resourceReference, "docs_processed"),
+				checkOptionalResyncCount(resourceReference, "docs_targeted"),
+				checkOptionalResyncCount(resourceReference, "docs_errored"),
 				resource.TestCheckResourceAttrSet(resourceReference, "start_time"),
 				resource.TestCheckResourceAttrSet(resourceReference, "state"),
 				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
@@ -60,6 +63,8 @@ func testAccAppEndpointResync(t *testing.T) []resource.TestStep {
 				resource.TestCheckResourceAttr(datasourceReference, "last_error", ""),
 				resource.TestCheckResourceAttrSet(datasourceReference, "docs_changed"),
 				resource.TestCheckResourceAttrSet(datasourceReference, "docs_processed"),
+				checkOptionalResyncCount(datasourceReference, "docs_targeted"),
+				checkOptionalResyncCount(datasourceReference, "docs_errored"),
 				resource.TestCheckResourceAttrSet(datasourceReference, "start_time"),
 				resource.TestCheckResourceAttrSet(datasourceReference, "state"),
 			),
@@ -113,6 +118,33 @@ func testAccAppEndpointResyncConfig(resourceName, resourceReference, datasourceN
 		datasourceName,
 		resourceReference,
 	)
+}
+
+// checkOptionalResyncCount verifies a Resync counter that the Management API only reports on
+// App Services 4.1 and later. An absent attribute passes, since older App Services omit the field
+// entirely; a present one must be a non-negative integer.
+func checkOptionalResyncCount(reference, attribute string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[reference]
+		if !ok {
+			return fmt.Errorf("%s not found in state", reference)
+		}
+
+		raw, ok := rs.Primary.Attributes[attribute]
+		if !ok || raw == "" {
+			return nil
+		}
+
+		count, err := strconv.ParseInt(raw, 10, 64)
+		if err != nil {
+			return fmt.Errorf("%s.%s is not an integer: %q", reference, attribute, raw)
+		}
+		if count < 0 {
+			return fmt.Errorf("%s.%s is negative: %d", reference, attribute, count)
+		}
+
+		return nil
+	}
 }
 
 func testAccExistsAppEndpointResyncResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
