@@ -252,7 +252,7 @@ func (a *AppServiceOnOffOnDemand) Read(ctx context.Context, req resource.ReadReq
 		appServiceId   = IDs[providerschema.AppServiceId]
 	)
 
-	refreshedState, err := a.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, state.State.String())
+	refreshedState, err := a.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, state.State.ValueString())
 	if err != nil {
 		resourceNotFound, _ := app_service_onoff_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
