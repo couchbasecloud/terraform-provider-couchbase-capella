@@ -40,7 +40,7 @@ func TestAccAuditLogExportResource(t *testing.T) {
 	// when GET /auditLogExports/{id} is called for an export whose time
 	// window contains no audit data. The CI test cluster does not have
 	// audit logging configured (audit_log_settings.audit_enabled is the
-	// per-cluster singleton set by TestAccAuditLogSettingsResource — and
+	// per-cluster singleton set by TestAccAuditLog — and
 	// it ends with audit_enabled=false), so every export request on
 	// globalClusterId hits this 404. The provider's refreshAuditLogExport
 	// classifies any 404 as ResourceNotFound and the framework's
