@@ -28,14 +28,6 @@ var (
 	_ resource.ResourceWithImportState = &Cluster{}
 )
 
-const errorMessageAfterClusterCreationInitiation = "Cluster creation is initiated, but encountered an error while checking the current" +
-	" state of the cluster. Please run `terraform plan` after 4-5 minutes to know the" +
-	" current status of the cluster. Additionally, run `terraform apply --refresh-only` to update" +
-	" the state from remote, unexpected error: "
-
-const errorMessageWhileClusterCreation = "There is an error during cluster creation. Please check in Capella to see if any hanging resources" +
-	" have been created, unexpected error: "
-
 // Cluster is the Cluster resource implementation.
 type Cluster struct {
 	*providerschema.Data
@@ -189,42 +181,34 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating cluster",
-			errorMessageWhileClusterCreation+api.ParseError(err),
+			"Error initiating cluster create request",
+			fmt.Sprintf("Could not initiate cluster create request. error: %v", api.ParseError(err)),
 		)
 		return
 	}
 
 	clusterResponse := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResponse)
-	if err != nil {
+	if err = json.Unmarshal(response.Body, &clusterResponse); err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			errorMessageWhileClusterCreation+"error during unmarshalling:"+err.Error(),
+			"Error unmarshalling cluster response",
+			fmt.Sprintf("Could not unmarshal response. error: %v", err.Error()),
 		)
 		return
 	}
 
-	diags = resp.State.Set(ctx, initializePendingClusterWithPlanAndId(plan, clusterResponse.Id.String()))
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterResponse.Id.String())
-	if err != nil {
-		resp.Diagnostics.AddWarning(
+	if err = c.checkClusterStatus(ctx, organizationId, projectId, clusterResponse.Id.String()); err != nil {
+		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			errorMessageAfterClusterCreationInitiation+api.ParseError(err),
+			fmt.Sprintf("Could not create cluster. error: %v", api.ParseError(err)),
 		)
 		return
 	}
 
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddWarning(
-			"Error creating cluster",
-			errorMessageAfterClusterCreationInitiation+api.ParseError(err),
+		resp.Diagnostics.AddError(
+			"Error refreshing cluster state",
+			fmt.Sprintf("Could not refresh cluster state. error: %v", api.ParseError(err)),
 		)
 		return
 	}
@@ -482,7 +466,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 }
 
 // Delete deletes the cluster.
-func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (c *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
 	var state providerschema.Cluster
 	diags := req.State.Get(ctx, &state)
@@ -515,13 +499,13 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	)
 
 	// Delete existing Cluster
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = r.ClientV1.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
-		r.Token,
+		c.Token,
 		nil,
 	)
 	if err != nil {
@@ -532,47 +516,24 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Deleting Capella Cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+errString,
+			"Error initiating delete cluster request",
+			fmt.Sprintf("Could not initiate delete cluster request. error: %v", errString),
 		)
 		return
 	}
 
-	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella Cluster",
-				"Could not delete cluster id "+state.Id.String()+": "+errString,
-			)
-			return
-		}
-		// resourceNotFound as expected
-		return
-	}
-
-	// This case will only occur when cluster deletion has failed,
-	// and the cluster record still exists in the cp metadata. Therefore,
-	// no error will be returned when performing a GET call.
-	cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	if err != nil {
+	if err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId); err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError(
-			"Error Deleting Capella Cluster",
+			"Error Deleting Cluster",
 			"Could not delete cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
-	resp.Diagnostics.AddError(
-		"Error deleting cluster",
-		fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
-	)
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.
@@ -650,27 +611,32 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	const sleep = time.Second * 3
-
-	timer := time.NewTimer(2 * time.Minute)
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
-		case <-timer.C:
+		case <-ticker.C:
 			clusterResp, err = c.getCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
+				if clusterResp.CurrentState.Equal(clusterapi.Healthy) {
 					return nil
 				}
+
+				if clusterapi.IsTerminalState(clusterResp.CurrentState) {
+					return fmt.Errorf(
+						"cluster operation failed, current state is %s", clusterResp.CurrentState,
+					)
+				}
+
 				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
 				return err
 			}
-			timer.Reset(sleep)
 		}
 	}
 }
@@ -889,44 +855,6 @@ func getCouchbaseServer(
 	diags.Append(config.GetAttribute(ctx, path.Root("couchbase_server"), &couchbaseServer)...)
 	tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", couchbaseServer))
 	return couchbaseServer
-}
-
-// initializePendingClusterWithPlanAndId initializes an instance of providerschema.Cluster
-// with the specified plan and ID. It marks all computed fields as null and state as pending.
-func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id string) providerschema.Cluster {
-	plan.Id = types.StringValue(id)
-	plan.CurrentState = types.StringValue("pending")
-	if plan.Description.IsNull() || plan.Description.IsUnknown() {
-		plan.Description = types.StringNull()
-	}
-	if plan.ConfigurationType.IsNull() || plan.ConfigurationType.IsUnknown() {
-		plan.ConfigurationType = types.StringNull()
-	}
-
-	if plan.EnablePrivateDNSResolution.IsNull() || plan.EnablePrivateDNSResolution.IsUnknown() {
-		plan.EnablePrivateDNSResolution = types.BoolNull()
-	}
-
-	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
-		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
-	}
-	plan.AppServiceId = types.StringNull()
-	plan.ConnectionString = types.StringNull()
-	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
-	plan.Etag = types.StringNull()
-
-	for _, serviceGroup := range plan.ServiceGroups {
-		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.Storage.IsNull() || serviceGroup.Node.Disk.Storage.IsUnknown()) {
-			serviceGroup.Node.Disk.Storage = types.Int64Null()
-		}
-		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.IOPS.IsNull() || serviceGroup.Node.Disk.IOPS.IsUnknown()) {
-			serviceGroup.Node.Disk.IOPS = types.Int64Null()
-		}
-		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.Autoexpansion.IsNull() || serviceGroup.Node.Disk.Autoexpansion.IsUnknown()) {
-			serviceGroup.Node.Disk.Autoexpansion = types.BoolNull()
-		}
-	}
-	return plan
 }
 
 func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
