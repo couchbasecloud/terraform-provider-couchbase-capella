@@ -25,6 +25,17 @@ func AppEndpointResyncSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "collections_processing", appEndpointResyncBuilder, mapAttribute(types.SetType{ElemType: types.StringType}, []string{computed}...), "ResyncStatus")
 	capellaschema.AddAttr(attrs, "docs_changed", appEndpointResyncBuilder, int64Attribute(computed), "ResyncStatus")
 	capellaschema.AddAttr(attrs, "docs_processed", appEndpointResyncBuilder, int64Attribute(computed), "ResyncStatus")
+
+	// The published OpenAPI spec does not carry these two fields yet, so they supply a fallback
+	// description; AddAttr prefers the spec as soon as it has one.
+	docsTargeted := int64Attribute(computed)
+	docsTargeted.MarkdownDescription = capellaschema.DocsTargetedDescription
+	capellaschema.AddAttr(attrs, "docs_targeted", appEndpointResyncBuilder, docsTargeted, "ResyncStatus")
+
+	docsErrored := int64Attribute(computed)
+	docsErrored.MarkdownDescription = capellaschema.DocsErroredDescription
+	capellaschema.AddAttr(attrs, "docs_errored", appEndpointResyncBuilder, docsErrored, "ResyncStatus")
+
 	capellaschema.AddAttr(attrs, "last_error", appEndpointResyncBuilder, stringAttribute([]string{computed}), "ResyncStatus")
 	capellaschema.AddAttr(attrs, "start_time", appEndpointResyncBuilder, stringAttribute([]string{computed}), "ResyncStatus")
 	capellaschema.AddAttr(attrs, "state", appEndpointResyncBuilder, stringAttribute([]string{computed}), "ResyncStatus")

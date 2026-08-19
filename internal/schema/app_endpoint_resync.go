@@ -9,6 +9,14 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
+// Fallback descriptions for the Resync progress fields, used only until the published OpenAPI spec
+// carries them. The leading "\n - " matches the bullet format buildEnhancedDescription emits, so the
+// generated docs do not change once the spec takes over.
+const (
+	DocsTargetedDescription = "\n - The estimated total number of documents to process across the cluster during the resync operation."
+	DocsErroredDescription  = "\n - The number of documents that errored during the resync operation."
+)
+
 // AppEndpointResync defines the Terraform schema for an App Endpoint Resync resource.
 // It includes both the request fields and additional metadata fields required for resource management.
 type AppEndpointResync struct {
@@ -43,6 +51,14 @@ type AppEndpointResync struct {
 	// DocsProcessed represents the total number of documents that have been
 	// processed during the resync operation.
 	DocsProcessed types.Int64 `tfsdk:"docs_processed"`
+
+	// DocsTargeted is the estimated total number of documents to process across
+	// the cluster. Null on App Services older than 4.1, which do not report it.
+	DocsTargeted types.Int64 `tfsdk:"docs_targeted"`
+
+	// DocsErrored is the number of documents that errored during the resync
+	// operation. Null on App Services older than 4.1, which do not report it.
+	DocsErrored types.Int64 `tfsdk:"docs_errored"`
 
 	// LastError contains the last error message encountered during the resync
 	// operation, if any.
@@ -100,6 +116,14 @@ type AppEndpointResyncData struct {
 	// DocsProcessed represents the total number of documents that have been
 	// processed during the resync operation.
 	DocsProcessed types.Int64 `tfsdk:"docs_processed"`
+
+	// DocsTargeted is the estimated total number of documents to process across
+	// the cluster. Null on App Services older than 4.1, which do not report it.
+	DocsTargeted types.Int64 `tfsdk:"docs_targeted"`
+
+	// DocsErrored is the number of documents that errored during the resync
+	// operation. Null on App Services older than 4.1, which do not report it.
+	DocsErrored types.Int64 `tfsdk:"docs_errored"`
 
 	// LastError contains the last error message encountered during the resync
 	// operation, if any.

@@ -85,6 +85,8 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	plan.CollectionsProcessing = types.MapNull(types.SetType{ElemType: types.StringType})
 	plan.DocsChanged = types.Int64Null()
 	plan.DocsProcessed = types.Int64Null()
+	plan.DocsTargeted = types.Int64Null()
+	plan.DocsErrored = types.Int64Null()
 	plan.LastError = types.StringNull()
 	plan.StartTime = types.StringNull()
 	plan.State = types.StringNull()
@@ -377,6 +379,8 @@ func (a *AppEndpointResync) mapResponseToState(
 		Scopes:         plan.Scopes,
 		DocsChanged:    types.Int64Value(int64(response.DocsChanged)),
 		DocsProcessed:  types.Int64Value(int64(response.DocsProcessed)),
+		DocsTargeted:   utils.Int64ValueFromUint64Ptr(response.DocsTargeted),
+		DocsErrored:    types.Int64PointerValue(response.DocsErrored),
 		LastError:      types.StringValue(response.LastError),
 		StartTime:      types.StringValue(response.StartTime.Format("2006-01-02T15:04:05Z")),
 		State:          types.StringValue(string(response.State)),
