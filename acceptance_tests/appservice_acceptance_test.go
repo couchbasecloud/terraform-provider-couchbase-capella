@@ -177,6 +177,8 @@ data "couchbase-capella_app_services" "%[2]s" {}
 func testAccAppServiceResourceConfig(resourceName string) string {
 	clusterName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := generateRandomCIDR()
+	// Pin 4.0 due to bug CBG-5539 causing test cleanup failures. Remove once 4.1.2+ is the default version.
+	const version = "4.0"
 	return fmt.Sprintf(`
 %[1]s
 
@@ -220,12 +222,13 @@ resource "couchbase-capella_app_service" "%[4]s" {
   project_id      = "%[3]s"
   cluster_id      = couchbase-capella_cluster.%[5]s.id
   name            = "tf_acc_test_app_service"
+  version         = "%[7]s"
   compute = {
     cpu = 2
     ram = 4
   }
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr, version)
 }
 
 func testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, version string, nodes, cpu, ram int) string {
