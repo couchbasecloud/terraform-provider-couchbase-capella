@@ -346,7 +346,15 @@ func (c *Cors) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		appServiceId,
 		appEndpointName,
 	)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	// The CORS endpoint has no long-running transient condition to wait out, so a
+	// persistent 503 here should fail the apply quickly rather than retry for the
+	// full request deadline.
+	cfg := api.EndpointCfg{
+		Url:                    url,
+		Method:                 http.MethodPut,
+		SuccessStatus:          http.StatusNoContent,
+		MaxServiceErrorRetries: api.FastFailServiceErrorRetries,
+	}
 	_, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,

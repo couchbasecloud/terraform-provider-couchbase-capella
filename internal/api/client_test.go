@@ -14,7 +14,8 @@ import (
 )
 
 // testPolicy is a retryPolicy whose backoff is short enough that the retry loop
-// can be exercised without waiting for the production budget.
+// can be exercised without waiting for the production budget. A maxServiceErrors
+// of zero reproduces the default, uncapped policy.
 func testPolicy(maxServiceErrors int) retryPolicy {
 	return retryPolicy{
 		backoff:          func(int) time.Duration { return time.Millisecond },
@@ -153,6 +154,33 @@ func TestExecRetryBudget(t *testing.T) {
 	}
 }
 
+// The default policy must not cap 5xx retries. Every endpoint relies on retrying
+// until the request deadline to wait out long transient conditions such as an
+// in-flight bucket delete, so a cap only applies when a caller opts in.
+func TestExecDefaultPolicyDoesNotCapServiceErrors(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+	defer cancel()
+
+	var calls int
+	_, err := exec(ctx, scriptedFn(repeat(errors.ErrServiceUnavailable, 10000), &calls), testPolicy(0))
+
+	if calls <= FastFailServiceErrorRetries+1 {
+		t.Errorf("issued %d requests, want more than the opt-in budget of %d: the default must not cap",
+			calls, FastFailServiceErrorRetries+1)
+	}
+
+	var exhausted *RetryExhaustedError
+	if !goer.As(err, &exhausted) {
+		t.Fatalf("got error %v, want *RetryExhaustedError once the deadline expires", err)
+	}
+	if !goer.Is(err, errors.ErrServiceUnavailable) {
+		t.Errorf("error %v does not unwrap to ErrServiceUnavailable", err)
+	}
+	if exhausted.Attempts != calls {
+		t.Errorf("RetryExhaustedError.Attempts = %d, want %d", exhausted.Attempts, calls)
+	}
+}
+
 func TestExecHonoursReturnedBackoff(t *testing.T) {
 	const backoff = 120 * time.Millisecond
 
@@ -243,6 +271,15 @@ func retryServer(t *testing.T, handler func(w http.ResponseWriter, requests int3
 	return server, &requests
 }
 
+func alwaysStatus(status int, body string) func(http.ResponseWriter, int32) {
+	return func(w http.ResponseWriter, _ int32) {
+		w.WriteHeader(status)
+		if body != "" {
+			_, _ = fmt.Fprint(w, body)
+		}
+	}
+}
+
 func TestExecuteWithRetryServiceUnavailable(t *testing.T) {
 	t.Run("retries then succeeds", func(t *testing.T) {
 		server, requests := retryServer(t, func(w http.ResponseWriter, requests int32) {
@@ -263,12 +300,35 @@ func TestExecuteWithRetryServiceUnavailable(t *testing.T) {
 		}
 	})
 
-	t.Run("persistent 503 exhausts the budget", func(t *testing.T) {
-		server, requests := retryServer(t, func(w http.ResponseWriter, _ int32) {
-			w.WriteHeader(http.StatusServiceUnavailable)
-		})
+	t.Run("default budget is bounded only by the deadline", func(t *testing.T) {
+		server, requests := retryServer(t, alwaysStatus(http.StatusServiceUnavailable, ""))
 
+		ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+		defer cancel()
+
+		// No MaxServiceErrorRetries: this is what every existing call site gets.
 		cfg := EndpointCfg{Url: server.URL, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+		_, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(ctx, cfg, nil, "token", nil)
+
+		var exhausted *RetryExhaustedError
+		if !goer.As(err, &exhausted) {
+			t.Fatalf("got error %v, want *RetryExhaustedError", err)
+		}
+		if got := atomic.LoadInt32(requests); got <= FastFailServiceErrorRetries+1 {
+			t.Errorf("issued %d requests, want more than %d: the default must not cap retries",
+				got, FastFailServiceErrorRetries+1)
+		}
+	})
+
+	t.Run("opt-in budget is honoured", func(t *testing.T) {
+		server, requests := retryServer(t, alwaysStatus(http.StatusServiceUnavailable, ""))
+
+		cfg := EndpointCfg{
+			Url:                    server.URL,
+			Method:                 http.MethodPut,
+			SuccessStatus:          http.StatusNoContent,
+			MaxServiceErrorRetries: FastFailServiceErrorRetries,
+		}
 		_, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil)
 
 		var exhausted *RetryExhaustedError
@@ -278,14 +338,32 @@ func TestExecuteWithRetryServiceUnavailable(t *testing.T) {
 		if !goer.Is(err, errors.ErrServiceUnavailable) {
 			t.Errorf("error %v does not unwrap to ErrServiceUnavailable", err)
 		}
-		if exhausted.Attempts != maxServiceErrorRetries+1 {
-			t.Errorf("Attempts = %d, want %d", exhausted.Attempts, maxServiceErrorRetries+1)
+		if exhausted.Attempts != FastFailServiceErrorRetries+1 {
+			t.Errorf("Attempts = %d, want %d", exhausted.Attempts, FastFailServiceErrorRetries+1)
 		}
-		if got := atomic.LoadInt32(requests); got != maxServiceErrorRetries+1 {
-			t.Errorf("issued %d requests, want %d", got, maxServiceErrorRetries+1)
+		if got := atomic.LoadInt32(requests); got != FastFailServiceErrorRetries+1 {
+			t.Errorf("issued %d requests, want %d", got, FastFailServiceErrorRetries+1)
 		}
 		if msg := ParseError(err); msg != err.Error() {
 			t.Errorf("ParseError rendered %q, want the RetryExhaustedError message %q", msg, err.Error())
+		}
+	})
+
+	t.Run("a custom budget of one still retries once", func(t *testing.T) {
+		server, requests := retryServer(t, alwaysStatus(http.StatusServiceUnavailable, ""))
+
+		cfg := EndpointCfg{
+			Url:                    server.URL,
+			Method:                 http.MethodGet,
+			SuccessStatus:          http.StatusOK,
+			MaxServiceErrorRetries: 1,
+		}
+		if _, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil); err == nil {
+			t.Fatal("expected the retry budget to be exhausted")
+		}
+
+		if got := atomic.LoadInt32(requests); got != 2 {
+			t.Errorf("issued %d requests, want 2", got)
 		}
 	})
 }
@@ -293,49 +371,31 @@ func TestExecuteWithRetryServiceUnavailable(t *testing.T) {
 func TestExecuteWithRetryGatewayTimeout(t *testing.T) {
 	const timeoutBody = `{"code":4000,"hint":"retry later","httpStatusCode":504,"message":"gateway timeout"}`
 
-	t.Run("GET is retried", func(t *testing.T) {
-		server, requests := retryServer(t, func(w http.ResponseWriter, _ int32) {
-			w.WriteHeader(http.StatusGatewayTimeout)
-			_, _ = fmt.Fprint(w, timeoutBody)
+	// A 504 is retried for every method, including non-idempotent ones. Whether a
+	// POST should be replayed after a gateway timeout is a separate question.
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPut} {
+		t.Run(method+" is retried", func(t *testing.T) {
+			server, requests := retryServer(t, alwaysStatus(http.StatusGatewayTimeout, timeoutBody))
+
+			cfg := EndpointCfg{
+				Url:                    server.URL,
+				Method:                 method,
+				SuccessStatus:          http.StatusOK,
+				MaxServiceErrorRetries: FastFailServiceErrorRetries,
+			}
+			_, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil)
+
+			if !goer.Is(err, errors.ErrGatewayTimeout) {
+				t.Fatalf("got error %v, want it to match ErrGatewayTimeout", err)
+			}
+			if got := atomic.LoadInt32(requests); got != FastFailServiceErrorRetries+1 {
+				t.Errorf("issued %d requests, want %d", got, FastFailServiceErrorRetries+1)
+			}
 		})
-
-		cfg := EndpointCfg{Url: server.URL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-		_, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil)
-
-		if !goer.Is(err, errors.ErrGatewayTimeout) {
-			t.Fatalf("got error %v, want it to match ErrGatewayTimeout", err)
-		}
-		if got := atomic.LoadInt32(requests); got != maxServiceErrorRetries+1 {
-			t.Errorf("issued %d requests, want %d", got, maxServiceErrorRetries+1)
-		}
-	})
-
-	t.Run("POST is not retried", func(t *testing.T) {
-		server, requests := retryServer(t, func(w http.ResponseWriter, _ int32) {
-			w.WriteHeader(http.StatusGatewayTimeout)
-			_, _ = fmt.Fprint(w, timeoutBody)
-		})
-
-		cfg := EndpointCfg{Url: server.URL, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-		_, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil)
-
-		var apiErr *Error
-		if !goer.As(err, &apiErr) {
-			t.Fatalf("got error %v, want *api.Error", err)
-		}
-		if apiErr.Message != "gateway timeout" {
-			t.Errorf("Message = %q, want the message from the response body", apiErr.Message)
-		}
-		if got := atomic.LoadInt32(requests); got != 1 {
-			t.Errorf("issued %d requests, want 1: a POST must not be replayed after a gateway timeout", got)
-		}
-	})
+	}
 
 	t.Run("index DDL code 7001 is not retried", func(t *testing.T) {
-		server, requests := retryServer(t, func(w http.ResponseWriter, _ int32) {
-			w.WriteHeader(http.StatusGatewayTimeout)
-			_, _ = fmt.Fprint(w, `{"code":7001,"message":"index DDL timed out"}`)
-		})
+		server, requests := retryServer(t, alwaysStatus(http.StatusGatewayTimeout, `{"code":7001,"message":"index DDL timed out"}`))
 
 		cfg := EndpointCfg{Url: server.URL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 		_, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil)
@@ -374,8 +434,8 @@ func TestExecuteWithRetryRateLimit(t *testing.T) {
 		}
 	})
 
-	t.Run("is not subject to the attempt cap", func(t *testing.T) {
-		const rateLimited = maxServiceErrorRetries * 3
+	t.Run("is not subject to an opt-in 5xx budget", func(t *testing.T) {
+		const rateLimited = FastFailServiceErrorRetries * 3
 
 		server, requests := retryServer(t, func(w http.ResponseWriter, requests int32) {
 			if requests <= rateLimited {
@@ -386,7 +446,12 @@ func TestExecuteWithRetryRateLimit(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		cfg := EndpointCfg{Url: server.URL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		cfg := EndpointCfg{
+			Url:                    server.URL,
+			Method:                 http.MethodGet,
+			SuccessStatus:          http.StatusOK,
+			MaxServiceErrorRetries: FastFailServiceErrorRetries,
+		}
 		if _, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -398,10 +463,7 @@ func TestExecuteWithRetryRateLimit(t *testing.T) {
 }
 
 func TestExecuteWithRetrySuccessPassthrough(t *testing.T) {
-	server, requests := retryServer(t, func(w http.ResponseWriter, _ int32) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprint(w, `{"id":"abc"}`)
-	})
+	server, requests := retryServer(t, alwaysStatus(http.StatusOK, `{"id":"abc"}`))
 
 	cfg := EndpointCfg{Url: server.URL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := NewClient(time.Minute, WithFastBackoff()).ExecuteWithRetry(context.Background(), cfg, nil, "token", nil)
@@ -414,21 +476,5 @@ func TestExecuteWithRetrySuccessPassthrough(t *testing.T) {
 	}
 	if got := atomic.LoadInt32(requests); got != 1 {
 		t.Errorf("issued %d requests, want 1", got)
-	}
-}
-
-func TestWithMaxRetries(t *testing.T) {
-	server, requests := retryServer(t, func(w http.ResponseWriter, _ int32) {
-		w.WriteHeader(http.StatusServiceUnavailable)
-	})
-
-	cfg := EndpointCfg{Url: server.URL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	client := NewClient(time.Minute, WithFastBackoff(), WithMaxRetries(2))
-	if _, err := client.ExecuteWithRetry(context.Background(), cfg, nil, "token", nil); err == nil {
-		t.Fatal("expected the retry budget to be exhausted")
-	}
-
-	if got := atomic.LoadInt32(requests); got != 3 {
-		t.Errorf("issued %d requests, want 3", got)
 	}
 }

@@ -35,20 +35,13 @@ type retryPolicy struct {
 	backoff func(attempt int) time.Duration
 
 	// maxServiceErrors is how many 503/504 responses are tolerated before the
-	// request is abandoned. It does not bound 429 retries.
+	// request is abandoned. Zero means no attempt cap, leaving the overall request
+	// deadline as the only bound. It never bounds 429 retries.
 	maxServiceErrors int
 }
 
 // RetryOption customises a Client's retry behaviour.
 type RetryOption func(*Client)
-
-// WithMaxRetries overrides how many 503/504 responses are tolerated before the
-// request is abandoned.
-func WithMaxRetries(maxRetries int) RetryOption {
-	return func(c *Client) {
-		c.retry.maxServiceErrors = maxRetries
-	}
-}
 
 // WithFastBackoff shrinks retry delays to milliseconds so that tests can exercise
 // the retry loop without waiting for the production budget.
@@ -71,8 +64,7 @@ func NewClient(timeout time.Duration, opts ...RetryOption) *Client {
 			Timeout: timeout,
 		},
 		retry: retryPolicy{
-			backoff:          exponentialJitterBackoff,
-			maxServiceErrors: maxServiceErrorRetries,
+			backoff: exponentialJitterBackoff,
 		},
 	}
 
@@ -100,17 +92,27 @@ type EndpointCfg struct {
 	// SuccessStatus represents the HTTP status code associated
 	// with a successful response from the endpoint.
 	SuccessStatus int
+
+	// MaxServiceErrorRetries bounds how many 503/504 responses are retried for
+	// this request. Zero, the default, applies no attempt cap: retries continue
+	// until the overall request deadline, which is what every endpoint relies on
+	// to wait out long transient conditions such as an in-flight bucket delete.
+	// Set it to FastFailServiceErrorRetries on endpoints that have no such
+	// condition and should surface an unavailable service quickly instead.
+	MaxServiceErrorRetries int
 }
 
-// maxServiceErrorRetries bounds retries of 503 and 504 responses so that an
-// unavailable endpoint fails fast rather than being retried until the overall
-// deadline expires. 429 is deliberately excluded: its interval is dictated by the
-// server's Retry-After header, so the deadline stays its only bound.
-const maxServiceErrorRetries = 5
+// FastFailServiceErrorRetries is a short retry budget for endpoints with no known
+// long-running transient condition, where an unavailable service should surface
+// quickly rather than consume the full request deadline. It is roughly 23 seconds
+// with the default backoff. Opt in per request via
+// EndpointCfg.MaxServiceErrorRetries; it is deliberately not the default, because
+// shortening the budget globally would stop calls such as bucket create from
+// waiting out an in-flight bucket delete.
+const FastFailServiceErrorRetries = 5
 
 // Bounds for the backoff applied between retries of a response that carries no
-// Retry-After header. Together with maxServiceErrorRetries they cap the total
-// wait at roughly 31 seconds.
+// Retry-After header.
 const (
 	retryWaitMin = time.Second
 	retryWaitMax = 30 * time.Second
@@ -227,15 +229,6 @@ func (c *Client) ExecuteWithRetry(
 				return nil, 0, errors.ErrGatewayTimeoutForIndexDDL
 			}
 
-			// A gateway timeout means the upstream was reached but did not answer in
-			// time, so the write may already have been committed. Replaying a
-			// non-idempotent request risks a duplicate create, so a POST is failed
-			// rather than retried. A 503 is still retried for POST because it
-			// indicates the request was refused before it was processed.
-			if endpointCfg.Method == http.MethodPost {
-				return nil, 0, &apiError
-			}
-
 			return nil, 0, errors.ErrGatewayTimeout
 		default:
 			var apiError Error
@@ -259,7 +252,10 @@ func (c *Client) ExecuteWithRetry(
 		}, 0, nil
 	}
 
-	return exec(ctx, fn, c.retry)
+	policy := c.retry
+	policy.maxServiceErrors = endpointCfg.MaxServiceErrorRetries
+
+	return exec(ctx, fn, policy)
 }
 
 func exec(
@@ -288,6 +284,16 @@ func exec(
 	for {
 		select {
 		case <-ctx.Done():
+			// A persistent 503/504 normally ends here rather than at an attempt cap,
+			// so report the attempts and elapsed time instead of a bare deadline.
+			if serviceErrors > 0 {
+				return nil, &RetryExhaustedError{
+					LastErr:  err,
+					Attempts: attempts,
+					Elapsed:  time.Since(start),
+				}
+			}
+
 			return nil, fmt.Errorf("timed out executing request against api: %w", ctx.Err())
 		case <-timer.C:
 			attempts++
@@ -304,7 +310,7 @@ func exec(
 				serviceErrors++
 			}
 
-			if serviceErrors > policy.maxServiceErrors {
+			if policy.maxServiceErrors > 0 && serviceErrors > policy.maxServiceErrors {
 				return nil, &RetryExhaustedError{
 					LastErr:  err,
 					Attempts: attempts,
