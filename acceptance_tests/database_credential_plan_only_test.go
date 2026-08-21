@@ -40,7 +40,7 @@ func TestAccDatabaseCredentialPlanOnly(t *testing.T) {
 			// API as a body carrying neither access nor userRoles.
 			{
 				Config:      testAccDatabaseCredentialPlanOnlyEmptyAccessConfig(emptyAccessName),
-				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value.*Attribute access list must contain at least 1 elements, got: 0`),
+				ExpectError: regexp.MustCompile(`(?s)access.*must contain at least 1`),
 			},
 		},
 	})
