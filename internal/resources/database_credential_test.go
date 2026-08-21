@@ -2,51 +2,58 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"gotest.tools/assert"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 const (
-	testCredentialID   = "e8d94b7a-d03e-4f28-b14a-65e0487c764a"
+	testCredentialID   = "e8d94b7a-d03e-4f28-b14a-65e0487c764a" //nolint:gosec // G101: a resource UUID, not a credential
 	testCredentialName = "AdvancedCredential"
 	testUserRole       = "developer"
 )
 
-// databaseCredentialGetHandler serves the V4 GET database credential endpoint with a
-// fixed credential, carrying userRoles only when withUserRoles is set. Omitting them
-// is the response shape that used to flip credential_type to basic (AV-139985); the
-// omitempty tag on the field drops it from the body entirely.
+// databaseCredentialGetHandler serves the V4 GET database credential endpoint, carrying
+// userRoles only when withUserRoles is set - omitting them is the response shape that used
+// to flip credential_type to basic (AV-139985).
+//
+// The body is a literal rather than a marshalled api.GetDatabaseCredentialResponse so the
+// test pins the real wire format: marshalling the provider's own struct would round-trip
+// successfully even if its json tags did not match what the API sends.
 func databaseCredentialGetHandler(t *testing.T, withUserRoles bool, gotPath *string) http.HandlerFunc {
 	t.Helper()
+
+	var userRoles string
+	if withUserRoles {
+		userRoles = fmt.Sprintf(`"userRoles": [%q],`, testUserRole)
+	}
+	body := fmt.Sprintf(`{
+		"id": %q,
+		"name": %q,
+		"organizationId": %q,
+		"projectId": %q,
+		"clusterId": %q,
+		"access": [],
+		%s
+		"audit": {
+			"createdAt": "2026-08-01T00:00:00Z", "createdBy": "tf-acc",
+			"modifiedAt": "2026-08-01T00:00:00Z", "modifiedBy": "tf-acc", "version": 1
+		}
+	}`, testCredentialID, testCredentialName, testOrgID, testProjectID, testClusterID, userRoles)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		*gotPath = r.URL.Path
-
-		body := api.GetDatabaseCredentialResponse{
-			Id:             uuid.MustParse(testCredentialID),
-			Name:           testCredentialName,
-			OrganizationId: testOrgID,
-			ProjectId:      testProjectID,
-			ClusterId:      testClusterID,
-		}
-		if withUserRoles {
-			body.UserRoles = []string{testUserRole}
-		}
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(body); err != nil {
-			t.Errorf("encoding stub response: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		if _, err := w.Write([]byte(body)); err != nil {
+			t.Errorf("writing stub response: %v", err)
 		}
 	}
 }
