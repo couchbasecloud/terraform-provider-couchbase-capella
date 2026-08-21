@@ -10,6 +10,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -82,9 +83,14 @@ func (r *DatabaseCredential) Configure(_ context.Context, req resource.Configure
 // as the V4 API rejects mismatched combinations: a basic credential must define its permissions
 // through the access field and an advanced credential through the user_roles field.
 // The exactly-one-of constraint between access and user_roles is enforced by the schema validator.
+//
+// access and user_roles are read into attr.Value rather than a concrete types.List/types.Set on
+// purpose. GetAttribute matches the target against the schema type at runtime, so a concrete target
+// turns any future List/Set change in the schema into a "Value Conversion Error" on every plan that
+// still compiles cleanly. Only IsNull/IsUnknown are needed here, and both are on the interface.
 func (r *DatabaseCredential) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var credentialType types.String
-	var access, userRoles types.Set
+	var access, userRoles attr.Value
 
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("credential_type"), &credentialType)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("access"), &access)...)

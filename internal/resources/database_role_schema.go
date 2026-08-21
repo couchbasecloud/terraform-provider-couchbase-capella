@@ -3,9 +3,11 @@ package resources
 import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 var databaseRoleBuilder = capellaschema.NewSchemaBuilder("databaseRole")
@@ -29,11 +31,11 @@ func DatabaseRoleSchema() schema.Schema {
 
 	scopeAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(scopeAttrs, "name", databaseRoleBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(scopeAttrs, "collections", databaseRoleBuilder, stringSetAttribute(optional))
+	capellaschema.AddAttr(scopeAttrs, "collections", databaseRoleBuilder, stringListAttribute(optional))
 
 	bucketAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(bucketAttrs, "name", databaseRoleBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(bucketAttrs, "scopes", databaseRoleBuilder, &schema.SetNestedAttribute{
+	capellaschema.AddAttr(bucketAttrs, "scopes", databaseRoleBuilder, &schema.ListNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: scopeAttrs,
@@ -41,7 +43,7 @@ func DatabaseRoleSchema() schema.Schema {
 	})
 
 	resourcesAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(resourcesAttrs, "buckets", databaseRoleBuilder, &schema.SetNestedAttribute{
+	capellaschema.AddAttr(resourcesAttrs, "buckets", databaseRoleBuilder, &schema.ListNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: bucketAttrs,
@@ -55,10 +57,15 @@ func DatabaseRoleSchema() schema.Schema {
 		Attributes: resourcesAttrs,
 	})
 
-	capellaschema.AddAttr(attrs, "access", databaseRoleBuilder, &schema.SetNestedAttribute{
+	// SizeAtLeast rejects `access = []`, which satisfies Required but sends a role
+	// with no privileges at all.
+	capellaschema.AddAttr(attrs, "access", databaseRoleBuilder, &schema.ListNestedAttribute{
 		Required: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: accessAttrs,
+		},
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
 		},
 	})
 
