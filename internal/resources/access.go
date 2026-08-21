@@ -96,43 +96,174 @@ func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
 }
 
 // reconcileAccess merges the API response access with the prior state to
-// prevent perpetual drift. For global privileges the V4 API returns a wildcard
-// bucket even when the user omitted the resources field. This function detects
-// that pattern and preserves the prior state's nil resources so Terraform does
-// not report an unnecessary diff.
+// prevent perpetual drift. It serves two purposes.
+//
+// First, ordering: access and its nested resources are List attributes, so
+// Terraform treats element order as significant. The API is not guaranteed to
+// echo entries back in the order they were sent, so the result is emitted in
+// prior state order — entries are matched to the API response by privilege set
+// rather than by position. API entries with no state counterpart are appended
+// so genuine remote additions still surface as a diff, and state entries with
+// no API counterpart are dropped because they no longer exist remotely.
+//
+// Second, wildcards: for global privileges the V4 API returns a wildcard bucket
+// even when the user omitted the resources field. That pattern is detected and
+// the prior state's nil resources preserved so Terraform does not report an
+// unnecessary diff.
 func reconcileAccess(apiAccess, stateAccess []providerschema.Access) []providerschema.Access {
 	if stateAccess == nil {
 		return apiAccess
 	}
 
-	// Build a lookup of state access entries keyed by sorted privileges to
-	// allow matching entries regardless of ordering.
-	stateByPrivileges := make(map[string][]providerschema.Access, len(stateAccess))
-	for _, sa := range stateAccess {
-		key := privilegesKey(sa.Privileges)
-		stateByPrivileges[key] = append(stateByPrivileges[key], sa)
+	// Index API entries by sorted privileges to allow matching regardless of
+	// the order the API returned them in.
+	apiByPrivileges := make(map[string][]int, len(apiAccess))
+	for i, aa := range apiAccess {
+		key := privilegesKey(aa.Privileges)
+		apiByPrivileges[key] = append(apiByPrivileges[key], i)
 	}
 
-	result := make([]providerschema.Access, len(apiAccess))
-	for i, apiEntry := range apiAccess {
-		result[i] = apiAccess[i]
-		key := privilegesKey(apiEntry.Privileges)
-		candidates, ok := stateByPrivileges[key]
-		if !ok || len(candidates) == 0 {
+	consumed := make([]bool, len(apiAccess))
+	result := make([]providerschema.Access, 0, len(apiAccess))
+
+	for _, stateEntry := range stateAccess {
+		key := privilegesKey(stateEntry.Privileges)
+		candidates := apiByPrivileges[key]
+		if len(candidates) == 0 {
 			continue
 		}
 
 		// Pop the first matching candidate to handle duplicate privilege sets.
-		stateEntry := candidates[0]
-		stateByPrivileges[key] = candidates[1:]
+		idx := candidates[0]
+		apiByPrivileges[key] = candidates[1:]
+		consumed[idx] = true
 
-		if stateEntry.Resources == nil && apiEntry.Resources != nil && isWildcardOnlyResourcesSchema(apiEntry.Resources) {
+		apiEntry := apiAccess[idx]
+		entry := providerschema.Access{Privileges: apiEntry.Privileges, Resources: apiEntry.Resources}
+
+		// The two privilege slices hold the same values by construction, so
+		// adopting the state ordering keeps element order stable across reads.
+		if len(stateEntry.Privileges) == len(apiEntry.Privileges) {
+			entry.Privileges = stateEntry.Privileges
+		}
+
+		switch {
+		case stateEntry.Resources == nil && apiEntry.Resources != nil && isWildcardOnlyResourcesSchema(apiEntry.Resources):
 			// The user did not specify resources and the API returned only
 			// the implicit wildcard — suppress the diff by keeping nil.
-			result[i].Resources = nil
+			entry.Resources = nil
+		case stateEntry.Resources != nil && apiEntry.Resources != nil:
+			entry.Resources = &providerschema.Resources{
+				Buckets: reconcileBuckets(apiEntry.Resources.Buckets, stateEntry.Resources.Buckets),
+			}
+		}
+
+		result = append(result, entry)
+	}
+
+	for i, aa := range apiAccess {
+		if !consumed[i] {
+			result = append(result, aa)
 		}
 	}
+
 	return result
+}
+
+// reconcileBuckets reorders the API buckets to follow prior state order,
+// matching on the bucket name. Unmatched API buckets are appended.
+func reconcileBuckets(apiBuckets, stateBuckets []providerschema.BucketResource) []providerschema.BucketResource {
+	if apiBuckets == nil || stateBuckets == nil {
+		return apiBuckets
+	}
+
+	stateOrder := make([]providerschema.BucketResource, 0, len(stateBuckets))
+	consumed := make([]bool, len(apiBuckets))
+
+	for _, stateBucket := range stateBuckets {
+		for i, apiBucket := range apiBuckets {
+			if consumed[i] || apiBucket.Name.ValueString() != stateBucket.Name.ValueString() {
+				continue
+			}
+			consumed[i] = true
+			stateOrder = append(stateOrder, providerschema.BucketResource{
+				Name:   apiBucket.Name,
+				Scopes: reconcileScopes(apiBucket.Scopes, stateBucket.Scopes),
+			})
+			break
+		}
+	}
+
+	for i, apiBucket := range apiBuckets {
+		if !consumed[i] {
+			stateOrder = append(stateOrder, apiBucket)
+		}
+	}
+
+	return stateOrder
+}
+
+// reconcileScopes reorders the API scopes to follow prior state order, matching
+// on the scope name. Unmatched API scopes are appended.
+func reconcileScopes(apiScopes, stateScopes []providerschema.ScopeResource) []providerschema.ScopeResource {
+	if apiScopes == nil || stateScopes == nil {
+		return apiScopes
+	}
+
+	stateOrder := make([]providerschema.ScopeResource, 0, len(apiScopes))
+	consumed := make([]bool, len(apiScopes))
+
+	for _, stateScope := range stateScopes {
+		for i, apiScope := range apiScopes {
+			if consumed[i] || apiScope.Name.ValueString() != stateScope.Name.ValueString() {
+				continue
+			}
+			consumed[i] = true
+			stateOrder = append(stateOrder, providerschema.ScopeResource{
+				Name:        apiScope.Name,
+				Collections: reconcileCollections(apiScope.Collections, stateScope.Collections),
+			})
+			break
+		}
+	}
+
+	for i, apiScope := range apiScopes {
+		if !consumed[i] {
+			stateOrder = append(stateOrder, apiScope)
+		}
+	}
+
+	return stateOrder
+}
+
+// reconcileCollections reorders the API collection names to follow prior state
+// order. Unmatched API collections are appended.
+func reconcileCollections(apiCollections, stateCollections []types.String) []types.String {
+	if apiCollections == nil || stateCollections == nil {
+		return apiCollections
+	}
+
+	stateOrder := make([]types.String, 0, len(apiCollections))
+	consumed := make([]bool, len(apiCollections))
+
+	for _, stateColl := range stateCollections {
+		for i, apiColl := range apiCollections {
+			if consumed[i] || apiColl.ValueString() != stateColl.ValueString() {
+				continue
+			}
+			consumed[i] = true
+			stateOrder = append(stateOrder, apiColl)
+			break
+		}
+	}
+
+	for i, apiColl := range apiCollections {
+		if !consumed[i] {
+			stateOrder = append(stateOrder, apiColl)
+		}
+	}
+
+	return stateOrder
 }
 
 // isWildcardOnlyResourcesSchema returns true when the resources contain only
