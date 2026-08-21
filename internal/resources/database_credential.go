@@ -270,6 +270,14 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
 	refreshedState.Access = mapAccess(state)
 
+	// credential_type is absent from the GET API response and user_roles cannot be trusted to
+	// be complete, so both are carried forward from prior state; re-deriving them destroys and
+	// recreates the credential (AV-139985). A null credential_type means no prior state: import.
+	if !state.CredentialType.IsNull() {
+		refreshedState.CredentialType = state.CredentialType
+		refreshedState.UserRoles = state.UserRoles
+	}
+
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -468,9 +476,10 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		auditObj,
 	)
 
-	// The GET API response does not include the credential type, but user roles are
-	// only present for advanced credentials, so the type is derived from them. This
-	// keeps the credential type populated when a credential is imported.
+	// The GET API response does not include the credential type, but user roles are only
+	// present for advanced credentials, so the type is derived from them. This derivation
+	// serves the import path alone: Create and Update overwrite both fields from the plan,
+	// and Read overwrites them from prior state whenever prior state exists.
 	refreshedState.CredentialType = types.StringValue(credentialTypeBasic)
 	if len(dbResp.UserRoles) > 0 {
 		refreshedState.CredentialType = types.StringValue(credentialTypeAdvanced)
