@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -70,14 +71,17 @@ func DatabaseCredentialSchema() schema.Schema {
 	})
 
 	// Exactly one of access or user_roles must be configured: access for a basic
-	// credential type and user_roles for an advanced credential type.
+	// credential type and user_roles for an advanced credential type. SizeAtLeast
+	// rejects `access = []`, which satisfies ExactlyOneOf but marshals away under
+	// the omitempty tag, leaving a request body carrying neither field.
 	capellaschema.AddAttr(attrs, "access", databaseCredentialBuilder, &schema.ListNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: accessAttrs,
 		},
-		Validators: []validator.Set{
-			setvalidator.ExactlyOneOf(path.MatchRoot("user_roles")),
+		Validators: []validator.List{
+			listvalidator.ExactlyOneOf(path.MatchRoot("user_roles")),
+			listvalidator.SizeAtLeast(1),
 		},
 	})
 
