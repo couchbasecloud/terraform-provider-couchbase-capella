@@ -1,231 +1,185 @@
 package resources
 
 import (
-	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/stretchr/testify/assert"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-func privileges(values ...string) []types.String {
-	privs := make([]types.String, len(values))
-	for i, v := range values {
-		privs[i] = types.StringValue(v)
+// newAccess builds one access entry. Omitting buckets leaves resources nil,
+// which is how a config that skipped the resources block is stored.
+func newAccess(privileges string, buckets ...providerschema.BucketResource) providerschema.Access {
+	entry := providerschema.Access{Privileges: newStrings(strings.Split(privileges, ",")...)}
+	if buckets != nil {
+		entry.Resources = &providerschema.Resources{Buckets: buckets}
 	}
-	return privs
+	return entry
 }
 
-func collections(values ...string) []types.String {
-	return privileges(values...)
-}
-
-func bucket(name string, scopes ...providerschema.ScopeResource) providerschema.BucketResource {
+// newBucket builds a bucket. Omitting scopes leaves scopes nil.
+func newBucket(name string, scopes ...providerschema.ScopeResource) providerschema.BucketResource {
 	return providerschema.BucketResource{Name: types.StringValue(name), Scopes: scopes}
 }
 
-func scope(name string, colls ...string) providerschema.ScopeResource {
-	s := providerschema.ScopeResource{Name: types.StringValue(name)}
-	if colls != nil {
-		s.Collections = collections(colls...)
-	}
-	return s
+// newScope builds a scope. Omitting collections leaves collections nil.
+func newScope(name string, collections ...string) providerschema.ScopeResource {
+	return providerschema.ScopeResource{Name: types.StringValue(name), Collections: newStrings(collections...)}
 }
 
-func resources(buckets ...providerschema.BucketResource) *providerschema.Resources {
-	return &providerschema.Resources{Buckets: buckets}
+func newStrings(values ...string) []types.String {
+	if values == nil {
+		return nil
+	}
+	out := make([]types.String, len(values))
+	for i, v := range values {
+		out[i] = types.StringValue(v)
+	}
+	return out
 }
 
 func TestReconcileAccess(t *testing.T) {
 	tests := []struct {
-		name       string
-		apiAccess  []providerschema.Access
-		stateEntry []providerschema.Access
-		want       []providerschema.Access
+		name  string
+		api   []providerschema.Access
+		state []providerschema.Access
+		want  []providerschema.Access
 	}{
 		{
-			name: "api returns access entries in reversed order",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-			stateEntry: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-			},
-			want: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-			},
+			name:  "entries returned out of order follow state order",
+			api:   []providerschema.Access{newAccess("dataWrite", newBucket("b2")), newAccess("dataRead", newBucket("b1"))},
+			state: []providerschema.Access{newAccess("dataRead", newBucket("b1")), newAccess("dataWrite", newBucket("b2"))},
+			want:  []providerschema.Access{newAccess("dataRead", newBucket("b1")), newAccess("dataWrite", newBucket("b2"))},
 		},
 		{
-			name: "api reorders buckets, scopes and collections within an entry",
-			apiAccess: []providerschema.Access{
-				{
-					Privileges: privileges("dataRead"),
-					Resources: resources(
-						bucket("b2", scope("s1", "c1")),
-						bucket("b1", scope("s2", "c2"), scope("s1", "c2", "c1")),
-					),
-				},
-			},
-			stateEntry: []providerschema.Access{
-				{
-					Privileges: privileges("dataRead"),
-					Resources: resources(
-						bucket("b1", scope("s1", "c1", "c2"), scope("s2", "c2")),
-						bucket("b2", scope("s1", "c1")),
-					),
-				},
-			},
-			want: []providerschema.Access{
-				{
-					Privileges: privileges("dataRead"),
-					Resources: resources(
-						bucket("b1", scope("s1", "c1", "c2"), scope("s2", "c2")),
-						bucket("b2", scope("s1", "c1")),
-					),
-				},
-			},
+			name:  "privileges follow state order within a matched entry",
+			api:   []providerschema.Access{newAccess("dataWrite,dataRead")},
+			state: []providerschema.Access{newAccess("dataRead,dataWrite")},
+			want:  []providerschema.Access{newAccess("dataRead,dataWrite")},
 		},
 		{
-			name: "privilege ordering follows state regardless of api ordering",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("dataWrite", "dataRead")},
-			},
-			stateEntry: []providerschema.Access{
-				{Privileges: privileges("dataRead", "dataWrite")},
-			},
-			want: []providerschema.Access{
-				{Privileges: privileges("dataRead", "dataWrite")},
-			},
+			name:  "entry with no state counterpart is appended last",
+			api:   []providerschema.Access{newAccess("dataWrite", newBucket("b2")), newAccess("dataRead", newBucket("b1"))},
+			state: []providerschema.Access{newAccess("dataRead", newBucket("b1"))},
+			want:  []providerschema.Access{newAccess("dataRead", newBucket("b1")), newAccess("dataWrite", newBucket("b2"))},
 		},
 		{
-			name: "api entry with no state counterpart is appended last",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-			stateEntry: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-			want: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-			},
+			name:  "state entry missing from the api is dropped",
+			api:   []providerschema.Access{newAccess("dataRead", newBucket("b1"))},
+			state: []providerschema.Access{newAccess("dataRead", newBucket("b1")), newAccess("dataWrite", newBucket("b2"))},
+			want:  []providerschema.Access{newAccess("dataRead", newBucket("b1"))},
 		},
 		{
-			name: "state entry missing from the api is dropped",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-			stateEntry: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-			},
-			want: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
+			name:  "nil state returns the api response untouched, as on import",
+			api:   []providerschema.Access{newAccess("dataWrite", newBucket("b2")), newAccess("dataRead", newBucket("b1"))},
+			state: nil,
+			want:  []providerschema.Access{newAccess("dataWrite", newBucket("b2")), newAccess("dataRead", newBucket("b1"))},
 		},
 		{
-			name: "nil state access returns the api access untouched",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-			stateEntry: nil,
-			want: []providerschema.Access{
-				{Privileges: privileges("dataWrite"), Resources: resources(bucket("b2"))},
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
+			name:  "implicit wildcard bucket is suppressed when state omitted resources",
+			api:   []providerschema.Access{newAccess("analyticsAdmin", newBucket("*"))},
+			state: []providerschema.Access{newAccess("analyticsAdmin")},
+			want:  []providerschema.Access{newAccess("analyticsAdmin")},
 		},
 		{
-			name: "wildcard only resources are suppressed when state omitted them",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("analyticsAdmin"), Resources: resources(bucket("*"))},
-			},
-			stateEntry: []providerschema.Access{
-				{Privileges: privileges("analyticsAdmin")},
-			},
-			want: []providerschema.Access{
-				{Privileges: privileges("analyticsAdmin")},
-			},
+			name:  "wildcard bucket is kept when state declared it",
+			api:   []providerschema.Access{newAccess("dataRead", newBucket("*"))},
+			state: []providerschema.Access{newAccess("dataRead", newBucket("*"))},
+			want:  []providerschema.Access{newAccess("dataRead", newBucket("*"))},
 		},
 		{
-			name: "wildcard resources are kept when state declared them",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("*"))},
-			},
-			stateEntry: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("*"))},
-			},
-			want: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("*"))},
-			},
-		},
-		{
-			name: "duplicate privilege sets are matched one at a time",
-			apiAccess: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b2"))},
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-			stateEntry: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b2"))},
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-			want: []providerschema.Access{
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b2"))},
-				{Privileges: privileges("dataRead"), Resources: resources(bucket("b1"))},
-			},
-		},
-		{
-			name: "nil and empty nested collections round trip unchanged",
-			apiAccess: []providerschema.Access{
-				{
-					Privileges: privileges("dataRead"),
-					Resources: resources(
-						bucket("b1", providerschema.ScopeResource{Name: types.StringValue("s1")}),
-						bucket("b2", providerschema.ScopeResource{Name: types.StringValue("s2"), Collections: []types.String{}}),
-						providerschema.BucketResource{Name: types.StringValue("b3")},
-					),
-				},
-			},
-			stateEntry: []providerschema.Access{
-				{
-					Privileges: privileges("dataRead"),
-					Resources: resources(
-						bucket("b1", providerschema.ScopeResource{Name: types.StringValue("s1")}),
-						bucket("b2", providerschema.ScopeResource{Name: types.StringValue("s2"), Collections: []types.String{}}),
-						providerschema.BucketResource{Name: types.StringValue("b3")},
-					),
-				},
-			},
-			want: []providerschema.Access{
-				{
-					Privileges: privileges("dataRead"),
-					Resources: resources(
-						bucket("b1", providerschema.ScopeResource{Name: types.StringValue("s1")}),
-						bucket("b2", providerschema.ScopeResource{Name: types.StringValue("s2"), Collections: []types.String{}}),
-						providerschema.BucketResource{Name: types.StringValue("b3")},
-					),
-				},
-			},
+			name:  "duplicate privilege sets are matched one at a time",
+			api:   []providerschema.Access{newAccess("dataRead", newBucket("b2")), newAccess("dataRead", newBucket("b1"))},
+			state: []providerschema.Access{newAccess("dataRead", newBucket("b2")), newAccess("dataRead", newBucket("b1"))},
+			want:  []providerschema.Access{newAccess("dataRead", newBucket("b2")), newAccess("dataRead", newBucket("b1"))},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apiCopy := deepCopyAccess(tt.apiAccess)
+			assert.Equal(t, tt.want, reconcileAccess(tt.api, tt.state))
+		})
+	}
+}
 
-			got := reconcileAccess(tt.apiAccess, tt.stateEntry)
+func TestReconcileAccessDoesNotMutateAPIResponse(t *testing.T) {
+	api := []providerschema.Access{
+		newAccess("dataWrite", newBucket("b2", newScope("s2", "c2"))),
+		newAccess("dataRead", newBucket("b1", newScope("s1", "c1"))),
+	}
+	unchanged := []providerschema.Access{
+		newAccess("dataWrite", newBucket("b2", newScope("s2", "c2"))),
+		newAccess("dataRead", newBucket("b1", newScope("s1", "c1"))),
+	}
 
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("reconcileAccess() =\n%s\nwant\n%s", formatAccess(got), formatAccess(tt.want))
-			}
-			if !reflect.DeepEqual(tt.apiAccess, apiCopy) {
-				t.Errorf("reconcileAccess() mutated its apiAccess argument:\n%s\nwas\n%s", formatAccess(tt.apiAccess), formatAccess(apiCopy))
-			}
+	reconcileAccess(api, []providerschema.Access{newAccess("dataRead", newBucket("b1", newScope("s1", "c1")))})
+
+	assert.Equal(t, unchanged, api, "reconcileAccess() must not mutate the api response it was given")
+}
+
+func TestReconcileBuckets(t *testing.T) {
+	tests := []struct {
+		name  string
+		api   []providerschema.BucketResource
+		state []providerschema.BucketResource
+		want  []providerschema.BucketResource
+	}{
+		{
+			name:  "buckets returned out of order follow state order",
+			api:   []providerschema.BucketResource{newBucket("b2"), newBucket("b1")},
+			state: []providerschema.BucketResource{newBucket("b1"), newBucket("b2")},
+			want:  []providerschema.BucketResource{newBucket("b1"), newBucket("b2")},
+		},
+		{
+			name:  "scopes and collections follow state order within a bucket",
+			api:   []providerschema.BucketResource{newBucket("b1", newScope("s2", "c2"), newScope("s1", "c2", "c1"))},
+			state: []providerschema.BucketResource{newBucket("b1", newScope("s1", "c1", "c2"), newScope("s2", "c2"))},
+			want:  []providerschema.BucketResource{newBucket("b1", newScope("s1", "c1", "c2"), newScope("s2", "c2"))},
+		},
+		{
+			name:  "bucket with no state counterpart is appended last",
+			api:   []providerschema.BucketResource{newBucket("b2"), newBucket("b1")},
+			state: []providerschema.BucketResource{newBucket("b1")},
+			want:  []providerschema.BucketResource{newBucket("b1"), newBucket("b2")},
+		},
+		{
+			name:  "state bucket missing from the api is dropped",
+			api:   []providerschema.BucketResource{newBucket("b1")},
+			state: []providerschema.BucketResource{newBucket("b1"), newBucket("b2")},
+			want:  []providerschema.BucketResource{newBucket("b1")},
+		},
+		{
+			name:  "nil api buckets stay nil",
+			api:   nil,
+			state: []providerschema.BucketResource{newBucket("b1")},
+			want:  nil,
+		},
+		{
+			name:  "nil state buckets return the api buckets unchanged",
+			api:   []providerschema.BucketResource{newBucket("b2"), newBucket("b1")},
+			state: nil,
+			want:  []providerschema.BucketResource{newBucket("b2"), newBucket("b1")},
+		},
+		{
+			name:  "nil scopes are not turned into an empty list",
+			api:   []providerschema.BucketResource{newBucket("b1")},
+			state: []providerschema.BucketResource{newBucket("b1")},
+			want:  []providerschema.BucketResource{newBucket("b1")},
+		},
+		{
+			name:  "empty scopes are not turned into nil",
+			api:   []providerschema.BucketResource{{Name: types.StringValue("b1"), Scopes: []providerschema.ScopeResource{}}},
+			state: []providerschema.BucketResource{{Name: types.StringValue("b1"), Scopes: []providerschema.ScopeResource{}}},
+			want:  []providerschema.BucketResource{{Name: types.StringValue("b1"), Scopes: []providerschema.ScopeResource{}}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, reconcileBuckets(tt.api, tt.state))
 		})
 	}
 }
@@ -238,108 +192,46 @@ func TestReconcileCollections(t *testing.T) {
 		want  []types.String
 	}{
 		{
-			name:  "reordered collections follow state order",
-			api:   collections("c3", "c1", "c2"),
-			state: collections("c1", "c2", "c3"),
-			want:  collections("c1", "c2", "c3"),
+			name:  "collections returned out of order follow state order",
+			api:   newStrings("c3", "c1", "c2"),
+			state: newStrings("c1", "c2", "c3"),
+			want:  newStrings("c1", "c2", "c3"),
 		},
 		{
-			name:  "new api collection is appended",
-			api:   collections("c2", "c1"),
-			state: collections("c1"),
-			want:  collections("c1", "c2"),
+			name:  "collection with no state counterpart is appended last",
+			api:   newStrings("c2", "c1"),
+			state: newStrings("c1"),
+			want:  newStrings("c1", "c2"),
 		},
 		{
-			name:  "removed collection is dropped",
-			api:   collections("c1"),
-			state: collections("c1", "c2"),
-			want:  collections("c1"),
+			name:  "state collection missing from the api is dropped",
+			api:   newStrings("c1"),
+			state: newStrings("c1", "c2"),
+			want:  newStrings("c1"),
 		},
 		{
-			name:  "nil api stays nil",
+			name:  "nil api collections stay nil",
 			api:   nil,
-			state: collections("c1"),
+			state: newStrings("c1"),
 			want:  nil,
 		},
 		{
-			name:  "nil state returns api unchanged",
-			api:   collections("c2", "c1"),
+			name:  "nil state collections return the api collections unchanged",
+			api:   newStrings("c2", "c1"),
 			state: nil,
-			want:  collections("c2", "c1"),
+			want:  newStrings("c2", "c1"),
 		},
 		{
-			name:  "empty api stays empty",
+			name:  "empty api collections stay empty",
 			api:   []types.String{},
-			state: collections("c1"),
+			state: newStrings("c1"),
 			want:  []types.String{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := reconcileCollections(tt.api, tt.state)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("reconcileCollections() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, reconcileCollections(tt.api, tt.state))
 		})
 	}
-}
-
-// deepCopyAccess clones an access slice so a test can assert the input was not
-// mutated; mapAccessFromSlice is not reused here because it drops resources
-// with nil buckets.
-func deepCopyAccess(access []providerschema.Access) []providerschema.Access {
-	if access == nil {
-		return nil
-	}
-	result := make([]providerschema.Access, len(access))
-	for i, acc := range access {
-		result[i].Privileges = append([]types.String(nil), acc.Privileges...)
-		if acc.Privileges == nil {
-			result[i].Privileges = nil
-		}
-		if acc.Resources == nil {
-			continue
-		}
-		result[i].Resources = &providerschema.Resources{Buckets: copyBucketResources(acc.Resources.Buckets)}
-		if acc.Resources.Buckets == nil {
-			result[i].Resources.Buckets = nil
-		}
-	}
-	return result
-}
-
-func formatAccess(access []providerschema.Access) string {
-	out := "["
-	for _, acc := range access {
-		out += "\n  {privileges: ["
-		for i, p := range acc.Privileges {
-			if i > 0 {
-				out += " "
-			}
-			out += p.ValueString()
-		}
-		out += "]"
-		if acc.Resources == nil {
-			out += ", resources: nil}"
-			continue
-		}
-		out += ", buckets: ["
-		for _, b := range acc.Resources.Buckets {
-			out += b.Name.ValueString() + "("
-			for _, s := range b.Scopes {
-				out += s.Name.ValueString() + ":"
-				for i, c := range s.Collections {
-					if i > 0 {
-						out += ","
-					}
-					out += c.ValueString()
-				}
-				out += " "
-			}
-			out += ") "
-		}
-		out += "]}"
-	}
-	return out + "\n]"
 }
