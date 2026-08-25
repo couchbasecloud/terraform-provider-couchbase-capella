@@ -21,6 +21,7 @@ func TestAccDatabaseCredentialWithReqFields(t *testing.T) {
 	resourceReference := "couchbase-capella_database_credential." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddDatabaseCredWithReqFieldsConfig(resourceName),
@@ -41,6 +42,7 @@ func TestAccDatabaseCredentialWithOptionalFields(t *testing.T) {
 	resourceReference := "couchbase-capella_database_credential." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddDatabaseCredWithOptionalFieldsConfig(resourceName),
@@ -65,6 +67,7 @@ func TestAccDatabaseCredentialAdvanced(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseRBACDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{

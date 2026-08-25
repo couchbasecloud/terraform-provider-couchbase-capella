@@ -25,6 +25,7 @@ func TestAccDatabaseRoleResource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseRoleDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
@@ -79,6 +80,7 @@ func TestAccDatabaseRoleResourceWithRequiredFieldsOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseRoleResourceConfig(resourceName, "", "", `"dataRead"`),
@@ -104,6 +106,7 @@ func TestAccDatabaseRoleResourceWithScopedAccess(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseRoleResourceConfigWithScopedAccess(resourceName),
@@ -145,6 +148,7 @@ func TestAccDatasourceDatabaseRoles(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseRolesDatasourceConfig(resourceName, dsName),

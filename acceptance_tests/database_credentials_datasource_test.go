@@ -16,6 +16,7 @@ func TestAccDatasourceDatabaseCredentials(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseCredentialsDataSourceConfig(resourceName, dsName),
@@ -50,6 +51,7 @@ func TestAccDatasourceDatabaseCredentialsAdvanced(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseRBACDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseCredentialsAdvancedDataSourceConfig(resourceName, dsName, roleName),
