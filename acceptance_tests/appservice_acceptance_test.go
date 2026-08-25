@@ -48,7 +48,7 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 	appServiceName := randomStringWithPrefix("tf_acc_app_svc_")
 	description := "terraform app service optional fields acceptance test"
 
-	const version = "4.0"
+	const version = pinnedAppServiceVersion
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
@@ -177,8 +177,7 @@ data "couchbase-capella_app_services" "%[2]s" {}
 func testAccAppServiceResourceConfig(resourceName string) string {
 	clusterName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := generateRandomCIDR()
-	// Pin 4.0 due to bug CBG-5539 causing test cleanup failures. Remove once 4.1.2+ is the default version.
-	const version = "4.0"
+	const version = pinnedAppServiceVersion
 	return fmt.Sprintf(`
 %[1]s
 
