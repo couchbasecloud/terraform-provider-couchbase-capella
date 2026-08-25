@@ -12,3 +12,9 @@ type GetDatabasePrivilegeResponse struct {
 	// Resources is the RBAC template indicating which resource levels (bucket/scope/collection) are configurable.
 	Resources *AccessibleResources `json:"resources,omitempty"`
 }
+
+// GetDatabasePrivilegesResponse is the envelope wrapping the privileges returned by the
+// GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/privileges endpoint.
+type GetDatabasePrivilegesResponse struct {
+	Data []GetDatabasePrivilegeResponse `json:"data"`
+}

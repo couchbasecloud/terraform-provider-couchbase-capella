@@ -94,12 +94,12 @@ func (d *DatabasePrivileges) listPrivileges(ctx context.Context, organizationId,
 		return nil, fmt.Errorf("executing request: %w", err)
 	}
 
-	var privileges []api.GetDatabasePrivilegeResponse
+	var privileges api.GetDatabasePrivilegesResponse
 	if err := json.Unmarshal(response.Body, &privileges); err != nil {
 		return nil, fmt.Errorf("unmarshalling response: %w", err)
 	}
 
-	return privileges, nil
+	return privileges.Data, nil
 }
 
 func (d *DatabasePrivileges) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
