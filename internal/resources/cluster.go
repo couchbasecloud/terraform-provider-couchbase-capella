@@ -635,7 +635,8 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
-				return err
+				tflog.Warn(ctx, "could not get cluster status.  retrying...")
+				continue
 			}
 		}
 	}
