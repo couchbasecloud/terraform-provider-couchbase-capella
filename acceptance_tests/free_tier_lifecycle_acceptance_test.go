@@ -12,10 +12,7 @@ import (
 // TestAccFreeTierClusterLifecycle exercises the free-tier resources and data
 // sources that need a live cluster against a SINGLE shared free-tier cluster:
 // the cluster resource, on/off, bucket, and buckets data source, plus the app
-// service. The free_tier_clusters data source is intentionally not covered here
-// because the Capella API has no free-tier cluster list endpoint and the
-// general /clusters list does not include free-tier clusters, so it cannot be
-// exercised (see the datasource notes).
+// service, plus the free-tier clusters data source.
 //
 // Capella allows only one free-tier operational cluster per organization
 // (docs/index.md), so these cases cannot run in parallel and previously each
@@ -37,6 +34,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 	appServiceName := randomStringWithPrefix("tf_acc_free_tier_lifecycle_appsvc_")
 	onOffName := randomStringWithPrefix("tf_acc_free_tier_lifecycle_on_off_")
 	bucketsDsName := randomStringWithPrefix("tf_acc_free_tier_lifecycle_buckets_ds_")
+	clustersDsName := randomStringWithPrefix("tf_acc_free_tier_lifecycle_clusters_ds_")
 	cidr := generateRandomCIDR()
 
 	clusterRef := "couchbase-capella_free_tier_cluster." + clusterName
@@ -44,6 +42,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 	appServiceRef := "couchbase-capella_free_tier_app_service." + appServiceName
 	onOffRef := "couchbase-capella_free_tier_cluster_on_off." + onOffName
 	bucketsDsRef := "data.couchbase-capella_free_tier_buckets." + bucketsDsName
+	clustersDsRef := "data.couchbase-capella_free_tier_clusters." + clustersDsName
 
 	const (
 		createDescription     = "Free tier lifecycle cluster."
@@ -87,7 +86,25 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterRef, "description", updateDescription),
 				),
 			},
-			// 4. Turn the cluster off (only the cluster exists at this point).
+			// 4. Read the free-tier clusters data source; the shared cluster
+			// must show up in it.
+			{
+				Config: testAccFreeTierLifecycleConfig(cluster, testAccFreeTierLifecycleClustersDsBlock(clusterName, clustersDsName)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(clustersDsRef, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(clustersDsRef, "project_id", globalProjectId),
+					resource.TestCheckResourceAttrSet(clustersDsRef, "data.#"),
+					// support.plan is deliberately not asserted: the /clusters
+					// list reports an empty plan for free-tier clusters, so the
+					// value here is "" until the API populates it.
+					testAccCheckListElemNestedAttrs(clustersDsRef, "data", map[string]string{
+						"name":            clusterName,
+						"organization_id": globalOrgId,
+						"project_id":      globalProjectId,
+					}),
+				),
+			},
+			// 5. Turn the cluster off (only the cluster exists at this point).
 			{
 				Config: testAccFreeTierLifecycleConfig(cluster, testAccFreeTierLifecycleOnOffBlock(clusterName, onOffName, "off")),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -97,7 +114,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(onOffRef, "state", "off"),
 				),
 			},
-			// 5. Import the on/off resource.
+			// 6. Import the on/off resource.
 			{
 				ResourceName:                         onOffRef,
 				ImportStateIdFunc:                    generateFreeTierClusterOnOffImportId(onOffRef),
@@ -105,7 +122,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "cluster_id",
 			},
-			// 6. Turn the cluster back on so the rest of the flow runs healthy.
+			// 7. Turn the cluster back on so the rest of the flow runs healthy.
 			{
 				Config: testAccFreeTierLifecycleConfig(cluster, testAccFreeTierLifecycleOnOffBlock(clusterName, onOffName, "on")),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -113,7 +130,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(onOffRef, "state", "on"),
 				),
 			},
-			// 7. Create a bucket on the shared cluster.
+			// 8. Create a bucket on the shared cluster.
 			{
 				Config: testAccFreeTierLifecycleConfig(cluster, testAccFreeTierLifecycleBucketBlock(clusterName, bucketName, 100)),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -128,13 +145,13 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttrSet(bucketRef, "vbuckets"),
 				),
 			},
-			// 8. Import the bucket.
+			// 9. Import the bucket.
 			{
 				ResourceName:      bucketRef,
 				ImportStateIdFunc: generateBucketImportIdForResource(bucketRef),
 				ImportState:       true,
 			},
-			// 9. Update the bucket memory allocation.
+			// 10. Update the bucket memory allocation.
 			{
 				Config: testAccFreeTierLifecycleConfig(cluster, testAccFreeTierLifecycleBucketBlock(clusterName, bucketName, 200)),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -142,7 +159,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(bucketRef, "memory_allocation_in_mb", "200"),
 				),
 			},
-			// 10. Read the free-tier buckets data source.
+			// 11. Read the free-tier buckets data source.
 			{
 				Config: testAccFreeTierLifecycleConfig(
 					cluster,
@@ -163,7 +180,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					}),
 				),
 			},
-			// 11. Create an app service (required fields only) on the healthy cluster.
+			// 12. Create an app service (required fields only) on the healthy cluster.
 			{
 				Config: testAccFreeTierLifecycleConfig(
 					cluster,
@@ -181,13 +198,13 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttrSet(appServiceRef, "etag"),
 				),
 			},
-			// 12. Import the app service.
+			// 13. Import the app service.
 			{
 				ResourceName:      appServiceRef,
 				ImportStateIdFunc: generateAppServiceImportId(appServiceRef),
 				ImportState:       true,
 			},
-			// 13. Update the app service description.
+			// 14. Update the app service description.
 			{
 				Config: testAccFreeTierLifecycleConfig(
 					cluster,
@@ -264,6 +281,17 @@ resource "couchbase-capella_free_tier_cluster_on_off" "%[1]s" {
   state           = "%[5]s"
 }
 `, onOffName, globalOrgId, globalProjectId, clusterName, state)
+}
+
+func testAccFreeTierLifecycleClustersDsBlock(clusterName, dsName string) string {
+	return fmt.Sprintf(`
+data "couchbase-capella_free_tier_clusters" "%[1]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+
+  depends_on = [couchbase-capella_free_tier_cluster.%[4]s]
+}
+`, dsName, globalOrgId, globalProjectId, clusterName)
 }
 
 func testAccFreeTierLifecycleBucketsDsBlock(clusterName, bucketName, dsName string) string {
