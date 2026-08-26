@@ -142,4 +142,9 @@ var (
 
 const (
 	timeout = 60 * time.Second
+
+	// pinnedAppServiceVersion keeps every acceptance test app service on 4.0 while the default 4.1.1 carries
+	// CBG-5539, which slows Sync Gateway database deletes and makes cleanups time out. Remove once 4.1.2+ is
+	// the default version.
+	pinnedAppServiceVersion = "4.0"
 )

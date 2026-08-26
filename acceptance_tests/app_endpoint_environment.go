@@ -305,13 +305,15 @@ func waitForAppEndpointTestBucket(ctx context.Context, client *api.Client, bucke
 
 func createAppEndpointTestAppService(ctx context.Context, client *api.Client) (string, error) {
 	var n int64 = 2
+	version := pinnedAppServiceVersion
 	appServiceRequest := appservice.CreateAppServiceRequest{
 		Name: appEndpointAppServiceName,
 		Compute: appservice.AppServiceCompute{
 			Cpu: 2,
 			Ram: 4,
 		},
-		Nodes: &n,
+		Nodes:   &n,
+		Version: &version,
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices", globalHost, globalOrgId, globalProjectId, appEndpointClusterId)
