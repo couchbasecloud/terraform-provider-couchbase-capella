@@ -220,6 +220,11 @@ func assertNoDiags(t *testing.T, diags diag.Diagnostics) {
 // then plans "basic" against that null. Under a plain RequiresReplace this destroyed and
 // recreated every existing credential on the first plan after the upgrade, regenerating
 // the auto-generated passwords applications were holding (AV-139981).
+//
+// A null prior state is not on its own proof of a backfill, so the legacy cases below pin
+// both readings of one: the practitioner may convert the credential in the same plan that
+// upgrades the provider, and may equally pin the default explicitly. Only the planned value
+// separates them.
 func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 	ctx := context.Background()
 	credentialSchema := DatabaseCredentialSchema()
@@ -255,6 +260,26 @@ func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 			state:       &upgraded,
 			plan:        &basic,
 			configValue: types.StringNull(),
+			wantReplace: false,
+		},
+		{
+			// Converting in the same plan that upgrades the provider. The prior state is
+			// null exactly as in the backfill above, but the V4 API cannot promote a basic
+			// credential, so this must still replace.
+			name:        "legacy state converted to advanced replaces",
+			state:       &upgraded,
+			plan:        &advanced,
+			configValue: types.StringValue(credentialTypeAdvanced),
+			wantReplace: true,
+		},
+		{
+			// The mirror image: pinning the default explicitly while upgrading is not a
+			// change, so keying off "was it configured" instead of the planned value would
+			// destroy the credential here.
+			name:        "legacy state pinned to the default does not replace",
+			state:       &upgraded,
+			plan:        &basic,
+			configValue: types.StringValue(credentialTypeBasic),
 			wantReplace: false,
 		},
 		{

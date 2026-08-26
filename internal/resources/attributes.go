@@ -33,7 +33,6 @@ const (
 	sensitive                   = "sensitive"
 	requiresReplace             = "requiresReplace"
 	requiresReplaceIfConfigured = "requiresReplaceIfConfigured"
-	requiresReplaceOnChange     = "requiresReplaceOnChange"
 	useStateForUnknown          = "useStateForUnknown"
 	deprecated                  = "deprecated"
 	deprecationMessage          = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
@@ -69,11 +68,6 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 				stringplanmodifier.RequiresReplaceIfConfigured(),
 			}
 			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
-		case requiresReplaceOnChange:
-			var planModifiers = []planmodifier.String{
-				requiresReplaceOnKnownChange(),
-			}
-			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		case useStateForUnknown:
 			var planModifiers = []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
@@ -86,31 +80,47 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 	return &attribute
 }
 
-// requiresReplaceOnKnownChange requests replacement only when a known prior value changes.
-// A null prior state means the attribute was absent from the state file because it was
-// added to the schema after that state was written, so a Default supplying a value is a
-// backfill on provider upgrade rather than a practitioner-driven change. Plain
-// RequiresReplace cannot tell the two apart and destroys every existing resource on the
-// first plan after the upgrade (AV-139981). RequiresReplaceIf's own guards already cover
-// create, destroy and an unchanged value, so only the null prior state has to be excluded
-// here.
-func requiresReplaceOnKnownChange() planmodifier.String {
-	const description = "Replaces the resource when a known prior value changes."
-
-	return stringplanmodifier.RequiresReplaceIf(
-		func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-			resp.RequiresReplace = !req.StateValue.IsNull()
-		},
-		description,
-		description,
-	)
-}
-
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.
 func stringDefaultAttribute(defaultValue string, fields ...string) *schema.StringAttribute {
 	attribute := stringAttribute(fields)
 	attribute.Default = stringdefault.StaticString(defaultValue)
 	return attribute
+}
+
+// stringDefaultAttributeReplaceOnChange returns a defaulted string attribute that requires
+// replacement only when its value genuinely changes. Use it in place of the requiresReplace
+// field wherever a Default and RequiresReplace are combined.
+func stringDefaultAttributeReplaceOnChange(defaultValue string, fields ...string) *schema.StringAttribute {
+	attribute := stringDefaultAttribute(defaultValue, fields...)
+	attribute.PlanModifiers = append(attribute.PlanModifiers, requiresReplaceOnKnownChange(defaultValue))
+	return attribute
+}
+
+// requiresReplaceOnKnownChange requests replacement when the planned value differs from the
+// prior one, treating an absent prior value as implicitPriorValue.
+//
+// A state file written before the attribute existed holds no value for it, so it decodes as
+// null and the Default backfills it on the first plan after a provider upgrade. Plain
+// RequiresReplace reads that backfill as a change and destroys every existing resource
+// (AV-139981). Excluding a null prior state outright is not enough: the practitioner may set
+// a different value in the same plan that upgrades the provider, which is a real change and
+// must still replace. Comparing against implicitPriorValue distinguishes the two.
+//
+// RequiresReplaceIf's own guards already cover create, destroy and an unchanged value.
+func requiresReplaceOnKnownChange(implicitPriorValue string) planmodifier.String {
+	const description = "Replaces the resource when the value changes, treating an absent prior value as the default."
+
+	return stringplanmodifier.RequiresReplaceIf(
+		func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+			priorValue := req.StateValue
+			if priorValue.IsNull() {
+				priorValue = types.StringValue(implicitPriorValue)
+			}
+			resp.RequiresReplace = !req.PlanValue.Equal(priorValue)
+		},
+		description,
+		description,
+	)
 }
 
 // requiredUUIDStringAttribute is intended for adding a required string attribute with requires replace set for hierarchical Capella resource UUIDs
