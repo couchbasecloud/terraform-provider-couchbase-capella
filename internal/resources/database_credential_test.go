@@ -7,9 +7,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"gotest.tools/assert"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -206,4 +210,139 @@ func assertNoDiags(t *testing.T, diags diag.Diagnostics) {
 	if diags.HasError() {
 		t.Fatalf("unexpected diagnostics: %v", diags.Errors())
 	}
+}
+
+// TestDatabaseCredentialTypeReplacement covers when a credential_type diff is allowed to
+// destroy and recreate the credential. The V4 API cannot convert a credential between
+// basic and advanced, so a practitioner-driven type change must still replace. An
+// attribute merely absent from an older state file must not: credential_type was added by
+// AV-124932, so every state a released provider wrote decodes it as null and the Default
+// then plans "basic" against that null. Under a plain RequiresReplace this destroyed and
+// recreated every existing credential on the first plan after the upgrade, regenerating
+// the auto-generated passwords applications were holding (AV-139981).
+func TestDatabaseCredentialTypeReplacement(t *testing.T) {
+	ctx := context.Background()
+	credentialSchema := DatabaseCredentialSchema()
+
+	attribute, ok := credentialSchema.Attributes["credential_type"].(*schema.StringAttribute)
+	if !ok {
+		t.Fatalf("credential_type is %T, want *schema.StringAttribute", credentialSchema.Attributes["credential_type"])
+	}
+
+	basicAccess := []providerschema.Access{{Privileges: []types.String{types.StringValue("read")}}}
+	advancedRoles := []types.String{types.StringValue(testUserRole)}
+
+	basic := managedCredentialState(credentialTypeBasic, nil, basicAccess)
+	advanced := managedCredentialState(credentialTypeAdvanced, advancedRoles, nil)
+
+	// The regression fixture: a basic credential as a released provider stored it, with no
+	// credential_type key at all. The planned value is the Default backfilling it.
+	upgraded := managedCredentialState(credentialTypeBasic, nil, basicAccess)
+	upgraded.CredentialType = types.StringNull()
+
+	tests := []struct {
+		name string
+		// A nil state is a create and a nil plan is a destroy, both of which the framework
+		// signals with a null raw value rather than a null attribute.
+		state       *providerschema.DatabaseCredential
+		plan        *providerschema.DatabaseCredential
+		configValue types.String
+		wantReplace bool
+	}{
+		{
+			// The regression. Nothing in the configuration changed.
+			name:        "upgrade backfills a state written before the attribute existed",
+			state:       &upgraded,
+			plan:        &basic,
+			configValue: types.StringNull(),
+			wantReplace: false,
+		},
+		{
+			name:        "an unchanged credential type is left alone",
+			state:       &basic,
+			plan:        &basic,
+			configValue: types.StringNull(),
+			wantReplace: false,
+		},
+		{
+			name:        "basic to advanced replaces",
+			state:       &basic,
+			plan:        &advanced,
+			configValue: types.StringValue(credentialTypeAdvanced),
+			wantReplace: true,
+		},
+		{
+			// Dropping credential_type from an advanced credential's configuration falls
+			// back to the Default, which is still a real type change.
+			name:        "advanced to basic replaces",
+			state:       &advanced,
+			plan:        &basic,
+			configValue: types.StringNull(),
+			wantReplace: true,
+		},
+		{
+			name:        "create does not replace",
+			state:       nil,
+			plan:        &basic,
+			configValue: types.StringNull(),
+			wantReplace: false,
+		},
+		{
+			name:        "destroy does not replace",
+			state:       &basic,
+			plan:        nil,
+			configValue: types.StringNull(),
+			wantReplace: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := planmodifier.StringRequest{
+				Path:        path.Root("credential_type"),
+				State:       tfsdk.State{Schema: credentialSchema, Raw: credentialRawValue(t, ctx, credentialSchema, tc.state)},
+				StateValue:  credentialTypeOf(tc.state),
+				Plan:        tfsdk.Plan{Schema: credentialSchema, Raw: credentialRawValue(t, ctx, credentialSchema, tc.plan)},
+				PlanValue:   credentialTypeOf(tc.plan),
+				ConfigValue: tc.configValue,
+			}
+
+			// Each modifier sees the plan value the previous one produced, matching
+			// fwserver.AttributeModifyPlan.
+			var gotReplace bool
+			for _, modifier := range attribute.PlanModifiers {
+				resp := planmodifier.StringResponse{PlanValue: req.PlanValue}
+				modifier.PlanModifyString(ctx, req, &resp)
+				req.PlanValue = resp.PlanValue
+				gotReplace = gotReplace || resp.RequiresReplace
+			}
+
+			assert.Equal(t, gotReplace, tc.wantReplace,
+				"credential_type replacement decision for %q", tc.name)
+		})
+	}
+}
+
+// credentialRawValue renders v as the whole-resource value the framework puts in a plan
+// modifier request. RequiresReplaceIf consults req.State.Raw and req.Plan.Raw before it
+// looks at any attribute value, so a request carrying only StateValue and PlanValue would
+// take the create branch and pass no matter what the modifier does. A nil v is that null
+// raw value: no prior state on create, no planned state on destroy.
+func credentialRawValue(t *testing.T, ctx context.Context, s schema.Schema, v *providerschema.DatabaseCredential) tftypes.Value {
+	t.Helper()
+
+	if v == nil {
+		return tftypes.NewValue(s.Type().TerraformType(ctx), nil)
+	}
+
+	state := tfsdk.State{Schema: s}
+	assertNoDiags(t, state.Set(ctx, *v))
+	return state.Raw
+}
+
+func credentialTypeOf(v *providerschema.DatabaseCredential) types.String {
+	if v == nil {
+		return types.StringNull()
+	}
+	return v.CredentialType
 }

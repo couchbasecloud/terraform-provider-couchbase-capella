@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -32,6 +33,7 @@ const (
 	sensitive                   = "sensitive"
 	requiresReplace             = "requiresReplace"
 	requiresReplaceIfConfigured = "requiresReplaceIfConfigured"
+	requiresReplaceOnChange     = "requiresReplaceOnChange"
 	useStateForUnknown          = "useStateForUnknown"
 	deprecated                  = "deprecated"
 	deprecationMessage          = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
@@ -67,6 +69,11 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 				stringplanmodifier.RequiresReplaceIfConfigured(),
 			}
 			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case requiresReplaceOnChange:
+			var planModifiers = []planmodifier.String{
+				requiresReplaceOnKnownChange(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		case useStateForUnknown:
 			var planModifiers = []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
@@ -77,6 +84,26 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 		}
 	}
 	return &attribute
+}
+
+// requiresReplaceOnKnownChange requests replacement only when a known prior value changes.
+// A null prior state means the attribute was absent from the state file because it was
+// added to the schema after that state was written, so a Default supplying a value is a
+// backfill on provider upgrade rather than a practitioner-driven change. Plain
+// RequiresReplace cannot tell the two apart and destroys every existing resource on the
+// first plan after the upgrade (AV-139981). RequiresReplaceIf's own guards already cover
+// create, destroy and an unchanged value, so only the null prior state has to be excluded
+// here.
+func requiresReplaceOnKnownChange() planmodifier.String {
+	const description = "Replaces the resource when a known prior value changes."
+
+	return stringplanmodifier.RequiresReplaceIf(
+		func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+			resp.RequiresReplace = !req.StateValue.IsNull()
+		},
+		description,
+		description,
+	)
 }
 
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.

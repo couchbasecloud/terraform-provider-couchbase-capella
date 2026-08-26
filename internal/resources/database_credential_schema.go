@@ -30,7 +30,7 @@ func DatabaseCredentialSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "name", databaseCredentialBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "password", databaseCredentialBuilder, stringAttribute([]string{optional, computed, sensitive, useStateForUnknown}))
 
-	credentialTypeAttr := stringDefaultAttribute(credentialTypeBasic, optional, computed, requiresReplace)
+	credentialTypeAttr := stringDefaultAttribute(credentialTypeBasic, optional, computed, requiresReplaceOnChange)
 	// The OneOf validator is attached manually because the published OpenAPI spec
 	// does not yet include credentialType; it can be removed once the spec is
 	// published and `make gen-enums` regenerates the enum table.
