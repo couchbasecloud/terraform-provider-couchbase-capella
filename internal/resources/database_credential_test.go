@@ -212,19 +212,10 @@ func assertNoDiags(t *testing.T, diags diag.Diagnostics) {
 	}
 }
 
-// TestDatabaseCredentialTypeReplacement covers when a credential_type diff is allowed to
-// destroy and recreate the credential. The V4 API cannot convert a credential between
-// basic and advanced, so a practitioner-driven type change must still replace. An
-// attribute merely absent from an older state file must not: credential_type was added by
-// AV-124932, so every state a released provider wrote decodes it as null and the Default
-// then plans "basic" against that null. Under a plain RequiresReplace this destroyed and
-// recreated every existing credential on the first plan after the upgrade, regenerating
-// the auto-generated passwords applications were holding (AV-139981).
-//
-// A null prior state is not on its own proof of a backfill, so the legacy cases below pin
-// both readings of one: the practitioner may convert the credential in the same plan that
-// upgrades the provider, and may equally pin the default explicitly. Only the planned value
-// separates them.
+// TestDatabaseCredentialTypeReplacement pins when a credential_type diff replaces the
+// credential. The V4 API cannot convert between basic and advanced, so a real change must
+// replace, but the Default backfilling a state written before the attribute existed must not
+// (AV-139981). Only the planned value separates the two on a null prior state.
 func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 	ctx := context.Background()
 	credentialSchema := DatabaseCredentialSchema()
@@ -240,22 +231,19 @@ func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 	basic := managedCredentialState(credentialTypeBasic, nil, basicAccess)
 	advanced := managedCredentialState(credentialTypeAdvanced, advancedRoles, nil)
 
-	// The regression fixture: a basic credential as a released provider stored it, with no
-	// credential_type key at all. The planned value is the Default backfilling it.
+	// A basic credential as a released provider stored it: no credential_type key.
 	upgraded := managedCredentialState(credentialTypeBasic, nil, basicAccess)
 	upgraded.CredentialType = types.StringNull()
 
 	tests := []struct {
 		name string
-		// A nil state is a create and a nil plan is a destroy, both of which the framework
-		// signals with a null raw value rather than a null attribute.
+		// nil state means create, nil plan means destroy: both are a null raw value.
 		state       *providerschema.DatabaseCredential
 		plan        *providerschema.DatabaseCredential
 		configValue types.String
 		wantReplace bool
 	}{
 		{
-			// The regression. Nothing in the configuration changed.
 			name:        "upgrade backfills a state written before the attribute existed",
 			state:       &upgraded,
 			plan:        &basic,
@@ -263,9 +251,7 @@ func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 			wantReplace: false,
 		},
 		{
-			// Converting in the same plan that upgrades the provider. The prior state is
-			// null exactly as in the backfill above, but the V4 API cannot promote a basic
-			// credential, so this must still replace.
+			// Prior state is null as in the backfill above, but this is a real change.
 			name:        "legacy state converted to advanced replaces",
 			state:       &upgraded,
 			plan:        &advanced,
@@ -273,9 +259,7 @@ func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 			wantReplace: true,
 		},
 		{
-			// The mirror image: pinning the default explicitly while upgrading is not a
-			// change, so keying off "was it configured" instead of the planned value would
-			// destroy the credential here.
+			// Pinning the default while upgrading is not a change.
 			name:        "legacy state pinned to the default does not replace",
 			state:       &upgraded,
 			plan:        &basic,
@@ -297,8 +281,7 @@ func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 			wantReplace: true,
 		},
 		{
-			// Dropping credential_type from an advanced credential's configuration falls
-			// back to the Default, which is still a real type change.
+			// A dropped credential_type falls back to the Default, still a real change.
 			name:        "advanced to basic replaces",
 			state:       &advanced,
 			plan:        &basic,
@@ -332,8 +315,7 @@ func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 				ConfigValue: tc.configValue,
 			}
 
-			// Each modifier sees the plan value the previous one produced, matching
-			// fwserver.AttributeModifyPlan.
+			// Each modifier sees the previous one's plan value, as fwserver does.
 			var gotReplace bool
 			for _, modifier := range attribute.PlanModifiers {
 				resp := planmodifier.StringResponse{PlanValue: req.PlanValue}
@@ -348,11 +330,9 @@ func TestDatabaseCredentialTypeReplacement(t *testing.T) {
 	}
 }
 
-// credentialRawValue renders v as the whole-resource value the framework puts in a plan
-// modifier request. RequiresReplaceIf consults req.State.Raw and req.Plan.Raw before it
-// looks at any attribute value, so a request carrying only StateValue and PlanValue would
-// take the create branch and pass no matter what the modifier does. A nil v is that null
-// raw value: no prior state on create, no planned state on destroy.
+// credentialRawValue renders v as the whole-resource value a plan modifier request carries.
+// RequiresReplaceIf checks State.Raw and Plan.Raw before any attribute value, so a request
+// without them passes vacuously. A nil v is that null raw: create has no state, destroy no plan.
 func credentialRawValue(t *testing.T, ctx context.Context, s schema.Schema, v *providerschema.DatabaseCredential) tftypes.Value {
 	t.Helper()
 

@@ -88,25 +88,17 @@ func stringDefaultAttribute(defaultValue string, fields ...string) *schema.Strin
 }
 
 // stringDefaultAttributeReplaceOnChange returns a defaulted string attribute that requires
-// replacement only when its value genuinely changes. Use it in place of the requiresReplace
-// field wherever a Default and RequiresReplace are combined.
+// replacement only on a genuine change. Use it wherever a Default and RequiresReplace combine.
 func stringDefaultAttributeReplaceOnChange(defaultValue string, fields ...string) *schema.StringAttribute {
 	attribute := stringDefaultAttribute(defaultValue, fields...)
 	attribute.PlanModifiers = append(attribute.PlanModifiers, requiresReplaceOnKnownChange(defaultValue))
 	return attribute
 }
 
-// requiresReplaceOnKnownChange requests replacement when the planned value differs from the
-// prior one, treating an absent prior value as implicitPriorValue.
-//
-// A state file written before the attribute existed holds no value for it, so it decodes as
-// null and the Default backfills it on the first plan after a provider upgrade. Plain
-// RequiresReplace reads that backfill as a change and destroys every existing resource
-// (AV-139981). Excluding a null prior state outright is not enough: the practitioner may set
-// a different value in the same plan that upgrades the provider, which is a real change and
-// must still replace. Comparing against implicitPriorValue distinguishes the two.
-//
-// RequiresReplaceIf's own guards already cover create, destroy and an unchanged value.
+// requiresReplaceOnKnownChange requires replacement when the planned value differs from the
+// prior one, treating an absent prior value as implicitPriorValue. Plain RequiresReplace
+// instead reads the Default backfilling a state file written before the attribute existed as
+// a change, and destroys every existing resource on the first plan after an upgrade (AV-139981).
 func requiresReplaceOnKnownChange(implicitPriorValue string) planmodifier.String {
 	const description = "Replaces the resource when the value changes, treating an absent prior value as the default."
 
