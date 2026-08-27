@@ -244,6 +244,10 @@ var (
 	// ErrProviderConfigCannotBeEmpty is returned when the provider_config was required for a request but was empty.
 	ErrProviderConfigCannotBeEmpty = errors.New("provider_config cannot be empty, it should be populated with one of- aws_config, gcp_config or azure_config. Please contact Couchbase Capella Support")
 
+	// ErrProviderTypeConfigMismatch is returned when provider_type does not match the provider_config block set.
+	// For example, provider_type = "azure" but provider_config.aws_config is populated instead of azure_config.
+	ErrProviderTypeConfigMismatch = errors.New("provider_type does not match the provider config block; provider_type \"aws\" requires aws_config, \"gcp\" requires gcp_config, \"azure\" requires azure_config")
+
 	ErrPrivateEndpointServiceTimeout = errors.New("changing private endpoint service status timed out after initiation")
 
 	// ErrPrivateEndpointServiceEnableFailed is returned when the backend reports a terminal
