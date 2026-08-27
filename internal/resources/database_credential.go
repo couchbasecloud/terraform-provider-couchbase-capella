@@ -223,26 +223,33 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 // Update updates the database credential.
 func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state providerschema.DatabaseCredential
-	diags := req.Plan.Get(ctx, &state)
+	var plan providerschema.DatabaseCredential
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	IDs, err := state.Validate()
+	var priorState providerschema.DatabaseCredential
+	diags = req.State.Get(ctx, &priorState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	IDs, err := plan.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Database Credentials in Capella",
-			"Could not update Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+			"Could not update Capella database credential with ID "+plan.Id.String()+": "+err.Error(),
 		)
 		return
 	}
 
-	if err := r.validateDatabaseCredentialAttributesTrimmed(state); err != nil {
+	if err := r.validateDatabaseCredentialAttributesTrimmed(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Database Credentials in Capella",
-			"Could not update Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+			"Could not update Capella database credential with ID "+plan.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -254,12 +261,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		dbId           = IDs[providerschema.Id]
 	)
 
-	dbCredRequest := api.PutDatabaseCredentialRequest{
-		// it is expected that the password in the state file will never be empty.
-		Password: state.Password.ValueString(),
-	}
-
-	dbCredRequest.Access = createAccess(state)
+	dbCredRequest := createDatabaseCredentialUpdateRequest(plan, priorState)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
@@ -292,14 +294,17 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	// this will ensure that the state file stores the new updated password, if password is not to be updated, it will retain the older one.
-	currentState.Password = state.Password
+	// Store a planned password change, otherwise preserve the prior state value.
+	currentState.Password = priorState.Password
+	if !plan.Password.IsNull() && !plan.Password.IsUnknown() {
+		currentState.Password = plan.Password
+	}
 
 	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
 	// we are going to work around this for private preview.
 	// The fix will be done in SURF-7366
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
-	currentState.Access = mapAccess(state)
+	currentState.Access = mapAccess(plan)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
@@ -308,6 +313,14 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func createDatabaseCredentialUpdateRequest(plan, priorState providerschema.DatabaseCredential) api.PutDatabaseCredentialRequest {
+	request := api.PutDatabaseCredentialRequest{Access: createAccess(plan)}
+	if !plan.Password.IsNull() && !plan.Password.IsUnknown() && !plan.Password.Equal(priorState.Password) {
+		request.Password = plan.Password.ValueString()
+	}
+	return request
 }
 
 // Delete deletes the database credential.
