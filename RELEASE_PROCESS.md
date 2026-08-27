@@ -49,7 +49,8 @@ To create a GitHub token:
 1. Go to https://github.com/settings/tokens
 2. Generate a new token (classic)
 3. Select scope: `repo` (for private repos) or `public_repo`
-4. Copy the token and set it as an environment variable
+4. Ensure to enable SSO for this token
+5. Copy the token and set it as an environment variable
 
 ## Important: Templates vs Docs Directory
 
