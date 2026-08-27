@@ -13,9 +13,9 @@ import (
 // as a null list and fails "Attribute 'data.#' expected to be set". See
 // AV-134714.
 //
-// Listing free-tier clusters themselves is not asserted here: the Capella v4
-// API has no free-tier cluster list endpoint (only the free-tier buckets have
-// one), so the data source can only filter the general /clusters list.
+// Listing an actual free-tier cluster is asserted in
+// TestAccFreeTierClusterLifecycle, which owns the organization's single
+// free-tier cluster.
 func TestAccFreeTierClustersDatasourceEmptyResult(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_free_tier_clusters_ds_")
 	dsRef := "data.couchbase-capella_free_tier_clusters." + dsName

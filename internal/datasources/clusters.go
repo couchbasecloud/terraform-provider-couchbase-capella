@@ -24,11 +24,10 @@ var (
 type Clusters struct {
 	*providerschema.Data
 
-	// FreeTierClusterFilter, when true, restricts the results to free-tier
-	// clusters. There is no list endpoint for free-tier clusters, so the
-	// free-tier clusters data source lists all clusters via /clusters and
-	// filters here on Support.Plan == "free".
-	FreeTierClusterFilter bool
+	// freeTier, when true, restricts the results to free-tier clusters. There
+	// is no free-tier cluster list endpoint, so they are picked out of the
+	// general /clusters list here.
+	freeTier bool
 }
 
 // NewClusters is a helper function to simplify the provider implementation.
@@ -98,7 +97,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 
 	for i := range response {
 		cluster := response[i]
-		if d.FreeTierClusterFilter && cluster.Support.Plan != "free" {
+		if d.freeTier && !isFreeTierPlan(cluster.Support.Plan) {
 			continue
 		}
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
@@ -130,6 +129,13 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+// isFreeTierPlan accepts an empty plan as free tier: /clusters reports no plan
+// for them, unlike the free-tier read endpoint. Both are matched so the filter
+// survives the API populating it.
+func isFreeTierPlan(plan clusterapi.SupportPlan) bool {
+	return plan == "free" || plan == ""
 }
 
 // Configure adds the provider configured client to the cluster data source.
