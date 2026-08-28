@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -71,8 +72,9 @@ func TestAccDatabaseCredentialWithBucketScopeAccess(t *testing.T) {
 				Config: testAccAddDatabaseCredWithBucketScopeAccessConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "access.0.privileges.0", "data_reader"),
-					resource.TestCheckResourceAttr(resourceReference, "access.0.privileges.1", "data_writer"),
+					resource.TestCheckResourceAttr(resourceReference, "access.0.privileges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "access.0.privileges.*", "data_reader"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "access.0.privileges.*", "data_writer"),
 					resource.TestCheckResourceAttr(resourceReference, "access.0.resources.buckets.0.name", globalBucketName),
 					resource.TestCheckResourceAttr(resourceReference, "access.0.resources.buckets.0.scopes.0.name", globalScopeName),
 					resource.TestCheckResourceAttr(resourceReference, "access.0.resources.buckets.0.scopes.0.collections.#", "3"),
@@ -158,7 +160,10 @@ func ensureDatabaseCredentialFixtureCollection(ctx context.Context, collectionsU
 
 	createCfg := api.EndpointCfg{Url: collectionsUrl, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	if _, err = globalClient.ExecuteWithRetry(ctx, createCfg, api.CreateCollectionRequest{Name: name}, globalToken, nil); err != nil {
-		return fmt.Errorf("creating fixture collection %q: %w", name, err)
+		var apiErr *api.Error
+		if !errors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusConflict {
+			return fmt.Errorf("creating fixture collection %q: %w", name, err)
+		}
 	}
 
 	const maxWait = 2 * time.Minute
