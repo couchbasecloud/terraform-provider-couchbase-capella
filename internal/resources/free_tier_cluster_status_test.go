@@ -148,9 +148,12 @@ func TestCheckForFreeTierClusterStatus_ReturnsImmediatelyOnGetError(t *testing.T
 func TestCheckForFreeTierClusterStatus_UsesFreeTierGetClusterEndpoint(t *testing.T) {
 	fastFreeTierClusterPolling(t)
 
+	var mu sync.Mutex
 	var gotPath string
 	handler := func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
 		gotPath = r.URL.Path
+		mu.Unlock()
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(clusterapi.GetClusterResponse{CurrentState: clusterapi.Healthy})
 	}
@@ -160,5 +163,7 @@ func TestCheckForFreeTierClusterStatus_UsesFreeTierGetClusterEndpoint(t *testing
 	_, err := f.checkForFreeTierClusterStatus(t.Context(), "org-1", "proj-1", "cluster-1")
 
 	assert.NilError(t, err)
+	mu.Lock()
+	defer mu.Unlock()
 	assert.Assert(t, strings.Contains(gotPath, "/organizations/org-1/projects/proj-1/clusters/freeTier/cluster-1"), "unexpected path: %s", gotPath)
 }
