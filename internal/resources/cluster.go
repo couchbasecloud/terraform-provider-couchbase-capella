@@ -199,7 +199,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err = c.checkClusterStatus(ctx, organizationId, projectId, clusterResponse.Id.String()); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			fmt.Sprintf("Could not create cluster. error: %v", api.ParseError(err)),
+			fmt.Sprintf("Could not create cluster id %s. error: %v", clusterResponse.Id.String(), api.ParseError(err)),
 		)
 		return
 	}

@@ -95,7 +95,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Error creating free tier cluster",
-			fmt.Sprintf("Could not create free tier cluster. error: %v", api.ParseError(err)),
+			fmt.Sprintf("Could not create free tier cluster id %s. error: %v", freeTierClusterResponse.Id.String(), api.ParseError(err)),
 		)
 		return
 	}
