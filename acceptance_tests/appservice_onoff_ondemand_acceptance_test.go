@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-
 func TestAccAppServiceOnOffOnDemandResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_app_service_onoff_ondemand_")
 	resourceReference := "couchbase-capella_app_service_onoff_ondemand." + resourceName
@@ -32,6 +31,31 @@ func TestAccAppServiceOnOffOnDemandResource(t *testing.T) {
 				ImportStateIdFunc:                    generateAppServiceOnOffOnDemandImportId(resourceReference),
 				ImportState:                          true,
 				ImportStateVerifyIdentifierAttribute: "app_service_id",
+			},
+		},
+	})
+}
+
+func TestAccAppServiceOnOffOnDemandAlreadyInRequestedState(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_service_onoff_already_on_")
+	resourceReference := "couchbase-capella_app_service_onoff_ondemand." + resourceName
+	cfg := testAccAppServiceOnOffOnDemandResourceConfig(resourceName, globalAppServiceId, "on")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: cfg,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "state", "on"),
+				),
+			},
+			// Re-apply the same config; expect no changes (no perpetual drift).
+			{
+				Config:             cfg,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
