@@ -25,8 +25,7 @@
 
 - \[AV-142277\] Fix cluster destroy hanging on the status poll [\#768](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/768) ([nimiyajoseph](https://github.com/nimiyajoseph))
 - \[AV-138941\] Stop app service on/off reporting spurious drift on every plan [\#740](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/740) ([nimiyajoseph](https://github.com/nimiyajoseph))
-\- \[AV-138608\] Improve error message on create [\#734](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/734) ([l0n3star](https://github.com/l0n3star))
-
+- \[AV-138608\] Improve error message on create [\#734](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/734) ([l0n3star](https://github.com/l0n3star))
 
 ## [v1.10.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.10.0) (2026-07-30)
 
