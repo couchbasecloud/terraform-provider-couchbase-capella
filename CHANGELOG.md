@@ -1,5 +1,32 @@
 # Changelog
 
+## [v1.11.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.11.0) (2026-08-31)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.10.0...v1.11.0)
+
+**Implemented enhancements:**
+
+- \[AV-140803\] Expose resync docs\_targeted and docs\_errored [\#754](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/754) ([stanleefdz](https://github.com/stanleefdz))
+
+**Fixed bugs:**
+
+- \[AV-134714\] Match free tier clusters on the unset support plan [\#763](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/763) ([pranavdeshmukh04](https://github.com/pranavdeshmukh04))
+- \[AV-138292\] Pin App Service version to 4.0 [\#759](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/759) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-132323\] Set state for healthy clusters [\#755](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/755) ([l0n3star](https://github.com/l0n3star))
+- \[AV-135211\] Recognize "Created" as a deferred index build status [\#751](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/751) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-139841\] Use List/ListNestedAttribute instead of Set for access/buckets/scopes/collections [\#749](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/749) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-138726\] Handle App Services entering a failed state properly [\#747](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/747) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-134714\] Fix FreeTierClusters datasource always returning empty result [\#746](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/746) ([pranavdeshmukh04](https://github.com/pranavdeshmukh04))
+- \[AV-138744\] Stop bucket update sending zero values for unconfigured fields [\#745](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/745) ([pranavdeshmukh04](https://github.com/pranavdeshmukh04))
+- \[AV-138606\] Wait for desired state [\#736](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/736) ([l0n3star](https://github.com/l0n3star))
+- \[AV-138335\] Move version change check to a ModifyPlan validator [\#735](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/735) ([IsaacLambat](https://github.com/IsaacLambat))
+
+**Merged pull requests:**
+
+- \[AV-142277\] Fix cluster destroy hanging on the status poll [\#768](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/768) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-138941\] Stop app service on/off reporting spurious drift on every plan [\#740](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/740) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-138608\] Improve error message on create [\#734](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/734) ([l0n3star](https://github.com/l0n3star))
+
 ## [v1.10.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.10.0) (2026-07-30)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.9.1...v1.10.0)
