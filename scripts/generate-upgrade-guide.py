@@ -147,7 +147,7 @@ def categorize_enriched_prs(enriched_prs: List[Dict]) -> Dict:
 
 
 def generate_feature_bullet(pr_data: Dict) -> str:
-    """Generate a simple bullet point for the New Features list."""
+    """Generate a simple bullet point for the New Features or Enhancements list."""
     title = pr_data['title']
     new_resources = pr_data['new_resources']
     new_datasources = pr_data['new_datasources']
@@ -253,12 +253,18 @@ Couchbase Capella Provider {version}: Upgrade and Information Guide
     if has_features:
         guide += f"Here is a list of what's new in {version}\n\n"
     
-    # New Features section - simple bullet list
-    if has_features:
+    # New Features section - simple bullet list. Kept separate from Enhancements so a release
+    # that only improves existing resources is not announced as shipping new functionality.
+    if prs_by_category['features']:
         guide += "## New Features\n\n"
-        
-        all_features = prs_by_category['features'] + prs_by_category['enhancements']
-        for pr_data in all_features:
+        for pr_data in prs_by_category['features']:
+            guide += generate_feature_bullet(pr_data)
+        guide += "\n"
+
+    # Enhancements section - improvements to resources that already exist
+    if prs_by_category['enhancements']:
+        guide += "## Enhancements\n\n"
+        for pr_data in prs_by_category['enhancements']:
             guide += generate_feature_bullet(pr_data)
         guide += "\n"
     
