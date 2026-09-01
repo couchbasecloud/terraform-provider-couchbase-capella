@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.11.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.11.1) (2026-09-01)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.11.0...v1.11.1)
+
+**Fixed bugs:**
+
+- \[AV-142331\] Reverting change for AV-139841 [\#772](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/772) ([toshikagarwal](https://github.com/toshikagarwal))
+- \[AV-142288\] Make app service on/off idempotent when already in requested state [\#769](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/769) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
 ## [v1.11.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.11.0) (2026-08-31)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.10.0...v1.11.0)
