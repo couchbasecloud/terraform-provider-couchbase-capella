@@ -35,7 +35,8 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
 
 ### Required
 
-- `access` (Attributes List) - Describes the access information of the database credential. (see [below for nested schema](#nestedatt--access))
+
+- `access` (Attributes Set) - Describes the access information of the database credential. (see [below for nested schema](#nestedatt--access))
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `name` (String) - Username for the database credential. The name should adhere to the following rules: The name must be between 2 & 128 characters. The name cannot contain spaces. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {` The name cannot begin with `@` character.
  - **Constraints**: Minimum length: 2 characters, Maximum length: 128 characters
@@ -69,7 +70,7 @@ Optional:
 
 Optional:
 
-- `buckets` (Attributes List) (see [below for nested schema](#nestedatt--access--resources--buckets))
+- `buckets` (Attributes Set) (see [below for nested schema](#nestedatt--access--resources--buckets))
 
 <a id="nestedatt--access--resources--buckets"></a>
 ### Nested Schema for `access.resources.buckets`
@@ -81,7 +82,7 @@ Required:
 
 Optional:
 
-- `scopes` (Attributes List) (see [below for nested schema](#nestedatt--access--resources--buckets--scopes))
+- `scopes` (Attributes Set) (see [below for nested schema](#nestedatt--access--resources--buckets--scopes))
 
 <a id="nestedatt--access--resources--buckets--scopes"></a>
 ### Nested Schema for `access.resources.buckets.scopes`
@@ -93,7 +94,7 @@ Required:
 
 Optional:
 
-- `collections` (List of String)
+- `collections` (Set of String)
 
 
 
@@ -109,7 +110,7 @@ Read-Only:
 - `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
 - `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
  - **Format**: Date-time in RFC3339 format
-- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
 - `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 ## Import

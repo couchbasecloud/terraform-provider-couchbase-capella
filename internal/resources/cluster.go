@@ -640,6 +640,14 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
+				// A not found error is terminal: the cluster no longer exists in the remote
+				// server.  Delete relies on this to detect that the deletion completed, while
+				// Create and Update report it as an error.  Any other error is treated as
+				// transient and the status is polled again.
+				if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+					return err
+				}
+
 				tflog.Warn(ctx, "could not get cluster status.  retrying...")
 				continue
 			}
