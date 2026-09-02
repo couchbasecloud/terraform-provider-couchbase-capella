@@ -270,30 +270,34 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 		}
 	}
 
-	// Make sure we keep all required fields (i.e. client ID and issuer)
-	oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
-	copy(oidcList, plan.Oidc)
+	// A nil slice must stay nil so a null oidc list in the plan is not replaced with an empty
+	// list, which Terraform reports as an inconsistent result after apply.
+	if len(plan.Oidc) > 0 {
+		// Make sure we keep all required fields (i.e. client ID and issuer)
+		oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
+		copy(oidcList, plan.Oidc)
 
-	for i := range oidcList {
-		oidcList[i].ProviderId = types.StringNull()
-		oidcList[i].IsDefault = types.BoolNull()
-		if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
-			oidcList[i].Register = types.BoolNull()
+		for i := range oidcList {
+			oidcList[i].ProviderId = types.StringNull()
+			oidcList[i].IsDefault = types.BoolNull()
+			if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
+				oidcList[i].Register = types.BoolNull()
+			}
+			if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
+				oidcList[i].DiscoveryUrl = types.StringNull()
+			}
+			if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
+				oidcList[i].UsernameClaim = types.StringNull()
+			}
+			if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
+				oidcList[i].RolesClaim = types.StringNull()
+			}
+			if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
+				oidcList[i].UserPrefix = types.StringNull()
+			}
 		}
-		if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
-			oidcList[i].DiscoveryUrl = types.StringNull()
-		}
-		if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
-			oidcList[i].UsernameClaim = types.StringNull()
-		}
-		if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
-			oidcList[i].RolesClaim = types.StringNull()
-		}
-		if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
-			oidcList[i].UserPrefix = types.StringNull()
-		}
+		plan.Oidc = oidcList
 	}
-	plan.Oidc = oidcList
 
 	return diags
 }
@@ -355,7 +359,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 	// If cors was never configured (nil in prior state), keep it nil to
 	// prevent the API's default cors object from causing perpetual drift.
 	// However, during import the prior state is empty so we must not
-	// suppress cors — the user expects all remote attributes to appear.
+	// suppress cors - the user expects all remote attributes to appear.
 	isImport := state.OrganizationId.IsNull()
 	if state.Cors == nil && !isImport {
 		newstate.Cors = nil

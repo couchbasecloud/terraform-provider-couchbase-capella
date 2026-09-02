@@ -143,7 +143,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 }
 
 // TestAccAppEndpointNoCors verifies that creating an app endpoint without a
-// cors block does not produce perpetual state drift on subsequent plans.
+// cors or oidc block keeps both null in state and does not produce perpetual
+// state drift on subsequent plans.
 func TestAccAppEndpointNoCors(t *testing.T) {
 	ensureFixtureCollection(t, globalNoCorsEPCollectionName)
 
@@ -164,6 +165,7 @@ func TestAccAppEndpointNoCors(t *testing.T) {
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckNoResourceAttr(resourceReference, "cors"),
+					resource.TestCheckNoResourceAttr(resourceReference, "oidc"),
 				),
 			},
 			// Re-apply the same config; expect no changes (no perpetual drift).
@@ -594,7 +596,7 @@ func TestAccAppEndpointUpdateAddOIDC(t *testing.T) {
 // API does not remove the OIDC provider. refreshAppEndpoint re-populates state.Oidc
 // from the GET response, and Terraform detects the plan/state mismatch.
 func TestAccAppEndpointUpdateRemoveOIDC(t *testing.T) {
-	t.Skip("AV-128167: removing the oidc block should succeed once the bug is fixed")
+	t.Skip("AV-141621: OIDC providers cannot be removed in a PUT")
 	ensureFixtureCollection(t, globalRemoveOIDCEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
