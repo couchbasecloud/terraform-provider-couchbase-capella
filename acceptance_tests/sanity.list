@@ -107,7 +107,7 @@ TestAccSampleBucket
 TestAccDatasourceSampleBuckets
 
 # ----------------------------------------
-# 7. DATABASE CREDENTIALS (Access Control)
+# 7. DATABASE CREDENTIALS & ROLES (Access Control)
 # ----------------------------------------
 # Tests creating database credentials with required fields
 TestAccDatabaseCredentialWithReqFields
@@ -121,6 +121,21 @@ TestAccDatasourceDatabaseCredentials
 # Tests that credential configs still reach a plan, guarding the schema attribute
 # types against drifting from what the provider reads back (AV-139978)
 TestAccDatabaseCredentialPlanOnly
+
+# Tests creating an advanced database credential, which takes its permissions from
+# capella user roles instead of bucket-level access - the second of the two
+# credential_type paths, and unreachable through the basic tests above
+TestAccDatabaseCredentialAdvanced
+
+# Tests the database role create/read/import/update/delete path
+TestAccDatabaseRoleResource
+
+# Tests listing database roles via data source, asserting the created role comes
+# back with its fields rather than only that the list is non-empty
+TestAccDatasourceDatabaseRolesContent
+
+# Tests listing the privileges assignable to credentials and roles via data source
+TestAccDatasourceDatabasePrivileges
 
 # ----------------------------------------
 # 8. SECURITY & NETWORKING
