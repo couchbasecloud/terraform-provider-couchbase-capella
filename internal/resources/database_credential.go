@@ -440,31 +440,38 @@ func createAccess(input providerschema.DatabaseCredential) []api.Access {
 		for j, permission := range acc.Privileges {
 			access[i].Privileges[j] = permission.ValueString()
 		}
-		if acc.Resources != nil {
-			if acc.Resources.Buckets != nil {
-				access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, len(acc.Resources.Buckets))}
-				for k, bucket := range acc.Resources.Buckets {
-					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name.ValueString()
-					if bucket.Scopes != nil {
-						access[i].Resources.Buckets[k].Scopes = make([]api.Scope, len(bucket.Scopes))
-						for s, scope := range bucket.Scopes {
-							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name.ValueString()
-							if scope.Collections != nil {
-								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]string, len(scope.Collections))
-								for c, coll := range scope.Collections {
-									access[i].Resources.Buckets[k].Scopes[s].Collections[c] = coll.ValueString()
-								}
-							}
-						}
-					}
+
+		// todo: There is a bug in the PUT V4 API where we cannot pass empty buckets list as it leads to a nil pointer exception.
+		// to workaround this bug, I have temporarily added a fix where we pass an empty list of buckets if the terraform input field doesn't contain any buckets.
+		// fix for the V4 API bug will come as part of https://couchbasecloud.atlassian.net/browse/AV-63388
+		//
+		// The workaround has to cover both an absent resources object and one
+		// supplied without a buckets list: either way there is no bucket to send,
+		// and the API cannot receive a nil list.
+		access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, 0)}
+		if acc.Resources == nil || acc.Resources.Buckets == nil {
+			continue
+		}
+
+		access[i].Resources.Buckets = make([]api.Bucket, len(acc.Resources.Buckets))
+		for k, bucket := range acc.Resources.Buckets {
+			access[i].Resources.Buckets[k].Name = bucket.Name.ValueString()
+			if bucket.Scopes == nil {
+				continue
+			}
+
+			access[i].Resources.Buckets[k].Scopes = make([]api.Scope, len(bucket.Scopes))
+			for s, scope := range bucket.Scopes {
+				access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name.ValueString()
+				if scope.Collections == nil {
+					continue
+				}
+
+				access[i].Resources.Buckets[k].Scopes[s].Collections = make([]string, len(scope.Collections))
+				for c, coll := range scope.Collections {
+					access[i].Resources.Buckets[k].Scopes[s].Collections[c] = coll.ValueString()
 				}
 			}
-		} else {
-			// todo: There is a bug in the PUT V4 API where we cannot pass empty buckets list as it leads to a nil pointer exception.
-			// to workaround this bug, I have temporarily added a fix where we pass an empty list of buckets if the terraform input field doesn't contain any buckets.
-			// fix for the V4 API bug will come as part of https://couchbasecloud.atlassian.net/browse/AV-63388
-
-			access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, 0)}
 		}
 	}
 
@@ -472,6 +479,11 @@ func createAccess(input providerschema.DatabaseCredential) []api.Access {
 }
 
 // mapAccess needs a 1:1 mapping when we store the output as the refreshed state.
+// At every level an absent list and an empty one are distinct values, so a nil
+// slice has to stay nil and a non-nil one has to stay non-nil. In particular a
+// resources object supplied without buckets must still map to a resources
+// object: dropping it makes the applied state differ from the plan, and
+// Terraform rejects that with "Provider produced inconsistent result after apply".
 // todo: add a unit test, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
 func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 	var access = make([]providerschema.Access, len(plan.Access))
@@ -479,22 +491,31 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 	for i, acc := range plan.Access {
 		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
 		copy(access[i].Privileges, acc.Privileges)
-		if acc.Resources != nil {
-			if acc.Resources.Buckets != nil {
-				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
-				for k, bucket := range acc.Resources.Buckets {
-					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name
-					if bucket.Scopes != nil {
-						access[i].Resources.Buckets[k].Scopes = make([]providerschema.ScopeResource, len(bucket.Scopes))
-						for s, scope := range bucket.Scopes {
-							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name
-							if scope.Collections != nil {
-								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
-								copy(access[i].Resources.Buckets[k].Scopes[s].Collections, scope.Collections)
-							}
-						}
-					}
+		if acc.Resources == nil {
+			continue
+		}
+
+		access[i].Resources = &providerschema.Resources{}
+		if acc.Resources.Buckets == nil {
+			continue
+		}
+
+		access[i].Resources.Buckets = make([]providerschema.BucketResource, len(acc.Resources.Buckets))
+		for k, bucket := range acc.Resources.Buckets {
+			access[i].Resources.Buckets[k].Name = bucket.Name
+			if bucket.Scopes == nil {
+				continue
+			}
+
+			access[i].Resources.Buckets[k].Scopes = make([]providerschema.ScopeResource, len(bucket.Scopes))
+			for s, scope := range bucket.Scopes {
+				access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name
+				if scope.Collections == nil {
+					continue
 				}
+
+				access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
+				copy(access[i].Resources.Buckets[k].Scopes[s].Collections, scope.Collections)
 			}
 		}
 	}
