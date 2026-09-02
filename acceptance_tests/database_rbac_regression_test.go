@@ -14,28 +14,6 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
-// Regression guards for defects found reviewing the fine-grained RBAC work that are
-// documented but not yet fixed. Each test asserts the behaviour we want rather than
-// the behaviour we have, and is skipped with its ticket so it becomes a guard the
-// moment the fix lands - unskip, do not rewrite.
-
-// TestAccDatabaseRole_AV_142505_DescriptionCanBeCleared asserts that a description set
-// on a database role can be cleared by assigning an empty string.
-//
-// AV-142505: `Description` is `string` with `json:"description,omitempty"` on both
-// database role request bodies, so an empty string is dropped from the PUT entirely,
-// the API keeps the previous description, and the GET reads that stale value back into
-// state. Because `description` is Optional+Computed the plan value is a known "", so
-// the apply fails with "Provider produced inconsistent result after apply".
-//
-// This is deliberately distinct from TestAccDatabaseRoleDescriptionLifecycle, whose
-// final step passes "" to testAccDatabaseRoleConfigAccess. That helper omits the
-// attribute entirely when the description is empty, so that step exercises attribute
-// removal - which Optional+Computed answers by keeping the prior value - and asserts
-// only TestCheckResourceAttrSet, which holds either way. The config builder below
-// emits an explicit `description = ""` instead, which is the case that breaks.
-//
-// Same defect class as AV-136448 on the eventing function resource, fixed there.
 func TestAccDatabaseRole_AV_142505_DescriptionCanBeCleared(t *testing.T) {
 	t.Skip("AV-142505: clearing a database role description fails with an inconsistent result after apply; unskip once the description field is transmitted when empty")
 
@@ -94,24 +72,6 @@ resource "couchbase-capella_database_role" %[2]q {
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, roleName, description, accessHCL)
 }
 
-// TestAccDatasourceDatabasePrivileges_AV_142506_ReturnsEveryPage asserts the database
-// privileges data source returns the complete privilege set, not just whatever the
-// first response carried.
-//
-// AV-142506: DatabasePrivileges.listPrivileges issues a single unpaged
-// ClientV1.ExecuteWithRetry and returns the envelope's Data slice, while the sibling
-// database_roles data source walks every page through api.GetPaginated. If the
-// privileges endpoint paginates the way other V4 list endpoints do, the data source
-// silently truncates and a practitioner sees valid privileges as unavailable.
-//
-// The assertion compares the data source against api.GetPaginated over the same
-// endpoint, which is exactly what the proposed fix uses, so the two agree once the fix
-// lands. TestAccDatasourceDatabasePrivileges cannot catch this: it asserts only that
-// the result is non-empty, which a truncated list satisfies.
-//
-// Note the outcome if the endpoint turns out not to paginate at all: both fetches
-// return the same set, this test passes, and AV-142506 should be closed as Not a Bug.
-// That is a legitimate result of unskipping, not a reason to change the assertion.
 func TestAccDatasourceDatabasePrivileges_AV_142506_ReturnsEveryPage(t *testing.T) {
 	t.Skip("AV-142506: the database_privileges data source does not paginate; unskip once listPrivileges walks every page, or to confirm the endpoint returns everything unpaged")
 
@@ -132,10 +92,6 @@ func TestAccDatasourceDatabasePrivileges_AV_142506_ReturnsEveryPage(t *testing.T
 	})
 }
 
-// testAccCheckDatabasePrivilegesMatchAllPages fetches every page of the privileges
-// endpoint directly and asserts the data source returned the same privilege names.
-// A data source that stops after one page yields a strict subset, and the diff names
-// exactly which privileges went missing.
 func testAccCheckDatabasePrivilegesMatchAllPages(dsReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ds := s.RootModule().Resources[dsReference]
@@ -177,9 +133,6 @@ func testAccCheckDatabasePrivilegesMatchAllPages(dsReference string) resource.Te
 	}
 }
 
-// allDatabasePrivilegeNames reads every page of the privileges endpoint. An empty
-// sortParameter leaves sortBy off the query string, which matters because privileges
-// carry no id to sort by.
 func allDatabasePrivilegeNames(organizationId, projectId, clusterId string) ([]string, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/privileges",
