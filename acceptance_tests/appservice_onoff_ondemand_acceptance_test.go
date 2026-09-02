@@ -1,14 +1,16 @@
 package acceptance_tests
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-)
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
+)
 
 func TestAccAppServiceOnOffOnDemandResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_app_service_onoff_ondemand_")
@@ -32,6 +34,59 @@ func TestAccAppServiceOnOffOnDemandResource(t *testing.T) {
 				ImportStateIdFunc:                    generateAppServiceOnOffOnDemandImportId(resourceReference),
 				ImportState:                          true,
 				ImportStateVerifyIdentifierAttribute: "app_service_id",
+			},
+		},
+	})
+}
+
+func TestAccAppServiceOnOffOnDemandAlreadyInRequestedState(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_service_onoff_already_on_")
+	resourceReference := "couchbase-capella_app_service_onoff_ondemand." + resourceName
+	cfg := testAccAppServiceOnOffOnDemandResourceConfig(resourceName, globalAppServiceId, "on")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		// The fixture app service has to be on already, otherwise the first apply performs a
+		// real activation and never reaches the redundant-request path under test. TestMain
+		// waits for Healthy only when it creates the app service itself; one supplied through
+		// TF_VAR_app_service_id is adopted as-is, so its state is asserted here rather than
+		// assumed. Failing loudly beats passing without covering the fix.
+		PreCheck: func() {
+			currentState, err := appServiceCurrentState(context.Background(), globalClient)
+			if err != nil {
+				t.Fatalf("could not read state of app service %s: %s", globalAppServiceId, err)
+			}
+			if currentState != appservice.Healthy {
+				t.Fatalf(
+					"app service %s must be %q so that requesting state \"on\" is redundant, got %q",
+					globalAppServiceId, appservice.Healthy, currentState,
+				)
+			}
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: cfg,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "state", "on"),
+				),
+			},
+			// Tainting forces a second Create against the app service, which is still on
+			// because Delete is a no-op for this resource. That exercises the redundant
+			// activation request independently of what the first apply happened to do.
+			{
+				Config: cfg,
+				Taint:  []string{resourceReference},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "state", "on"),
+				),
+			},
+			// Re-apply the same config; expect no changes (no perpetual drift).
+			{
+				Config:             cfg,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})

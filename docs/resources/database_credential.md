@@ -35,8 +35,7 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
 
 ### Required
 
-
-- `access` (Attributes Set) - Describes the access information of the database credential. (see [below for nested schema](#nestedatt--access))
+- `access` (Attributes Set) - Describes the access information of the database credential. Required when creating a basic credential type. Must not be provided when creating an advanced credential type with user roles. (see [below for nested schema](#nestedatt--access))
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `name` (String) - Username for the database credential. The name should adhere to the following rules: The name must be between 2 & 128 characters. The name cannot contain spaces. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {` The name cannot begin with `@` character.
  - **Constraints**: Minimum length: 2 characters, Maximum length: 128 characters
