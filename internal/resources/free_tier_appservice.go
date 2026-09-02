@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -93,7 +94,17 @@ func (f *FreeTierAppService) Create(ctx context.Context, request resource.Create
 	}
 
 	err = f.checkFreeTierAppServiceStatus(ctx, organizationId, projectId, clusterId, freeTierCreateAppServiceResponse.Id.String())
-	if err != nil {
+	switch {
+	case err == nil:
+	case stderrors.Is(err, errors.ErrAppServiceFailedState):
+		// Fall through to record the current state alongside the error
+		response.Diagnostics.AddWarning(
+			"Free tier app service creation failed",
+			"Free tier app service has been created but is in a failed state. "+
+				"Run `terraform apply --refresh-only` to get the latest App Service state from the remote. "+
+				"Error: "+api.ParseError(err),
+		)
+	default:
 		response.Diagnostics.AddWarning(
 			"Error creating app service",
 			errors.ErrFreeTierAppServiceAfterCreation.Error()+api.ParseError(err),
@@ -212,11 +223,22 @@ func (f *FreeTierAppService) Update(ctx context.Context, request resource.Update
 		return
 	}
 	err = f.checkFreeTierAppServiceStatus(ctx, organizationId, projectId, clusterId, appServiceId)
-	if err != nil {
+	switch {
+	case err == nil:
+	case stderrors.Is(err, errors.ErrAppServiceFailedState):
+		// Fall through to record the current state alongside the error
+		response.Diagnostics.AddError(
+			"Free tier app service update failed",
+			"Free tier app service has entered a failed state after the update was applied. "+
+				"Please contact Couchbase Capella support for further guidance. "+
+				"Error: "+api.ParseError(err),
+		)
+	default:
 		response.Diagnostics.AddError(
 			"Error updating free tier app service",
 			"could not update app service with id "+state.Id.String()+api.ParseError(err),
 		)
+		return
 	}
 
 	refreshedState, err := f.refreshFreeTierAppService(ctx, organizationId, projectId, clusterId, appServiceId)
@@ -280,39 +302,49 @@ func (f *FreeTierAppService) Delete(ctx context.Context, request resource.Delete
 	}
 
 	err = f.checkFreeTierAppServiceStatus(ctx, organizationId, projectId, clusterId, appserviceId)
-	if err != nil {
+	switch {
+	case err == nil:
+		// This case should never happen as it means a destroy operation started but the App Service has entered a different
+		// state then a destroy failed or destroying state. Add an error just in-case.
+		response.Diagnostics.AddError(
+			"Error deleting free tier app service",
+			"Free tier app service "+state.Id.String()+" has entered an unexpected state. "+
+				"Please retry the destroy operation.",
+		)
+	case stderrors.Is(err, errors.ErrAppServiceFailedState):
+		response.Diagnostics.AddError(
+			"Free tier app service deletion failed",
+			"Free tier app service has entered a failed state while attempting to delete. "+
+				"Please contact Couchbase Capella support for further guidance. "+
+				"Error: "+api.ParseError(err),
+		)
+	default:
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			response.Diagnostics.AddError(
-				"Failed to delete free tier app service",
-				"could not delete app service with id "+state.Id.String()+errString,
-			)
+		if resourceNotFound {
+			// Deleted as expected, all good to return now
 			return
 		}
-		return
+
+		response.Diagnostics.AddError(
+			"Failed to delete free tier app service",
+			"could not delete app service with id "+state.Id.String()+errString,
+		)
 	}
 
-	// This will only be reached when app service deletion has failed,
-	// and the app service record still exists in the cp metadata. Therefore,
-	// no error will be returned when performing a GET call.
-	freeTierAppService, err := f.refreshFreeTierAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
+	currentState, err := f.refreshFreeTierAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			response.State.RemoveResource(ctx)
 			return
 		}
-		response.Diagnostics.AddError(
-			"Error deleting app service",
-			"Could not delete app service id "+state.Id.String()+": "+errString,
-		)
+		tflog.Error(ctx, fmt.Sprintf("failed to refresh free tier App Service state after failed deletion: %v", err))
 		return
 	}
-	response.Diagnostics.AddError(
-		"Error deleting app service",
-		fmt.Sprintf("Could not delete free-tier app service id %s, as current app service state: %s", state.Id.String(), freeTierAppService.CurrentState),
-	)
+
+	diags = response.State.Set(ctx, currentState)
+	response.Diagnostics.Append(diags...)
 }
 
 // Configure adds the provider configured client to the free-tier app service resource.
@@ -439,17 +471,22 @@ func (f *FreeTierAppService) checkFreeTierAppServiceStatus(ctx context.Context, 
 
 		case <-timer.C:
 			appServiceResp, err = f.getFreeTierAppService(ctx, organizationId, projectId, clusterId, appServiceId)
-			switch err {
-			case nil:
-				if appservice.IsFinalState(appServiceResp.CurrentState) {
-					return nil
-				}
-				const msg = "waiting for app service to complete the execution"
-				tflog.Info(ctx, msg)
-			default:
+			if err != nil {
 				return err
 			}
-			timer.Reset(sleep)
+
+			if !appservice.IsFinalState(appServiceResp.CurrentState) {
+				const msg = "waiting for app service to complete the execution"
+				tflog.Info(ctx, msg)
+				timer.Reset(sleep)
+				continue
+			}
+
+			if appservice.IsFailureState(appServiceResp.CurrentState) {
+				return fmt.Errorf("%w, current state: %s", errors.ErrAppServiceFailedState, appServiceResp.CurrentState)
+			}
+
+			return nil
 		}
 	}
 }

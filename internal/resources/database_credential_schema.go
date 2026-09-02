@@ -44,11 +44,11 @@ func DatabaseCredentialSchema() schema.Schema {
 
 	scopeAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(scopeAttrs, "name", databaseCredentialBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(scopeAttrs, "collections", databaseCredentialBuilder, stringListAttribute(optional))
+	capellaschema.AddAttr(scopeAttrs, "collections", databaseCredentialBuilder, stringSetAttribute(optional))
 
 	bucketAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(bucketAttrs, "name", databaseCredentialBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(bucketAttrs, "scopes", databaseCredentialBuilder, &schema.ListNestedAttribute{
+	capellaschema.AddAttr(bucketAttrs, "scopes", databaseCredentialBuilder, &schema.SetNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: scopeAttrs,
@@ -56,7 +56,7 @@ func DatabaseCredentialSchema() schema.Schema {
 	})
 
 	resourcesAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(resourcesAttrs, "buckets", databaseCredentialBuilder, &schema.ListNestedAttribute{
+	capellaschema.AddAttr(resourcesAttrs, "buckets", databaseCredentialBuilder, &schema.SetNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: bucketAttrs,
@@ -74,7 +74,7 @@ func DatabaseCredentialSchema() schema.Schema {
 	// credential type and user_roles for an advanced credential type. SizeAtLeast
 	// rejects `access = []`, which satisfies ExactlyOneOf but marshals away under
 	// the omitempty tag, leaving a request body carrying neither field.
-	capellaschema.AddAttr(attrs, "access", databaseCredentialBuilder, &schema.ListNestedAttribute{
+	capellaschema.AddAttr(attrs, "access", databaseCredentialBuilder, &schema.SetNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: accessAttrs,

@@ -48,7 +48,7 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 	appServiceName := randomStringWithPrefix("tf_acc_app_svc_")
 	description := "terraform app service optional fields acceptance test"
 
-	const version = "4.0"
+	const version = pinnedAppServiceVersion
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
@@ -177,6 +177,7 @@ data "couchbase-capella_app_services" "%[2]s" {}
 func testAccAppServiceResourceConfig(resourceName string) string {
 	clusterName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := generateRandomCIDR()
+	const version = pinnedAppServiceVersion
 	return fmt.Sprintf(`
 %[1]s
 
@@ -220,12 +221,13 @@ resource "couchbase-capella_app_service" "%[4]s" {
   project_id      = "%[3]s"
   cluster_id      = couchbase-capella_cluster.%[5]s.id
   name            = "tf_acc_test_app_service"
+  version         = "%[7]s"
   compute = {
     cpu = 2
     ram = 4
   }
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr, version)
 }
 
 func testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, version string, nodes, cpu, ram int) string {

@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -167,13 +168,25 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	}
 
 	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
-	if err != nil {
+	switch {
+	case err == nil:
+	case stderrors.Is(err, errors.ErrAppServiceFailedState):
+		// Fall through to record the current state alongside the error
+		resp.Diagnostics.AddWarning(
+			"App Service creation failed",
+			"App Service has been created but is in a failed state. "+
+				"Please contact Couchbase Capella support for further guidance. "+
+				"Additionally, run `terraform apply --refresh-only` to get the latest App Service state from the remote. "+
+				"Error: "+api.ParseError(err),
+		)
+	default:
 		resp.Diagnostics.AddWarning(
 			"Error creating app service",
 			errorMessageAfterAppServiceCreationInitiation+api.ParseError(err),
 		)
 		return
 	}
+
 	refreshedState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddWarning(
@@ -322,7 +335,17 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 	}
 
 	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, appServiceId)
-	if err != nil {
+	switch {
+	case err == nil:
+	case stderrors.Is(err, errors.ErrAppServiceFailedState):
+		// Fall through to record the current state alongside the error
+		resp.Diagnostics.AddError(
+			"App Service update failed",
+			"App Service has entered a failed state after the update was applied. "+
+				"Please contact Couchbase Capella support for further guidance. "+
+				"Error: "+api.ParseError(err),
+		)
+	default:
 		resp.Diagnostics.AddError(
 			"Error updating app service",
 			"Could not update app service id "+state.Id.String()+": "+api.ParseError(err),
@@ -400,41 +423,50 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 		return
 	}
 
-	err = a.checkAppServiceStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
-	if err != nil {
+	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, appServiceId)
+	switch {
+	case err == nil:
+		// This case should never happen as it means a destroy operation started but the App Service has entered a different
+		// state then a destroy failed or destroying state. Add an error just in-case.
+		resp.Diagnostics.AddError(
+			"Error deleting app service",
+			"App Service "+state.Id.String()+" has entered an unexpected state. "+
+				"Please retry the destroy operation.",
+		)
+	case stderrors.Is(err, errors.ErrAppServiceFailedState):
+		resp.Diagnostics.AddError(
+			"App Service deletion failed",
+			"App Service has entered a failed state while attempting to delete. "+
+				"Please contact Couchbase Capella support for further guidance. "+
+				"Error: "+api.ParseError(err),
+		)
+	default:
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			resp.Diagnostics.AddError(
-				"Error deleting app service",
-				"Could not delete app service id "+state.Id.String()+": "+errString,
-			)
+		if resourceNotFound {
+			// Deleted as expected, all good to return now
 			return
 		}
-		// resourceNotFound as expected
-		return
+
+		resp.Diagnostics.AddError(
+			"Error deleting app service",
+			"Could not delete app service id "+state.Id.String()+": "+errString,
+		)
 	}
 
-	// This will only be reached when app service deletion has failed,
-	// and the app service record still exists in the cp metadata. Therefore,
-	// no error will be returned when performing a GET call.
-	appService, err := a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
+	currentState, err := a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(
-			"Error deleting app service",
-			"Could not delete app service id "+state.Id.String()+": "+errString,
-		)
+		tflog.Error(ctx, fmt.Sprintf("failed to refresh App Service state after failed deletion: %v", err))
 		return
 	}
-	resp.Diagnostics.AddError(
-		"Error deleting app service",
-		fmt.Sprintf("Could not delete app service id %s, as current app service state: %s", state.Id.String(), appService.CurrentState),
-	)
+
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Configure adds the provider configured client to the app service resource.
@@ -533,17 +565,22 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 
 		case <-timer.C:
 			appServiceResp, err = a.getAppService(ctx, organizationId, projectId, clusterId, appServiceId)
-			switch err {
-			case nil:
-				if appservice.IsFinalState(appServiceResp.CurrentState) {
-					return nil
-				}
-				const msg = "waiting for app service to complete the execution"
-				tflog.Info(ctx, msg)
-			default:
+			if err != nil {
 				return err
 			}
-			timer.Reset(sleep)
+
+			if !appservice.IsFinalState(appServiceResp.CurrentState) {
+				const msg = "waiting for app service to complete the execution"
+				tflog.Info(ctx, msg)
+				timer.Reset(sleep)
+				continue
+			}
+
+			if appservice.IsFailureState(appServiceResp.CurrentState) {
+				return fmt.Errorf("%w, current state: %s", errors.ErrAppServiceFailedState, appServiceResp.CurrentState)
+			}
+
+			return nil
 		}
 	}
 }

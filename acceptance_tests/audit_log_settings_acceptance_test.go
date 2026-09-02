@@ -15,77 +15,133 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// audit_log_settings is a per-cluster singleton — Create/Update both PUT,
-// Delete is a no-op. We exercise: Create -> Read -> Import -> Update.
+// audit_log_settings is a per-cluster singleton — Create/Update both PUT and
+// Delete disables auditing. TestAccAuditLog runs the tests that need a real
+// cluster as sequential subtests against the shared global cluster so they do
+// not overwrite each other's settings, and so the suite no longer deploys a
+// cluster per audit test.
+func TestAccAuditLog(t *testing.T) {
+	// Allow this test to run in parallel with other top-level tests, but ensure that the subtests run sequentially
+	// This is normally set by resource.ParallelTest
+	t.Parallel()
 
-func TestAccAuditLogSettingsResource(t *testing.T) {
-	clusterResourceName := randomStringWithPrefix("tf_acc_audit_cluster_")
+	t.Run("Audit Log Settings", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    auditLogSettingsSteps(t),
+		})
+	})
+
+	t.Run("Audit Log Settings Datasource", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    auditLogSettingsDatasourceSteps(),
+		})
+	})
+
+	t.Run("Audit Log Settings Disable On Removal", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    auditLogSettingsDisableOnRemovalSteps(t),
+		})
+	})
+}
+
+// auditLogSettingsSteps provides the steps to test the lifecycle of the
+// audit_log_settings resource on the global cluster: Create -> Import ->
+// Update (disabled users) -> Update (audit disabled).
+func auditLogSettingsSteps(t *testing.T) []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_settings_")
 	databaseCredentialName := randomStringWithPrefix("tf_acc_audit_db_credential_")
-	cidr := generateRandomCIDR()
-	clusterReference := "couchbase-capella_cluster." + clusterResourceName
 	resourceReference := "couchbase-capella_audit_log_settings." + resourceName
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, cidr, true, []int{20488, 20490, 20491}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsAuditLogSettingsResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttrPair(resourceReference, "cluster_id", clusterReference, "id"),
-					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "3"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20490"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20491"),
-					resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
-				),
-			},
-			{
-				ResourceName:                         resourceReference,
-				ImportState:                          true,
-				ImportStateIdFunc:                    generateAuditLogSettingsImportIdForResource(resourceReference),
-				ImportStateVerifyIdentifierAttribute: "cluster_id",
-			},
-			{
-				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseClusterDatabaseCredentialAndDisabledUsers(clusterResourceName, resourceName, databaseCredentialName, cidr, true, []int{20488}, `[
+	return []resource.TestStep{
+		{
+			Config: testAccAuditLogSettingsResourceConfig(resourceName, true, []int{20488, 20490, 20491}),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccExistsAuditLogSettingsResource(t, resourceReference),
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
+				resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "3"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20490"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20491"),
+				resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
+			),
+		},
+		{
+			ResourceName:                         resourceReference,
+			ImportState:                          true,
+			ImportStateIdFunc:                    generateAuditLogSettingsImportIdForResource(resourceReference),
+			ImportStateVerifyIdentifierAttribute: "cluster_id",
+		},
+		{
+			Config: testAccAuditLogSettingsResourceConfigWithDatabaseCredentialAndDisabledUsers(resourceName, databaseCredentialName, true, []int{20488}, `[
 					{
 						domain = "local"
 						name   = "%[1]s"
 					}
 				]`),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsAuditLogSettingsResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttrPair(resourceReference, "cluster_id", clusterReference, "id"),
-					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
-					resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceReference, "disabled_users.*", map[string]string{
-						"domain": "local",
-						"name":   databaseCredentialName,
-					}),
-				),
-			},
-			{
-				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseClusterDatabaseCredentialAndDisabledUsers(clusterResourceName, resourceName, databaseCredentialName, cidr, false, []int{20488}, "[]"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsAuditLogSettingsResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttrPair(resourceReference, "cluster_id", clusterReference, "id"),
-					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
-				),
-			},
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccExistsAuditLogSettingsResource(t, resourceReference),
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
+				resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "1"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
+				resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "1"),
+				resource.TestCheckTypeSetElemNestedAttrs(resourceReference, "disabled_users.*", map[string]string{
+					"domain": "local",
+					"name":   databaseCredentialName,
+				}),
+			),
 		},
-	})
+		{
+			Config: testAccAuditLogSettingsResourceConfigWithDatabaseCredentialAndDisabledUsers(resourceName, databaseCredentialName, false, []int{20488}, "[]"),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccExistsAuditLogSettingsResource(t, resourceReference),
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "false"),
+				resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "1"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
+			),
+		},
+	}
+}
+
+// auditLogSettingsDisableOnRemovalSteps provides the steps to verify that removing the
+// audit_log_settings resource from the config reverts audit logging on the cluster to
+// disabled, which is what allows a later downgrade from the enterprise support plan.
+func auditLogSettingsDisableOnRemovalSteps(t *testing.T) []resource.TestStep {
+	resourceName := randomStringWithPrefix("tf_acc_audit_rm_settings_")
+	resourceReference := "couchbase-capella_audit_log_settings." + resourceName
+
+	return []resource.TestStep{
+		{
+			Config: testAccAuditLogSettingsResourceConfig(resourceName, true, []int{20488, 20490, 20491}),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccExistsAuditLogSettingsResource(t, resourceReference),
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
+				resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "3"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20490"),
+				resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20491"),
+				resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
+			),
+		},
+		{
+			Config: globalProviderBlock,
+			Check:  testAccCheckAuditLogSettingsDisabled(t),
+		},
+	}
 }
 
 func TestAccAuditLogSettingsResourceInvalidCluster(t *testing.T) {
@@ -197,6 +253,10 @@ func TestAccAuditLogSettingsResourceDisabledUserMissingName(t *testing.T) {
 	})
 }
 
+// TestAccAuditLogSettingsResourcePlanUpgrade is the one audit test that still deploys its
+// own cluster: it asserts audit log settings are rejected on a developer pro cluster and
+// accepted once the cluster is upgraded to enterprise, so it cannot run against the shared
+// global cluster, which is already on the enterprise plan.
 func TestAccAuditLogSettingsResourcePlanUpgrade(t *testing.T) {
 	clusterResourceName := randomStringWithPrefix("tf_acc_audit_cluster_upgrade_")
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_settings_upgrade_")
@@ -330,15 +390,6 @@ resource "couchbase-capella_audit_log_settings" "%[2]s" {
 }
 
 func testAccAuditLogSettingsResourceConfigWithSupportPlan(clusterResourceName, auditSettingsResourceName, cidr, plan string, auditEnabled bool, enabledEventIDs []int) string {
-	ids := "["
-	for i, id := range enabledEventIDs {
-		if i > 0 {
-			ids += ", "
-		}
-		ids += fmt.Sprintf("%d", id)
-	}
-	ids += "]"
-
 	return fmt.Sprintf(`
 %[1]s
 
@@ -389,36 +440,47 @@ resource "couchbase-capella_audit_log_settings" "%[6]s" {
 	enabled_event_ids = %[9]s
 	disabled_users    = []
 }
-`, globalProviderBlock, clusterResourceName, globalOrgId, globalProjectId, cidr, auditSettingsResourceName, auditEnabled, plan, ids)
+`, globalProviderBlock, clusterResourceName, globalOrgId, globalProjectId, cidr, auditSettingsResourceName, auditEnabled, plan, formatEventIDs(enabledEventIDs))
 }
 
-func testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, auditSettingsResourceName, cidr string, auditEnabled bool, enabledEventIDs []int) string {
-	return testAccAuditLogSettingsResourceConfigWithEnterpriseClusterAndDisabledUsers(clusterResourceName, auditSettingsResourceName, cidr, auditEnabled, enabledEventIDs, "[]", "", "")
+// formatEventIDs renders event IDs as an HCL list literal.
+func formatEventIDs(enabledEventIDs []int) string {
+	ids := "["
+	for i, id := range enabledEventIDs {
+		if i > 0 {
+			ids += ", "
+		}
+		ids += fmt.Sprintf("%d", id)
+	}
+	return ids + "]"
 }
 
-func testAccAuditLogSettingsResourceConfigWithEnterpriseClusterDatabaseCredentialAndDisabledUsers(clusterResourceName, auditSettingsResourceName, databaseCredentialName, cidr string, auditEnabled bool, enabledEventIDs []int, disabledUsers string) string {
+func testAccAuditLogSettingsResourceConfig(auditSettingsResourceName string, auditEnabled bool, enabledEventIDs []int) string {
+	return testAccAuditLogSettingsResourceConfigWithDisabledUsers(auditSettingsResourceName, auditEnabled, enabledEventIDs, "[]", "", "")
+}
+
+func testAccAuditLogSettingsResourceConfigWithDatabaseCredentialAndDisabledUsers(auditSettingsResourceName, databaseCredentialName string, auditEnabled bool, enabledEventIDs []int, disabledUsers string) string {
 	databaseCredentialResource := fmt.Sprintf(`
 resource "couchbase-capella_database_credential" "%[1]s" {
 	name            = "%[1]s"
 	organization_id = "%[2]s"
 	project_id      = "%[3]s"
-	cluster_id      = couchbase-capella_cluster.%[4]s.id
+	cluster_id      = "%[4]s"
 	access = [
 		{
 			privileges = ["data_writer"]
 		},
 	]
 }
-`, databaseCredentialName, globalOrgId, globalProjectId, clusterResourceName)
+`, databaseCredentialName, globalOrgId, globalProjectId, globalClusterId)
+
 	formattedDisabledUsers := disabledUsers
 	if disabledUsers != "[]" {
 		formattedDisabledUsers = fmt.Sprintf(disabledUsers, databaseCredentialName)
 	}
 
-	return testAccAuditLogSettingsResourceConfigWithEnterpriseClusterAndDisabledUsers(
-		clusterResourceName,
+	return testAccAuditLogSettingsResourceConfigWithDisabledUsers(
 		auditSettingsResourceName,
-		cidr,
 		auditEnabled,
 		enabledEventIDs,
 		formattedDisabledUsers,
@@ -427,16 +489,7 @@ resource "couchbase-capella_database_credential" "%[1]s" {
 	)
 }
 
-func testAccAuditLogSettingsResourceConfigWithEnterpriseClusterAndDisabledUsers(clusterResourceName, auditSettingsResourceName, cidr string, auditEnabled bool, enabledEventIDs []int, disabledUsers, databaseCredentialName, databaseCredentialResource string) string {
-	ids := "["
-	for i, id := range enabledEventIDs {
-		if i > 0 {
-			ids += ", "
-		}
-		ids += fmt.Sprintf("%d", id)
-	}
-	ids += "]"
-
+func testAccAuditLogSettingsResourceConfigWithDisabledUsers(auditSettingsResourceName string, auditEnabled bool, enabledEventIDs []int, disabledUsers, databaseCredentialName, databaseCredentialResource string) string {
 	dependsOn := ""
 	if databaseCredentialResource != "" {
 		dependsOn = fmt.Sprintf(`
@@ -447,57 +500,18 @@ func testAccAuditLogSettingsResourceConfigWithEnterpriseClusterAndDisabledUsers(
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_cluster" "%[2]s" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	name            = "%[2]s"
+%[8]s
 
-	cloud_provider = {
-		type   = "aws"
-		region = "us-east-1"
-		cidr   = "%[5]s"
-	}
-
-	service_groups = [
-		{
-			node = {
-				compute = {
-					cpu = 4
-					ram = 16
-				}
-				disk = {
-					storage = 50
-					type    = "io2"
-					iops    = 3000
-				}
-			}
-			num_of_nodes = 3
-			services     = ["data", "index", "query"]
-		}
-	]
-
-	availability = {
-		type = "multi"
-	}
-
-	support = {
-		plan     = "enterprise"
-		timezone = "PT"
-	}
-}
-
-%[10]s
-
-resource "couchbase-capella_audit_log_settings" "%[6]s" {
+resource "couchbase-capella_audit_log_settings" "%[2]s" {
 	organization_id   = "%[3]s"
 	project_id        = "%[4]s"
-	cluster_id        = couchbase-capella_cluster.%[2]s.id
-	audit_enabled     = %[7]t
-	enabled_event_ids = %[8]s
+	cluster_id        = "%[5]s"
+	audit_enabled     = %[6]t
+	enabled_event_ids = %[7]s
 	disabled_users    = %[9]s
-%[11]s
+%[10]s
 }
-`, globalProviderBlock, clusterResourceName, globalOrgId, globalProjectId, cidr, auditSettingsResourceName, auditEnabled, ids, disabledUsers, databaseCredentialResource, dependsOn)
+`, globalProviderBlock, auditSettingsResourceName, globalOrgId, globalProjectId, globalClusterId, auditEnabled, formatEventIDs(enabledEventIDs), databaseCredentialResource, disabledUsers, dependsOn)
 }
 
 func generateAuditLogSettingsImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
@@ -552,93 +566,10 @@ func testAccExistsAuditLogSettingsResource(t *testing.T, resourceReference strin
 	}
 }
 
-func TestAccAuditLogSettingsResourceDisableOnRemoval(t *testing.T) {
-	clusterResourceName := randomStringWithPrefix("tf_acc_audit_rm_cluster_")
-	resourceName := randomStringWithPrefix("tf_acc_audit_rm_settings_")
-	cidr := generateRandomCIDR()
-	clusterReference := "couchbase-capella_cluster." + clusterResourceName
-	resourceReference := "couchbase-capella_audit_log_settings." + resourceName
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, cidr, true, []int{20488, 20490, 20491}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsAuditLogSettingsResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
-					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "3"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20490"),
-					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20491"),
-					resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
-				),
-			},
-			{
-				Config: testAccAuditClusterOnlyConfig(clusterResourceName, cidr),
-				Check:  testAccCheckAuditLogSettingsDisabled(t, clusterReference),
-			},
-		},
-	})
-}
-
-func testAccAuditClusterOnlyConfig(clusterResourceName, cidr string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "couchbase-capella_cluster" "%[2]s" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	name            = "%[2]s"
-
-	cloud_provider = {
-		type   = "aws"
-		region = "us-east-1"
-		cidr   = "%[5]s"
-	}
-
-	service_groups = [
-		{
-			node = {
-				compute = {
-					cpu = 4
-					ram = 16
-				}
-				disk = {
-					storage = 50
-					type    = "io2"
-					iops    = 3000
-				}
-			}
-			num_of_nodes = 3
-			services     = ["data", "index", "query"]
-		}
-	]
-
-	availability = {
-		type = "multi"
-	}
-
-	support = {
-		plan     = "enterprise"
-		timezone = "PT"
-	}
-}
-`, globalProviderBlock, clusterResourceName, globalOrgId, globalProjectId, cidr)
-}
-
-func testAccCheckAuditLogSettingsDisabled(t *testing.T, clusterReference string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[clusterReference]
-		if !ok {
-			return fmt.Errorf("cluster %s not found in state", clusterReference)
-		}
-		clusterId := rs.Primary.Attributes["id"]
+func testAccCheckAuditLogSettingsDisabled(t *testing.T) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
 		data := newTestClient(t)
-		settings, err := retrieveAuditLogSettingsFromServer(data, globalOrgId, globalProjectId, clusterId)
+		settings, err := retrieveAuditLogSettingsFromServer(data, globalOrgId, globalProjectId, globalClusterId)
 		if err != nil {
 			return err
 		}

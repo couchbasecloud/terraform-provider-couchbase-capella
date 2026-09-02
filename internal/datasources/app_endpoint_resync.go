@@ -112,6 +112,8 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 		AppEndpoint:    config.AppEndpoint,
 		DocsChanged:    types.Int64Value(int64(getResyncStatusResp.JSON200.DocsChanged)),
 		DocsProcessed:  types.Int64Value(int64(getResyncStatusResp.JSON200.DocsProcessed)),
+		DocsTargeted:   utils.Int64ValueFromUint64Ptr(getResyncStatusResp.JSON200.DocsTargeted),
+		DocsErrored:    types.Int64PointerValue(getResyncStatusResp.JSON200.DocsErrored),
 		LastError:      types.StringValue(getResyncStatusResp.JSON200.LastError),
 		StartTime:      types.StringValue(getResyncStatusResp.JSON200.StartTime.Format("2006-01-02T15:04:05Z")),
 		State:          types.StringValue(string(getResyncStatusResp.JSON200.State)),

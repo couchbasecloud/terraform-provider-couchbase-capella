@@ -9,6 +9,18 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
+// DocsServiceNameDescription overrides the published OpenAPI description for serviceName, which
+// still documents the field as AWS-only ("AWS private DNS service name") even though Azure returns
+// a Private Link Service resource ID here. Unlike the fallback descriptions elsewhere, this one has
+// to be applied *after* AddAttr: a non-empty spec description always wins inside AddAttr. Drop the
+// override once the published spec describes the field for every provider. The leading "\n - "
+// matches the bullet format buildEnhancedDescription emits, so the generated docs keep their shape.
+const DocsServiceNameDescription = "\n - Endpoint service name that customer endpoints connect to. " +
+	"For AWS, the VPC endpoint service name (e.g. `com.amazonaws.vpce.us-east-1.vpce-svc-1234`); " +
+	"for Azure, the Private Link Service resource ID " +
+	"(e.g. `/subscriptions/.../providers/Microsoft.Network/privateLinkServices/<name>`). " +
+	"Not currently returned for GCP."
+
 // PrivateEndpointService represents the status of private endpoint service on a cluster.
 type PrivateEndpointService struct {
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.

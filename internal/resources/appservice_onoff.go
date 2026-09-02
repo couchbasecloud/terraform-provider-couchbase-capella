@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -33,6 +32,13 @@ const errorMessageAfterAppServiceOnOffCreation = "Cluster switch on/off is succe
 	" state of the switched on/off cluster. Please run `terraform plan` after 1-2 minutes to know the" +
 	" current state. Additionally, run `terraform apply --refresh-only` to update" +
 	" the state from remote, unexpected error: "
+
+// Capella rejects an activation state change with a 409 when the app service is not in a
+// state that permits it, which includes it already being in the requested state.
+const (
+	errCodeAppServiceNotOffToBeTurnedOn = 11018
+	errCodeAppServiceNotOnToBeTurnedOff = 11019
+)
 
 // AppServiceOnOffOnDemand is the AppServiceOnOffOnDemand implementation.
 type AppServiceOnOffOnDemand struct {
@@ -160,9 +166,79 @@ func (a *AppServiceOnOffOnDemand) manageAppServiceActivation(ctx context.Context
 		nil,
 	)
 	if err != nil {
+		if a.appServiceAlreadyInState(ctx, err, state, organizationId, projectId, clusterId, appServiceId) {
+			tflog.Info(ctx, "app service is already in the requested activation state, nothing to do", map[string]any{
+				"app_service_id": appServiceId,
+				"state":          state,
+			})
+			return nil
+		}
 		return errors.New(errorMessageWhileAppServiceOnOffCreation + app_service_onoff_api.ParseError(err))
 	}
 	return nil
+}
+
+func (a *AppServiceOnOffOnDemand) appServiceAlreadyInState(ctx context.Context, err error, state, organizationId, projectId, clusterId, appServiceId string) bool {
+	var apiErr *app_service_onoff_api.Error
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+
+	switch {
+	case state == "on" && apiErr.Code == errCodeAppServiceNotOffToBeTurnedOn:
+	case state == "off" && apiErr.Code == errCodeAppServiceNotOnToBeTurnedOff:
+	default:
+		return false
+	}
+
+	currentState, stateErr := a.retrieveAppServiceCurrentState(ctx, organizationId, projectId, clusterId, appServiceId)
+	if stateErr != nil {
+		tflog.Warn(ctx, "could not read app service state to confirm it is already in the requested activation state", map[string]any{
+			"app_service_id": appServiceId,
+			"error":          app_service_onoff_api.ParseError(stateErr),
+		})
+		return false
+	}
+
+	return appServiceStateSatisfies(state, currentState)
+}
+
+// appServiceStateSatisfies reports whether currentState already satisfies the requested on/off
+// state. In-progress transitions count as satisfied so that a state read racing with a
+// concurrent transition does not turn a no-op into an apply failure.
+func appServiceStateSatisfies(state string, currentState apps_service_api.State) bool {
+	switch state {
+	case "on":
+		return currentState == apps_service_api.Healthy || currentState == apps_service_api.TurningOn
+	case "off":
+		return currentState == apps_service_api.TurnedOff || currentState == apps_service_api.TurningOff
+	default:
+		return false
+	}
+}
+
+// retrieveAppServiceCurrentState reads the app service's current state. There is no GET
+// endpoint for app service on/off, so the app service itself is fetched instead.
+func (a *AppServiceOnOffOnDemand) retrieveAppServiceCurrentState(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (apps_service_api.State, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
+	cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := a.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	appServiceResp := apps_service_api.GetAppServiceResponse{}
+	if err := json.Unmarshal(response.Body, &appServiceResp); err != nil {
+		return "", err
+	}
+
+	return appServiceResp.CurrentState, nil
 }
 
 func (a *AppServiceOnOffOnDemand) validateAppServiceOnOffRequest(plan providerschema.AppServiceOnOffOnDemand) error {
@@ -185,29 +261,13 @@ func (a *AppServiceOnOffOnDemand) validateAppServiceOnOffRequest(plan providersc
 }
 
 // retrieveAppServiceOnOff retrieves AppServiceOnOff information from the specified organization and project using the provided cluster ID by Get cluster open-api call.
+//
+// The returned state is the requested one rather than the app service's current state: the
+// current state carries transitional values such as turningOn that the on/off resource does
+// not model, so it is only fetched to confirm the app service still exists.
 func (a *AppServiceOnOffOnDemand) retrieveAppServiceOnOff(ctx context.Context, organizationId, projectId, clusterId, appServiceId, state string) (*providerschema.AppServiceOnOffOnDemand, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
-	cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
-	if err != nil {
+	if _, err := a.retrieveAppServiceCurrentState(ctx, organizationId, projectId, clusterId, appServiceId); err != nil {
 		return nil, err
-	}
-
-	//There is no GET endpoint so get the app service response and check current state
-	appServiceResp := apps_service_api.GetAppServiceResponse{}
-	err = json.Unmarshal(response.Body, &appServiceResp)
-	if err != nil {
-		return nil, err
-	}
-
-	if validateAppserviceStateIsSameInPlanAndState(state, string(appServiceResp.CurrentState)) {
-		appServiceResp.CurrentState = apps_service_api.State(state)
 	}
 
 	refreshedState := providerschema.AppServiceOnOffOnDemand{
@@ -219,10 +279,6 @@ func (a *AppServiceOnOffOnDemand) retrieveAppServiceOnOff(ctx context.Context, o
 	}
 
 	return &refreshedState, nil
-}
-
-func validateAppserviceStateIsSameInPlanAndState(planAppServiceState, stateAppServiceState string) bool {
-	return strings.EqualFold(planAppServiceState, stateAppServiceState)
 }
 
 // Couchbase Capella's v4 does not support a GET endpoint for app service on/off.
@@ -252,7 +308,7 @@ func (a *AppServiceOnOffOnDemand) Read(ctx context.Context, req resource.ReadReq
 		appServiceId   = IDs[providerschema.AppServiceId]
 	)
 
-	refreshedState, err := a.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, state.State.String())
+	refreshedState, err := a.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, state.State.ValueString())
 	if err != nil {
 		resourceNotFound, _ := app_service_onoff_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {

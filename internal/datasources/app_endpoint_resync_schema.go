@@ -26,6 +26,17 @@ func AppEndpointResyncSchema() schema.Schema {
 	}, "ResyncStatus")
 	capellaschema.AddAttr(attrs, "docs_changed", appEndpointResyncBuilder, computedInt64(), "ResyncStatus")
 	capellaschema.AddAttr(attrs, "docs_processed", appEndpointResyncBuilder, computedInt64(), "ResyncStatus")
+
+	// The published OpenAPI spec does not carry these two fields yet, so they supply a fallback
+	// description; AddAttr prefers the spec as soon as it has one.
+	docsTargeted := computedInt64()
+	docsTargeted.MarkdownDescription = capellaschema.DocsTargetedDescription
+	capellaschema.AddAttr(attrs, "docs_targeted", appEndpointResyncBuilder, docsTargeted, "ResyncStatus")
+
+	docsErrored := computedInt64()
+	docsErrored.MarkdownDescription = capellaschema.DocsErroredDescription
+	capellaschema.AddAttr(attrs, "docs_errored", appEndpointResyncBuilder, docsErrored, "ResyncStatus")
+
 	capellaschema.AddAttr(attrs, "last_error", appEndpointResyncBuilder, computedString(), "ResyncStatus")
 	capellaschema.AddAttr(attrs, "start_time", appEndpointResyncBuilder, computedString(), "ResyncStatus")
 	capellaschema.AddAttr(attrs, "state", appEndpointResyncBuilder, computedString(), "ResyncStatus")

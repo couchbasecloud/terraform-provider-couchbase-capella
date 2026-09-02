@@ -17,7 +17,11 @@ func PrivateEndpointServiceSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointServiceBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "enabled", privateEndpointServiceBuilder, computedBool())
 	capellaschema.AddAttr(attrs, "status", privateEndpointServiceBuilder, computedString())
-	capellaschema.AddAttr(attrs, "service_name", privateEndpointServiceBuilder, computedString())
+	// Applied after AddAttr, which would otherwise overwrite it with the AWS-only spec text.
+	// attrs holds the pointer, so mutating it here also updates the stored attribute.
+	serviceName := computedString()
+	capellaschema.AddAttr(attrs, "service_name", privateEndpointServiceBuilder, serviceName)
+	serviceName.MarkdownDescription = capellaschema.DocsServiceNameDescription
 
 	return schema.Schema{
 		MarkdownDescription: "The data source to retrieve private endpoint service information for a cluster.",

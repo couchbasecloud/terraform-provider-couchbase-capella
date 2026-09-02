@@ -140,11 +140,14 @@ func WatchIndexes(
 					return err
 				}
 
-				if status.Status == "Deferred" {
-					return internalerrors.ErrIndexDeferred
-				}
-
 				if status.Status != desiredState {
+					// AV-135211: a defer_build=true index reports "Created", not "Deferred", and never
+					// progresses to "Ready" on its own, so only treat that as the permanent deferred
+					// state when "Ready" is what we're actually waiting for (not the BUILD INDEX flow,
+					// which waits for "Created" itself).
+					if desiredState == "Ready" && (status.Status == "Created" || status.Status == "Deferred") {
+						return internalerrors.ErrIndexDeferred
+					}
 					d := min(maxDuration, 1<<attempt)
 					timer.Reset(time.Duration(d) * time.Minute)
 					attempt++

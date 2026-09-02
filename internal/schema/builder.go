@@ -189,7 +189,8 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	}
 }
 
-// setMarkdownDescription uses reflection to set the MarkdownDescription field on any attribute type
+// setMarkdownDescription uses reflection to set the MarkdownDescription field on any attribute type.
+// An empty description is ignored so a call site can supply a fallback the OpenAPI spec does not have.
 func setMarkdownDescription(attr any, description string) {
 	v := reflect.ValueOf(attr)
 	if v.Kind() == reflect.Ptr {
@@ -198,6 +199,13 @@ func setMarkdownDescription(attr any, description string) {
 	if v.Kind() != reflect.Struct {
 		return
 	}
+	// An empty description means the OpenAPI spec had nothing for this field. Leave whatever the
+	// call site already set in place, so an attribute can carry a fallback description until the
+	// published spec catches up.
+	if description == "" {
+		return
+	}
+
 	field := v.FieldByName("MarkdownDescription")
 	if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
 		field.SetString(description)

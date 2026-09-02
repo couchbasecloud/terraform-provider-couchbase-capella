@@ -5600,8 +5600,14 @@ type ResyncStatus struct {
 	// DocsChanged Number of documents that were changed during the resync operation.
 	DocsChanged int32 `json:"docsChanged"`
 
+	// DocsErrored The number of documents that errored during the resync operation.
+	DocsErrored *int64 `json:"docsErrored,omitempty"`
+
 	// DocsProcessed The amount of docs that have been processed so far in the resync operation.
 	DocsProcessed int32 `json:"docsProcessed"`
+
+	// DocsTargeted The estimated total number of documents to process across the cluster during the resync operation.
+	DocsTargeted *uint64 `json:"docsTargeted,omitempty"`
 
 	// LastError The last error that occurred in the resync operation (if any).
 	LastError string `json:"lastError"`

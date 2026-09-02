@@ -31,7 +31,9 @@ Manages an App Endpoints resync operations. This resource allows you to create a
 
 - `collections_processing` (Map of Set of String)
 - `docs_changed` (Number) - Number of documents that were changed during the resync operation.
+- `docs_errored` (Number) - The number of documents that errored during the resync operation.
 - `docs_processed` (Number) - The amount of docs that have been processed so far in the resync operation.
+- `docs_targeted` (Number) - The estimated total number of documents to process across the cluster during the resync operation.
 - `last_error` (String) - The last error that occurred in the resync operation (if any).
 - `start_time` (String) - The ISO-8601 date and time the resync operation was started.
  - **Format**: Date-time in RFC3339 format

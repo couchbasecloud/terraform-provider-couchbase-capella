@@ -1,6 +1,9 @@
 package cluster
 
-import "slices"
+import (
+	"slices"
+	"strings"
+)
 
 const (
 	Degraded         State = "degraded"
@@ -29,12 +32,13 @@ const (
 // State is the state that a cluster can have based on the fact if deployment of the cluster was successful or not.
 type State string
 
-// IsFinalState checks whether cluster is successfully deployed/updated or not while creation/updation
-// TODO: Degraded, draft, peeringFailed, turningOffFailed, and turningOnFailed are not known when it occurs and What happens if rebalancing fails? Will it retry?".
-func IsFinalState(state State) bool {
-	// Returns True if the state is an end state, False otherwise.
+func (s1 State) Equal(s2 State) bool {
+	return strings.EqualFold(string(s1), string(s2)) // case in-sensitive equality
+}
+
+// IsTerminalState checks whether cluster is in a terminal non-healthy state.
+func IsTerminalState(state State) bool {
 	finalStates := []State{
-		Healthy,
 		Degraded,
 		DeploymentFailed,
 		DestroyFailed,

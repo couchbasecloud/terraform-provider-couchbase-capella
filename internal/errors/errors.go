@@ -260,11 +260,16 @@ var (
 
 	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
 
+	// ErrAppServiceFailedState is returned when the App Service reports that it is in a terminal failed state (e.g. deployment failed).
+	ErrAppServiceFailedState = errors.New("app service operation failed")
+
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrIndexDeferred = errors.New("index is in Deferred state and will not become Ready without a BUILD INDEX statement")
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
+
+	ErrIndexDropPending = errors.New("index cannot be dropped yet as it is still being created in the background")
 
 	ErrTimeoutWaitingForClientResponse = errors.New("timeout waiting for index build")
 
