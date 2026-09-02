@@ -805,7 +805,7 @@ func TestAccEventingFunctionResourceMultipleBindings(t *testing.T) {
 					resource.TestCheckResourceAttr(funcReference, "bindings.constants.0.alias", "maxRetries"),
 					resource.TestCheckResourceAttr(funcReference, "bindings.constants.0.value", "3"),
 					resource.TestCheckResourceAttr(funcReference, "bindings.constants.1.alias", "region"),
-					resource.TestCheckResourceAttr(funcReference, "bindings.constants.1.value", "ap-south-1"),
+					resource.TestCheckResourceAttr(funcReference, "bindings.constants.1.value", `"ap-south-1"`),
 					resource.TestCheckResourceAttr(funcReference, "bindings.constants.2.alias", "featureFlag"),
 					resource.TestCheckResourceAttr(funcReference, "bindings.constants.2.value", "true"),
 				),
@@ -903,7 +903,10 @@ resource "couchbase-capella_eventing_function" "%[5]s" {
       },
       {
         alias = "region"
-        value = "ap-south-1"
+        # A constant binding value is injected into the handler as a JavaScript
+        # literal, so a string has to carry its own quotes or the function fails
+        # to compile.
+        value = "\"ap-south-1\""
       },
       {
         alias = "featureFlag"
@@ -1985,7 +1988,6 @@ func TestAccEventingFunctionResourceUpdateKeyspacesUndeployed(t *testing.T) {
 
 // TestAccEventingFunctionResourceRemoveDescription (TC-UP-Optional-Omit): clearing a set description should empty it on read; the fix lives in branch AV-136448-desc, so this is skipped until that merges.
 func TestAccEventingFunctionResourceRemoveDescription(t *testing.T) {
-	t.Skip("description-clear fix is delivered separately (AV-136448-desc); un-skip once it merges")
 
 	funcName := randomStringWithPrefix("tf_acc_evt_rm_desc_fn_")
 	funcReference := "couchbase-capella_eventing_function." + funcName
