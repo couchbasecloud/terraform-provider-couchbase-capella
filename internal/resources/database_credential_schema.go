@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -79,9 +78,9 @@ func DatabaseCredentialSchema() schema.Schema {
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: accessAttrs,
 		},
-		Validators: []validator.List{
-			listvalidator.ExactlyOneOf(path.MatchRoot("user_roles")),
-			listvalidator.SizeAtLeast(1),
+		Validators: []validator.Set{
+			setvalidator.ExactlyOneOf(path.MatchRoot("user_roles")),
+			setvalidator.SizeAtLeast(1),
 		},
 	})
 
