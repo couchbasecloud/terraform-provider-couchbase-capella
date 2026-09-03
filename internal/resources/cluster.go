@@ -199,7 +199,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err = c.checkClusterStatus(ctx, organizationId, projectId, clusterResponse.Id.String()); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			fmt.Sprintf("Could not create cluster. error: %v", api.ParseError(err)),
+			fmt.Sprintf("Could not create cluster id %s. error: %v", clusterResponse.Id.String(), api.ParseError(err)),
 		)
 		return
 	}
@@ -594,6 +594,14 @@ func (c *Cluster) retrieveCluster(
 	return refreshedState, nil
 }
 
+// clusterStatusPollInterval and clusterStatusTimeout are overridden in tests to avoid waiting on real
+// wall-clock time while exercising checkClusterStatus's polling loop.
+var (
+	clusterStatusPollInterval = time.Minute
+	// Assuming 60 minutes is the max time deployment takes, can change after discussion.
+	clusterStatusTimeout = time.Minute * 60
+)
+
 // checkClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified
 // organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
 // function and waits until the cluster reaches a final state or until a specified timeout is reached.
@@ -604,14 +612,11 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 		err         error
 	)
 
-	// Assuming 60 minutes is the max time deployment takes, can change after discussion
-	const timeout = time.Minute * 60
-
 	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, timeout)
+	ctx, cancel = context.WithTimeout(ctx, clusterStatusTimeout)
 	defer cancel()
 
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(clusterStatusPollInterval)
 	defer ticker.Stop()
 
 	for {
