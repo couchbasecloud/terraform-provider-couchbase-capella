@@ -222,15 +222,18 @@ func TestAccDatabaseRoleEmptyPrivileges(t *testing.T) {
 	})
 }
 
-// TestAccDatabaseRoleNonExistentKeyspace covers a role naming a bucket, scope or
-// collection that is not present on the cluster. The V4 API answers each with a 400.
+
 func TestAccDatabaseRoleNonExistentKeyspace(t *testing.T) {
 	testCases := []struct {
 		name      string
 		accessHCL func() string
+		phrase    func() string
 	}{
 		{
 			name: "bucket",
+			phrase: func() string {
+				return "references bucket 'tf_acc_no_such_bucket', which does not exist on the cluster"
+			},
 			accessHCL: func() string {
 				return `[
     {
@@ -248,6 +251,11 @@ func TestAccDatabaseRoleNonExistentKeyspace(t *testing.T) {
 		},
 		{
 			name: "scope",
+			phrase: func() string {
+				return fmt.Sprintf(
+					"references scope 'tf_acc_no_such_scope' in bucket '%s', which does not exist on the cluster",
+					globalBucketName)
+			},
 			accessHCL: func() string {
 				return fmt.Sprintf(`[
     {
@@ -270,6 +278,11 @@ func TestAccDatabaseRoleNonExistentKeyspace(t *testing.T) {
 		},
 		{
 			name: "collection",
+			phrase: func() string {
+				return fmt.Sprintf(
+					"references collection 'tf_acc_no_such_collection' in scope '%s' of bucket '%s', which does not exist on the cluster",
+					globalScopeName, globalBucketName)
+			},
 			accessHCL: func() string {
 				return fmt.Sprintf(`[
     {
@@ -303,7 +316,7 @@ func TestAccDatabaseRoleNonExistentKeyspace(t *testing.T) {
 				Steps: []resource.TestStep{
 					{
 						Config:      testAccDatabaseRoleConfigAccess(resourceName, resourceName, "", tc.accessHCL()),
-						ExpectError: apiErrorPattern("Error creating database role", "Bad Request", "400"),
+						ExpectError: apiErrorPattern("Error creating database role", tc.phrase(), "422"),
 					},
 				},
 			})
