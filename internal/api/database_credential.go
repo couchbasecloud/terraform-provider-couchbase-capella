@@ -44,8 +44,20 @@ type CreateDatabaseCredentialRequest struct {
 	// Forbidden special characters for the password are: < > ; . * & | £
 	Password string `json:"password,omitempty"`
 
+	// CredentialType is the type of credential to create. Credential types determine the level of access control:
+	// basic: Uses bucket-level access permissions. When omitted, this is the default.
+	// advanced: Uses capella user roles for fine-grained RBAC access.
+	// When basic is used, Access is required and UserRoles must not be provided.
+	// When advanced is used, UserRoles is required and Access must not be provided.
+	CredentialType string `json:"credentialType,omitempty"`
+
 	// Access describes the access information of the database credential.
-	Access []Access `json:"access"`
+	// Required when creating a basic credential type.
+	Access []Access `json:"access,omitempty"`
+
+	// UserRoles is a list of capella user role names to assign to the database credential.
+	// Required when creating an advanced credential type. The provided user roles must already exist in the cluster.
+	UserRoles []string `json:"userRoles,omitempty"`
 }
 
 // AccessibleResources is the level at which the above privileges are defined.
@@ -88,7 +100,10 @@ type GetDatabaseCredentialResponse struct {
 	ClusterId      string             `json:"clusterId"`
 	Audit          CouchbaseAuditData `json:"audit"`
 	Access         []Access           `json:"access"`
-	Id             uuid.UUID          `json:"id"`
+	// UserRoles is a list of capella user role names assigned to the database credential.
+	// Present only for advanced credential types.
+	UserRoles []string  `json:"userRoles,omitempty"`
+	Id        uuid.UUID `json:"id"`
 }
 
 // PutDatabaseCredentialRequest represents the schema for the PUT Capella V4 API request that updates an existing database credential.
@@ -96,5 +111,9 @@ type PutDatabaseCredentialRequest struct {
 	// Password is an optional field, if not passed, the existing password is not updated.
 	Password string `json:"password,omitempty"`
 	// Access describes the access information of the database credential.
-	Access []Access `json:"access"`
+	// Used when updating a basic credential type.
+	Access []Access `json:"access,omitempty"`
+	// UserRoles is a list of capella user role names to assign to the database credential.
+	// Used when updating an advanced credential type. The provided user roles must already exist in the cluster.
+	UserRoles []string `json:"userRoles,omitempty"`
 }
