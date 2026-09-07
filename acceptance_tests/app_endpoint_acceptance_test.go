@@ -505,7 +505,7 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 }
 
 
-func TestAccAppEndpoint_AV_128229(t *testing.T) {
+func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 	ensureFixtureCollection(t, globalCorsDisableToggleEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
@@ -816,8 +816,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 }
 
 // testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig creates an endpoint with
-// cors { disabled=true } and no origin field.
-// Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin, TestAccAppEndpoint_AV_128229.
+// cors { disabled=true } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
 func testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -1206,9 +1205,6 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	)
 }
 
-// testAccAppEndpointCorsDisabledTrueResourceConfig creates an endpoint with cors.disabled=true
-// alongside cors.origin, a combination the API rejects.
-// Used by: TestAccAppEndpoint_AV_128229.
 func testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s

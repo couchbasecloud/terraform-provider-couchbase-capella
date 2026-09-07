@@ -57,8 +57,6 @@ func (a *AppEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 	resp.Schema = AppEndpointSchema()
 }
 
-// ValidateConfig enforces the CORS rules of the App Endpoint API: origins are required while CORS
-// is enabled, and no other CORS attribute may carry a value once CORS is disabled.
 func (a *AppEndpoint) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var config providerschema.AppEndpoint
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -126,10 +124,6 @@ func validateDisabledCors(cors *providerschema.AppEndpointCors, resp *resource.V
 	}
 }
 
-// ModifyPlan plans cors.max_age as 0 whenever CORS is disabled. max_age is computed and uses
-// UseStateForUnknown, so an unconfigured max_age would otherwise be planned as the value from
-// before CORS was disabled: the API rejects a disable request that still carries a max age, and
-// reports max_age as 0 once CORS is disabled.
 func (a *AppEndpoint) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// The plan is null when the resource is being destroyed.
 	if req.Plan.Raw.IsNull() {
@@ -504,9 +498,6 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	resp.Diagnostics.Append(diags...)
 }
 
-// preserveDisabledCorsAttributes keeps the configured CORS lists in state when CORS is disabled.
-// A disabled App Endpoint reports an empty CORS configuration regardless of what was sent, so
-// reading the remote values back would report a change away from the configuration.
 func preserveDisabledCorsAttributes(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
 	if config.Cors == nil || state.Cors == nil {
 		return
