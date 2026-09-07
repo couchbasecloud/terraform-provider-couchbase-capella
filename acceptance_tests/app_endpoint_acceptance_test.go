@@ -484,7 +484,6 @@ func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
 // Once cors is set, the API rejects any PUT that omits the cors body entirely.
 // cors is effectively write-once via Terraform.
 func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
-	t.Skip("AV-128229 / AV-128217: removing the cors block after it is set should succeed once the bugs are fixed")
 	ensureFixtureCollection(t, globalRemoveCorsEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
@@ -505,13 +504,12 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 	})
 }
 
-// ── U3: cors.disabled false → true — API 409 "CORS cannot be disabled, config not empty" ──
-// The API rejects disabling CORS when other cors fields (origin etc.) are also set.
-func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
-	t.Skip("AV-128229: toggling cors.disabled=true while other CORS fields are set should succeed once the bug is fixed")
+
+func TestAccAppEndpoint_AV_128229(t *testing.T) {
 	ensureFixtureCollection(t, globalCorsDisableToggleEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
+	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
 	t.Parallel()
@@ -519,11 +517,40 @@ func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
+			// Phase 1: CORS enabled with every attribute populated.
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "false"),
+					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "3600"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
+				),
 			},
+			// Disabling CORS while origin is still set must fail provider validation rather than
+			// reaching the API and returning a 409.
 			{
-				Config: testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				Config:      testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				ExpectError: re.MustCompile(`(?s).*cors\.origin.*when cors\.disabled is true.*`),
+			},
+			// Phase 2: dropping the other CORS attributes disables CORS, and the max_age from
+			// phase 1 is not carried into the update.
+			{
+				Config: testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "true"),
+					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "0"),
+					resource.TestCheckNoResourceAttr(resourceReference, "cors.origin.#"),
+					resource.TestCheckNoResourceAttr(resourceReference, "cors.login_origin.#"),
+					resource.TestCheckNoResourceAttr(resourceReference, "cors.headers.#"),
+				),
+			},
+			// Re-apply the disabled config; expect no changes (no perpetual drift).
+			{
+				Config:             testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -789,7 +816,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 }
 
 // testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig creates an endpoint with
-// cors { disabled=true } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
+// cors { disabled=true } and no origin field.
+// Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin, TestAccAppEndpoint_AV_128229.
 func testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -1178,8 +1206,9 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	)
 }
 
-// testAccAppEndpointCorsDisabledTrueResourceConfig creates an endpoint with
-// cors.disabled=true. Used by: TestAccAppEndpointUpdateCorsDisableToggle (U3 phase 2, skipped).
+// testAccAppEndpointCorsDisabledTrueResourceConfig creates an endpoint with cors.disabled=true
+// alongside cors.origin, a combination the API rejects.
+// Used by: TestAccAppEndpoint_AV_128229.
 func testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
