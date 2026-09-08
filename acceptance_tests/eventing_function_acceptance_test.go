@@ -1986,9 +1986,7 @@ func TestAccEventingFunctionResourceUpdateKeyspacesUndeployed(t *testing.T) {
 	})
 }
 
-// TestAccEventingFunctionResourceRemoveDescription (TC-UP-Optional-Omit): clearing a set description should empty it on read; the fix lives in branch AV-136448-desc, so this is skipped until that merges.
 func TestAccEventingFunctionResourceRemoveDescription(t *testing.T) {
-
 	funcName := randomStringWithPrefix("tf_acc_evt_rm_desc_fn_")
 	funcReference := "couchbase-capella_eventing_function." + funcName
 
@@ -2001,7 +1999,7 @@ func TestAccEventingFunctionResourceRemoveDescription(t *testing.T) {
 			},
 			{
 				Config: testAccEventingFunctionResourceConfigMaybeDescription(funcName, "", "undeployed"),
-				Check:  resource.TestCheckResourceAttr(funcReference, "description", ""),
+				Check:  resource.TestCheckNoResourceAttr(funcReference, "description"),
 			},
 		},
 	})
