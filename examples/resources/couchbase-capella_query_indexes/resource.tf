@@ -1,5 +1,7 @@
-# Example json file -
-  {
+/*
+Example indexes.json template file for deferred index builds:
+
+{
   "resource": {
     "couchbase-capella_indexes": {
       "idx1": {
@@ -8,7 +10,7 @@
         "cluster_id": "ffffffff-aaaa-1414-eeee-000000000000",
         "bucket_name": "api",
         "scope_name": "metrics",
-        "scope_name": "memory",
+        "collection_name": "memory",
         "index_name": "idx1",
         "index_keys": [
           "field1"
@@ -17,24 +19,25 @@
           "defer_build": true
         }
       },
-    "idx2": {
-          "organization_id": "ffffffff-aaaa-1414-eeee-000000000000",
-          "project_id": "ffffffff-aaaa-1414-eeee-000000000000",
-          "cluster_id": "ffffffff-aaaa-1414-eeee-000000000000",
-          "bucket_name": "api",
-          "scope_name": "metrics",
-          "scope_name": "memory",
-          "index_name": "idx2",
-          "index_keys": [
-            "field2"
-          ],
-          "with": {
-            "defer_build": true
-             }
-          }
+      "idx2": {
+        "organization_id": "ffffffff-aaaa-1414-eeee-000000000000",
+        "project_id": "ffffffff-aaaa-1414-eeee-000000000000",
+        "cluster_id": "ffffffff-aaaa-1414-eeee-000000000000",
+        "bucket_name": "api",
+        "scope_name": "metrics",
+        "collection_name": "memory",
+        "index_name": "idx2",
+        "index_keys": [
+          "field2"
+        ],
+        "with": {
+          "defer_build": true
         }
       }
     }
+  }
+}
+*/
 
 # Example for deferred index build -
 locals {
