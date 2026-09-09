@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	stderrors "errors"
 	"net/http"
-	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 const (
@@ -94,15 +92,7 @@ func (b *fakeBackend) handler(w http.ResponseWriter, r *http.Request) {
 // by the supplied fakeBackend.
 func newTestResource(t *testing.T, b *fakeBackend) *PrivateEndpointService {
 	t.Helper()
-	srv := httptest.NewServer(http.HandlerFunc(b.handler))
-	t.Cleanup(srv.Close)
-
-	return &PrivateEndpointService{
-		Data: &providerschema.Data{
-			ClientV1: &api.Client{Client: srv.Client()},
-			HostURL:  srv.URL,
-		},
-	}
+	return &PrivateEndpointService{Data: newTestProviderData(t, b.handler)}
 }
 
 func strPtr(s string) *string { return &s }
