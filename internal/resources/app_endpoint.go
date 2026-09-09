@@ -26,6 +26,7 @@ var (
 	_ resource.Resource                   = &AppEndpoint{}
 	_ resource.ResourceWithConfigure      = &AppEndpoint{}
 	_ resource.ResourceWithImportState    = &AppEndpoint{}
+	_ resource.ResourceWithModifyPlan     = &AppEndpoint{}
 	_ resource.ResourceWithValidateConfig = &AppEndpoint{}
 )
 
@@ -56,7 +57,6 @@ func (a *AppEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 	resp.Schema = AppEndpointSchema()
 }
 
-// ValidateConfig enforces that CORS origins are configured unless CORS is explicitly disabled.
 func (a *AppEndpoint) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var config providerschema.AppEndpoint
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -73,7 +73,8 @@ func (a *AppEndpoint) ValidateConfig(ctx context.Context, req resource.ValidateC
 		return
 	}
 
-	if !config.Cors.Disabled.IsNull() && !config.Cors.Disabled.IsUnknown() && config.Cors.Disabled.ValueBool() {
+	if !config.Cors.Disabled.IsNull() && config.Cors.Disabled.ValueBool() {
+		validateDisabledCors(config.Cors, resp)
 		return
 	}
 
@@ -89,6 +90,61 @@ func (a *AppEndpoint) ValidateConfig(ctx context.Context, req resource.ValidateC
 			"Expected cors.origin to be configured with at least 1 value when cors.disabled is not true.",
 		)
 	}
+}
+
+func validateDisabledCors(cors *providerschema.AppEndpointCors, resp *resource.ValidateConfigResponse) {
+	const conflictDetail = "Expected cors.%s to be %s when cors.disabled is true. " +
+		"The App Endpoint API discards the CORS configuration when CORS is disabled and rejects a request that still specifies one."
+
+	for _, attribute := range []struct {
+		name  string
+		value types.Set
+	}{
+		{"origin", cors.Origin},
+		{"login_origin", cors.LoginOrigin},
+		{"headers", cors.Headers},
+	} {
+		if attribute.value.IsNull() || attribute.value.IsUnknown() || len(attribute.value.Elements()) == 0 {
+			continue
+		}
+
+		resp.Diagnostics.AddAttributeError(
+			path.Root("cors").AtName(attribute.name),
+			"Invalid Attribute Combination",
+			fmt.Sprintf(conflictDetail, attribute.name, "empty or unset"),
+		)
+	}
+
+	if !cors.MaxAge.IsNull() && !cors.MaxAge.IsUnknown() && cors.MaxAge.ValueInt64() != 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("cors").AtName("max_age"),
+			"Invalid Attribute Combination",
+			fmt.Sprintf(conflictDetail, "max_age", "0 or unset"),
+		)
+	}
+}
+
+func (a *AppEndpoint) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// The plan is null when the resource is being destroyed.
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan providerschema.AppEndpoint
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() || plan.Cors == nil {
+		return
+	}
+
+	if plan.Cors.Disabled.IsNull() || plan.Cors.Disabled.IsUnknown() || !plan.Cors.Disabled.ValueBool() {
+		return
+	}
+
+	if plan.Cors.MaxAge.Equal(types.Int64Value(0)) {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("cors").AtName("max_age"), types.Int64Value(0))...)
 }
 
 // Create creates a new App Endpoint.
@@ -170,7 +226,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 	if plan.Cors == nil {
 		state.Cors = nil
 	} else {
-		preserveDisabledCorsOrigin(&plan, state)
+		preserveDisabledCorsAttributes(&plan, state)
 	}
 
 	diags = resp.State.Set(ctx, state)
@@ -360,7 +416,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if state.Cors == nil && !isImport {
 		newstate.Cors = nil
 	} else if !isImport {
-		preserveDisabledCorsOrigin(&state, newstate)
+		preserveDisabledCorsAttributes(&state, newstate)
 	}
 
 	diags = resp.State.Set(ctx, newstate)
@@ -436,14 +492,13 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	if plan.Cors == nil {
 		refreshedState.Cors = nil
 	} else {
-		preserveDisabledCorsOrigin(&plan, refreshedState)
+		preserveDisabledCorsAttributes(&plan, refreshedState)
 	}
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 
-// preserveDisabledCorsOrigin keeps omitted origin absent from state when CORS is disabled.
-func preserveDisabledCorsOrigin(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
+func preserveDisabledCorsAttributes(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
 	if config.Cors == nil || state.Cors == nil {
 		return
 	}
@@ -452,9 +507,9 @@ func preserveDisabledCorsOrigin(config *providerschema.AppEndpoint, state *provi
 		return
 	}
 
-	if config.Cors.Origin.IsNull() {
-		state.Cors.Origin = types.SetNull(types.StringType)
-	}
+	state.Cors.Origin = config.Cors.Origin
+	state.Cors.LoginOrigin = config.Cors.LoginOrigin
+	state.Cors.Headers = config.Cors.Headers
 }
 
 // Delete deletes an existing App Endpoint.
