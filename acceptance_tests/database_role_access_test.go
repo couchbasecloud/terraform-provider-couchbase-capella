@@ -172,6 +172,14 @@ func TestAccDatabaseRoleGlobalPrivilege(t *testing.T) {
 // is the case that exercises the whole reconcile chain: entries are paired by privilege
 // set, buckets by name, scopes by name and collections by value. A clean post-apply plan
 // means the ordering survived the round-trip.
+//
+// The import step deliberately excludes access from ImportStateVerify (AV-143880).
+// reconcileAccess restores the configured order by pairing the response against prior
+// state, and import has no prior state to pair against, so the entries land in whatever
+// order the API returned - which is Go map order, and so a rotation of the configured
+// order about a quarter of the time. The grants themselves are asserted with
+// checkImportedAccess, which ignores entry order; every attribute outside access is
+// still verified attribute by attribute.
 func TestAccDatabaseRoleAllScopedLevels(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_db_role_multi_")
 	resourceReference := "couchbase-capella_database_role." + resourceName
@@ -195,10 +203,28 @@ func TestAccDatabaseRoleAllScopedLevels(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateDatabaseRoleImportId(resourceReference),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceReference,
+				ImportStateIdFunc:       generateDatabaseRoleImportId(resourceReference),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"access"},
+				ImportStateCheck: checkImportedAccess(
+					accessShape{
+						privileges:  []string{"dataRead"},
+						bucket:      globalBucketName,
+						scope:       globalScopeName,
+						collections: []string{globalCollectionName},
+					},
+					accessShape{
+						privileges: []string{"queryManage"},
+						bucket:     globalBucketName,
+						scope:      globalScopeName,
+					},
+					accessShape{
+						privileges: []string{"viewsReader"},
+						bucket:     globalBucketName,
+					},
+				),
 			},
 		},
 	})
