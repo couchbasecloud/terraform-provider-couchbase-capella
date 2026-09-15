@@ -704,13 +704,13 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 					diskAzure.Storage = &storage
 				}
 
-				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown() {
 					iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
 					diskAzure.Iops = &iops
 				}
 			}
 
-			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() {
+			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() && !serviceGroup.Node.Disk.Autoexpansion.IsUnknown() {
 				autoexpansion := serviceGroup.Node.Disk.Autoexpansion.ValueBool()
 				diskAzure.Autoexpansion = &autoexpansion
 			}
