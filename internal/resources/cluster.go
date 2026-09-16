@@ -710,7 +710,7 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				}
 			}
 
-			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() {
+			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() && !serviceGroup.Node.Disk.Autoexpansion.IsUnknown() {
 				autoexpansion := serviceGroup.Node.Disk.Autoexpansion.ValueBool()
 				diskAzure.Autoexpansion = &autoexpansion
 			}
