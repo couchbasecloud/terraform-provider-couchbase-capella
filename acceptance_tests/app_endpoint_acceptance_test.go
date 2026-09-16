@@ -207,6 +207,125 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	)
 }
 
+// TestAccAppEndpointNoOIDC verifies that creating an app endpoint without an oidc
+// block leaves oidc null in state. Before CBSE-23701 the provider wrote an empty
+// list instead, which Terraform rejected with "produced an unexpected new value:
+// .oidc: was null, but now cty.ListValEmpty(...)".
+func TestAccAppEndpointNoOIDC(t *testing.T) {
+	ensureFixtureCollection(t, globalNoOIDCEPCollectionName)
+
+	resourceName := randomStringWithPrefix("tf_acc_ep_nooidc_")
+	resourceReference := "couchbase-capella_app_endpoint." + resourceName
+	epName := randomStringWithPrefix("tf_acc_ep_nooidc_")
+
+	cfg := testAccAppEndpointNoOIDCConfig(resourceName, epName, globalNoOIDCEPCollectionName)
+
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: cfg,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "name", epName),
+					// A null list has no count key at all; an empty list would set it to "0".
+					resource.TestCheckNoResourceAttr(resourceReference, "oidc.#"),
+				),
+			},
+			// Re-apply the same config; expect no changes (no perpetual drift).
+			{
+				Config:             cfg,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+// TestAccAppEndpointEmptyOIDCList verifies the mirror image of TestAccAppEndpointNoOIDC:
+// an explicitly empty oidc list must stay an empty list rather than being refreshed
+// back to null.
+func TestAccAppEndpointEmptyOIDCList(t *testing.T) {
+	ensureFixtureCollection(t, globalEmptyOIDCEPCollectionName)
+
+	resourceName := randomStringWithPrefix("tf_acc_ep_eoidc_")
+	resourceReference := "couchbase-capella_app_endpoint." + resourceName
+	epName := randomStringWithPrefix("tf_acc_ep_eoidc_")
+
+	cfg := testAccAppEndpointEmptyOIDCListConfig(resourceName, epName, globalEmptyOIDCEPCollectionName)
+
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: cfg,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "name", epName),
+					resource.TestCheckResourceAttr(resourceReference, "oidc.#", "0"),
+				),
+			},
+			// Re-apply the same config; expect no changes (no perpetual drift).
+			{
+				Config:             cfg,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func testAccAppEndpointNoOIDCConfig(resourceName, endpointName, collectionName string) string {
+	return testAccAppEndpointDisabledOIDCConfig(resourceName, endpointName, collectionName, "")
+}
+
+func testAccAppEndpointEmptyOIDCListConfig(resourceName, endpointName, collectionName string) string {
+	return testAccAppEndpointDisabledOIDCConfig(resourceName, endpointName, collectionName, "\toidc = []\n")
+}
+
+// testAccAppEndpointDisabledOIDCConfig builds an endpoint config whose only variable
+// is the oidc block, so that omitting it and setting it to [] differ by nothing else.
+func testAccAppEndpointDisabledOIDCConfig(resourceName, endpointName, collectionName, oidcBlock string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_endpoint" "%[2]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[6]s"
+	bucket          = "`+appEndpointBucketName+`"
+	name            = "%[8]s"
+
+	cors = {
+		origin = ["*"]
+	}
+%[9]s
+	scopes = {
+		"_default" = {
+		  collections = {
+			"%[7]s" = {}
+		  }
+		}
+	}
+}
+`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		collectionName,
+		endpointName,
+		oidcBlock,
+	)
+}
+
 func generateAppEndpointImportId(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
