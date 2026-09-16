@@ -263,6 +263,18 @@ var (
 	// ErrAppServiceFailedState is returned when the App Service reports that it is in a terminal failed state (e.g. deployment failed).
 	ErrAppServiceFailedState = errors.New("app service operation failed")
 
+	// ErrReplicationJobFailed is returned when an asynchronous replication job reports a terminal failure state.
+	ErrReplicationJobFailed = errors.New("replication job failed")
+
+	// ErrReplicationJobTimeout is returned when a replication job does not reach a terminal state within the polling budget.
+	ErrReplicationJobTimeout = errors.New("replication job status transition timed out after initiation")
+
+	// ErrReplicationJobNotFound is returned when the control plane keeps reporting a replication job as notfound.
+	ErrReplicationJobNotFound = errors.New("replication job not found")
+
+	// ErrXDCROperationInProgress is returned when the cluster pair lock is still held after the retry budget is exhausted.
+	ErrXDCROperationInProgress = errors.New("another XDCR operation is in progress for this cluster pair")
+
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrIndexDeferred = errors.New("index is in Deferred state and will not become Ready without a BUILD INDEX statement")
