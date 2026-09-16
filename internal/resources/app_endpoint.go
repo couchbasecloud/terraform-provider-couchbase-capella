@@ -272,36 +272,47 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 		}
 	}
 
-	// Make sure we keep all required fields (i.e. client ID and issuer).
-	// The nil check matters: make() would turn a null oidc into a non-nil empty
-	// slice, which Terraform sees as an empty list rather than null.
-	if plan.Oidc != nil {
-		oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
-		copy(oidcList, plan.Oidc)
-
-		for i := range oidcList {
-			oidcList[i].ProviderId = types.StringNull()
-			oidcList[i].IsDefault = types.BoolNull()
-			if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
-				oidcList[i].Register = types.BoolNull()
-			}
-			if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
-				oidcList[i].DiscoveryUrl = types.StringNull()
-			}
-			if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
-				oidcList[i].UsernameClaim = types.StringNull()
-			}
-			if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
-				oidcList[i].RolesClaim = types.StringNull()
-			}
-			if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
-				oidcList[i].UserPrefix = types.StringNull()
-			}
-		}
-		plan.Oidc = oidcList
-	}
+	plan.Oidc = nullifyUnsetOidcFields(plan.Oidc)
 
 	return diags
+}
+
+// nullifyUnsetOidcFields returns a copy of oidc with the computed attributes and any
+// unset optional attributes set to null, while keeping the required. A nil input is
+// returned as nil, which Terraform sees correctly as null value rather an empty list.
+func nullifyUnsetOidcFields(oidc []providerschema.AppEndpointOidc) []providerschema.AppEndpointOidc {
+	if oidc == nil {
+		return nil
+	}
+
+	oidcList := make([]providerschema.AppEndpointOidc, len(oidc))
+	copy(oidcList, oidc)
+
+	for i := range oidcList {
+		oidcList[i].ProviderId = types.StringNull()
+		oidcList[i].IsDefault = types.BoolNull()
+		oidcList[i].Register = nullBoolIfUnset(oidcList[i].Register)
+		oidcList[i].DiscoveryUrl = nullStringIfUnset(oidcList[i].DiscoveryUrl)
+		oidcList[i].UsernameClaim = nullStringIfUnset(oidcList[i].UsernameClaim)
+		oidcList[i].RolesClaim = nullStringIfUnset(oidcList[i].RolesClaim)
+		oidcList[i].UserPrefix = nullStringIfUnset(oidcList[i].UserPrefix)
+	}
+
+	return oidcList
+}
+
+func nullStringIfUnset(v types.String) types.String {
+	if v.IsNull() || v.IsUnknown() {
+		return types.StringNull()
+	}
+	return v
+}
+
+func nullBoolIfUnset(v types.Bool) types.Bool {
+	if v.IsNull() || v.IsUnknown() {
+		return types.BoolNull()
+	}
+	return v
 }
 
 // Read reads and updates the current state of an App Endpoint.
