@@ -1,0 +1,1 @@
+terraform import couchbase-capella_bucket_backup_export.new_bucket_backup_export id=ffffffff-aaaa-1414-eeee-000000000000,backup_id=ffffffff-aaaa-1414-eeee-000000000000,bucket_id=dHJhdmVsLXNhbXBsZQ==,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000

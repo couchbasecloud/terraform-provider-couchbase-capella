@@ -8,6 +8,7 @@ const (
 	ClusterId       Attr = "clusterId"
 	BucketId        Attr = "bucketId"
 	BucketName      Attr = "bucketName"
+	BackupId        Attr = "backupId"
 	Id              Attr = "id"
 	ScopeName       Attr = "scopeName"
 	CollectionName  Attr = "collectionName"
