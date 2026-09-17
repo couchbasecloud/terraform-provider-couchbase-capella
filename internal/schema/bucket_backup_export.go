@@ -70,6 +70,52 @@ type BucketBackupExport struct {
 	BackupDownloadURL types.String `tfsdk:"backup_download_url"`
 }
 
+// BucketBackupExportData defines the Terraform schema for the bucket backup export data source.
+// There is no list endpoint, so the export is addressed by ID rather than searched for.
+type BucketBackupExportData struct {
+	// Id is the ID of the export job to fetch.
+	Id types.String `tfsdk:"id"`
+
+	// OrganizationId is the organizationId of the Capella tenant.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the Capella tenant.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the clusterId of the Capella tenant.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// BucketId is the ID of the bucket the exported backup belongs to.
+	BucketId types.String `tfsdk:"bucket_id"`
+
+	// BackupId is the ID of the exported backup.
+	BackupId types.String `tfsdk:"backup_id"`
+
+	// CycleId is the ID of the backup cycle that was exported.
+	CycleId types.String `tfsdk:"cycle_id"`
+
+	// BucketName is the name of the bucket the exported backup belongs to.
+	BucketName types.String `tfsdk:"bucket_name"`
+
+	// Status is the status of the export job.
+	Status types.String `tfsdk:"status"`
+
+	// CreatedAt is the time at which the export was requested.
+	CreatedAt types.String `tfsdk:"created_at"`
+
+	// SizeInBytes is the size of the exported archive.
+	SizeInBytes types.Int64 `tfsdk:"size_in_bytes"`
+
+	// Sha256Checksum is the SHA-256 hash of the exported archive.
+	Sha256Checksum types.String `tfsdk:"sha256_checksum"`
+
+	// Expiration is the time at which the exported archive is deleted from cloud storage.
+	Expiration types.String `tfsdk:"expiration"`
+
+	// BackupDownloadURL is a pre-signed URL to download the exported archive.
+	BackupDownloadURL types.String `tfsdk:"backup_download_url"`
+}
+
 // Validate is used to verify that IDs have been properly imported.
 func (b *BucketBackupExport) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
