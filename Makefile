@@ -129,9 +129,10 @@ testacc-sanity: ## Run the P0 sanity acceptance test suite
 # ============================================================================
 
 .PHONY: build-docs
+TFPLUGINDOCS_VERSION ?= v0.25.0
+
 build-docs: ## Generate provider documentation
-	@go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
+	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@$(TFPLUGINDOCS_VERSION) generate --examples-dir ./examples
 
 # ============================================================================
 # Code Generation
