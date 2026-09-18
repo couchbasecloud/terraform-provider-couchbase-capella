@@ -168,6 +168,11 @@ TestAccAppServiceLogStreaming
 # Tests app endpoint creation (includes resync and logging config steps)
 TestAccAppEndpoint
 
+# Tests oidc round trip for both, an absent oidc block must stay null,
+# and an explicitly empty list must stay empty.
+TestAccAppEndpointNoOIDC
+TestAccAppEndpointEmptyOIDCList
+
 # Tests app endpoint activation status management
 TestAccAppEndpointActivationStatus
 
