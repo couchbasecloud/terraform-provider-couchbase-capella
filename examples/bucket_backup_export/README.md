@@ -1,7 +1,7 @@
 # Capella Bucket Backup Export Example
 
 This example shows how to export an existing bucket backup in Capella into a downloadable zip
-archive.
+archive, and how to read back a pre-signed URL to download it.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -10,7 +10,8 @@ To run, configure your Couchbase Capella provider as described in README in the 
 In this example, we are going to do the following.
 
 1. Create a new backup export job for an existing backup with the specified configuration.
-2. Refresh it until the export completes and exposes a download URL.
+2. Refresh it until the export completes.
+3. Read the export job back through the data source to obtain the download URL.
 
 `bucket_id` is the ID Capella returns for the bucket, which is the URL-compatible base64 encoding of
 the bucket name, not the bucket name itself. `backup_id` is the ID of the backup to export, which
@@ -69,8 +70,9 @@ roughly 12 hours after the export completes, after which the backup must be expo
 
 Command: `terraform output download_url`
 
-The URL is generated fresh on every refresh and is valid for one hour. It is marked sensitive
-because it carries short lived cloud storage credentials.
+The URL is generated fresh on every read and is valid for one hour. It is marked sensitive because
+it carries short lived cloud storage credentials. The data source exists so a configuration other
+than the one that created the export can fetch a fresh URL for it.
 
 ## Import an existing backup export
 
