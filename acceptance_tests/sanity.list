@@ -236,6 +236,9 @@ TestAccBackupResource
 # Tests backup schedule configuration
 TestAccBackupScheduleResource
 
+# Tests exporting a bucket backup to a downloadable archive
+TestAccBucketBackupExportResource
+
 # Tests snapshot backup creation
 TestAccSnapshotBackupResource
 
