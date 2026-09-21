@@ -308,6 +308,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppService,
 		resources.NewBackup,
 		resources.NewBackupSchedule,
+		resources.NewBucketBackupExport,
 		resources.NewScope,
 		resources.NewCollection,
 		resources.NewSampleBucket,
