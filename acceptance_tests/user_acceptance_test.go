@@ -123,7 +123,7 @@ func TestAccUserResourceInvalidScenarioInvalidOrganizationRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserResourceConfigWithOrganizationRoles(resourceName, username, `["organizationWizard"]`),
-				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*organizationWizard.*organizationMember.*organizationOwner.*projectCreator`),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*organizationWizard.*organizationMember.*organizationOwner.*projectCreator.*organizationBillingAdmin.*organizationBillingViewer.*organizationReadOnly`),
 			},
 		},
 	})
