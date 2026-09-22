@@ -173,6 +173,8 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		preserveDisabledCorsOrigin(&plan, state)
 	}
 
+	preserveDisabledOidc(&plan, state)
+
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 
@@ -270,32 +272,47 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 		}
 	}
 
-	// Make sure we keep all required fields (i.e. client ID and issuer)
-	oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
-	copy(oidcList, plan.Oidc)
+	plan.Oidc = nullifyUnsetOidcFields(plan.Oidc)
+
+	return diags
+}
+
+// nullifyUnsetOidcFields returns a copy of oidc with the computed attributes and any
+// unset optional attributes set to null, while keeping the required. A nil input is
+// returned as nil, which Terraform sees correctly as null value rather an empty list.
+func nullifyUnsetOidcFields(oidc []providerschema.AppEndpointOidc) []providerschema.AppEndpointOidc {
+	if oidc == nil {
+		return nil
+	}
+
+	oidcList := make([]providerschema.AppEndpointOidc, len(oidc))
+	copy(oidcList, oidc)
 
 	for i := range oidcList {
 		oidcList[i].ProviderId = types.StringNull()
 		oidcList[i].IsDefault = types.BoolNull()
-		if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
-			oidcList[i].Register = types.BoolNull()
-		}
-		if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
-			oidcList[i].DiscoveryUrl = types.StringNull()
-		}
-		if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
-			oidcList[i].UsernameClaim = types.StringNull()
-		}
-		if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
-			oidcList[i].RolesClaim = types.StringNull()
-		}
-		if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
-			oidcList[i].UserPrefix = types.StringNull()
-		}
+		oidcList[i].Register = nullBoolIfUnset(oidcList[i].Register)
+		oidcList[i].DiscoveryUrl = nullStringIfUnset(oidcList[i].DiscoveryUrl)
+		oidcList[i].UsernameClaim = nullStringIfUnset(oidcList[i].UsernameClaim)
+		oidcList[i].RolesClaim = nullStringIfUnset(oidcList[i].RolesClaim)
+		oidcList[i].UserPrefix = nullStringIfUnset(oidcList[i].UserPrefix)
 	}
-	plan.Oidc = oidcList
 
-	return diags
+	return oidcList
+}
+
+func nullStringIfUnset(v types.String) types.String {
+	if v.IsNull() || v.IsUnknown() {
+		return types.StringNull()
+	}
+	return v
+}
+
+func nullBoolIfUnset(v types.Bool) types.Bool {
+	if v.IsNull() || v.IsUnknown() {
+		return types.BoolNull()
+	}
+	return v
 }
 
 // Read reads and updates the current state of an App Endpoint.
@@ -362,6 +379,10 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 	} else if !isImport {
 		preserveDisabledCorsOrigin(&state, newstate)
 	}
+
+	// Import needs no exception here: preserveDisabledOidc leaves remote providers
+	// untouched, and an imported endpoint without providers is null either way.
+	preserveDisabledOidc(&state, newstate)
 
 	diags = resp.State.Set(ctx, newstate)
 	resp.Diagnostics.Append(diags...)
@@ -438,6 +459,9 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	} else {
 		preserveDisabledCorsOrigin(&plan, refreshedState)
 	}
+
+	preserveDisabledOidc(&plan, refreshedState)
+
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
@@ -455,6 +479,26 @@ func preserveDisabledCorsOrigin(config *providerschema.AppEndpoint, state *provi
 	if config.Cors.Origin.IsNull() {
 		state.Cors.Origin = types.SetNull(types.StringType)
 	}
+}
+
+// preserveDisabledOidc keeps oidc in state matching the configured value whenever
+// the App Service reports no OIDC providers. terraform-plugin-framework renders a
+// nil slice as a null list but a non-nil empty slice as an empty list, so without
+// this a null config that refreshes into an empty list - or the reverse - is
+// reported by Terraform as an inconsistent result after apply.
+//
+// Providers on either side mean the difference is real drift, which is left alone.
+func preserveDisabledOidc(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
+	if len(state.Oidc) > 0 || len(config.Oidc) > 0 {
+		return
+	}
+
+	if config.Oidc == nil {
+		state.Oidc = nil
+		return
+	}
+
+	state.Oidc = []providerschema.AppEndpointOidc{}
 }
 
 // Delete deletes an existing App Endpoint.
