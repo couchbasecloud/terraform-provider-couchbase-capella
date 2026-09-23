@@ -282,7 +282,7 @@ func testAccDownloadBucketBackupExportArchive(resourceReference string) resource
 		if err != nil {
 			return fmt.Errorf("downloading export archive for %s: %w", resourceReference, err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
