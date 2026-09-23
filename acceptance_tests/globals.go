@@ -102,6 +102,8 @@ var (
 	// down with the shared bucket at the end of the suite.
 	globalEPCollectionName                   = "tf_acc_ep_col"
 	globalNoCorsEPCollectionName             = "tf_acc_ep_nocors_col"
+	globalNoOIDCEPCollectionName             = "tf_acc_ep_nooidc_col"
+	globalEmptyOIDCEPCollectionName          = "tf_acc_ep_eoidc_col"
 	globalCorsFullEPCollectionName           = "tf_acc_ep_cors_full_col"
 	globalCorsSpecificEPCollectionName       = "tf_acc_ep_cors_spec_col"
 	globalCorsMaxAge0EPCollectionName        = "tf_acc_ep_cors_ma0_col"

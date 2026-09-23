@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -84,6 +85,34 @@ func stringDefaultAttribute(defaultValue string, fields ...string) *schema.Strin
 	attribute := stringAttribute(fields)
 	attribute.Default = stringdefault.StaticString(defaultValue)
 	return attribute
+}
+
+// stringDefaultAttributeReplaceOnChange returns a defaulted string attribute that requires
+// replacement only on a genuine change. Use it wherever a Default and RequiresReplace combine.
+func stringDefaultAttributeReplaceOnChange(defaultValue string, fields ...string) *schema.StringAttribute {
+	attribute := stringDefaultAttribute(defaultValue, fields...)
+	attribute.PlanModifiers = append(attribute.PlanModifiers, requiresReplaceOnKnownChange(defaultValue))
+	return attribute
+}
+
+// requiresReplaceOnKnownChange requires replacement when the planned value differs from the
+// prior one, treating an absent prior value as implicitPriorValue. Plain RequiresReplace
+// instead reads the Default backfilling a state file written before the attribute existed as
+// a change, and destroys every existing resource on the first plan after an upgrade (AV-139981).
+func requiresReplaceOnKnownChange(implicitPriorValue string) planmodifier.String {
+	const description = "Replaces the resource when the value changes, treating an absent prior value as the default."
+
+	return stringplanmodifier.RequiresReplaceIf(
+		func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+			priorValue := req.StateValue
+			if priorValue.IsNull() {
+				priorValue = types.StringValue(implicitPriorValue)
+			}
+			resp.RequiresReplace = !req.PlanValue.Equal(priorValue)
+		},
+		description,
+		description,
+	)
 }
 
 // requiredUUIDStringAttribute is intended for adding a required string attribute with requires replace set for hierarchical Capella resource UUIDs

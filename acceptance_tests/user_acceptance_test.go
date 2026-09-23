@@ -11,6 +11,7 @@ import (
 
 func TestAccUserResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_user_")
+	username := resourceName
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -18,10 +19,10 @@ func TestAccUserResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
-				Config: testAccUserResourceConfig(resourceName, "terraform_acceptance_test1"),
+				Config: testAccUserResourceConfig(resourceName, username),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test1"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test1@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "name", username),
+					resource.TestCheckResourceAttr(resourceReference, "email", username+"@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
 				),
 			},
@@ -34,10 +35,10 @@ func TestAccUserResource(t *testing.T) {
 			},
 			// Update and Read
 			{
-				Config: testAccUserResourceConfigUpdate(resourceName, "terraform_acceptance_test1"),
+				Config: testAccUserResourceConfigUpdate(resourceName, username),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test1"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test1@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "name", username),
+					resource.TestCheckResourceAttr(resourceReference, "email", username+"@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),

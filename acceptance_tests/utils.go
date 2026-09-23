@@ -56,8 +56,8 @@ func generateRandomCIDR() string {
 		thirdOctet := int(buf[2]) & 0xFE // even for /23
 		return fmt.Sprintf("10.%d.%d.0/23", secondOctet, thirdOctet)
 	case 1: // 172.C.D.0/21
-		secondOctet := 16 + int(buf[1])%16    // 16..31
-		thirdOctet := (int(buf[2]) % 32) * 8  // 0, 8, 16, ..., 248
+		secondOctet := 16 + int(buf[1])%16   // 16..31
+		thirdOctet := (int(buf[2]) % 32) * 8 // 0, 8, 16, ..., 248
 		return fmt.Sprintf("172.%d.%d.0/21", secondOctet, thirdOctet)
 	default: // 192.168.E.0/24
 		thirdOctet := int(buf[2])

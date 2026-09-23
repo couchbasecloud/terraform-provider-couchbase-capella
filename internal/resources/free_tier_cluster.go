@@ -95,7 +95,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Error creating free tier cluster",
-			fmt.Sprintf("Could not create free tier cluster. error: %v", api.ParseError(err)),
+			fmt.Sprintf("Could not create free tier cluster id %s. error: %v", freeTierClusterResponse.Id.String(), api.ParseError(err)),
 		)
 		return
 	}
@@ -315,6 +315,14 @@ func (f *FreeTierCluster) Configure(_ context.Context, request resource.Configur
 	f.Data = data
 }
 
+// freeTierClusterStatusPollInterval and freeTierClusterStatusTimeout are overridden in tests to avoid
+// waiting on real wall-clock time while exercising checkForFreeTierClusterStatus's polling loop.
+var (
+	freeTierClusterStatusPollInterval = time.Minute
+	// Assuming 60 minutes is the max time deployment takes, can change after discussion.
+	freeTierClusterStatusTimeout = time.Minute * 60
+)
+
 // checkFreeTierClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified,
 // organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
 // function and waits until the cluster reaches a final state or until a specified timeout is reached.
@@ -325,14 +333,11 @@ func (f *FreeTierCluster) checkForFreeTierClusterStatus(ctx context.Context, org
 		err         error
 	)
 
-	// Assuming 60 minutes is the max time deployment takes, can change after discussion.
-	const timeout = time.Minute * 60
-
 	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, timeout)
+	ctx, cancel = context.WithTimeout(ctx, freeTierClusterStatusTimeout)
 	defer cancel()
 
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(freeTierClusterStatusPollInterval)
 	defer ticker.Stop()
 
 	for {

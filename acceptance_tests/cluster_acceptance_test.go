@@ -1037,6 +1037,14 @@ data "http" "cluster_info" {
   request_headers = {
     Authorization = "Bearer ${var.auth_token}"
   }
+
+  # Without this block the provider gives up after a single attempt, so a
+  # transient 429 or 5xx from the Capella API fails the whole test step.
+  retry {
+    attempts     = 5
+    min_delay_ms = 2000
+    max_delay_ms = 10000
+  }
 }
 
 resource "couchbase-capella_cluster" "%[4]s" {
