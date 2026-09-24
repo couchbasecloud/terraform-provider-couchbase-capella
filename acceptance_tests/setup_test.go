@@ -146,6 +146,10 @@ func setup(ctx context.Context, client *api.Client) error {
 }
 
 func cleanup(ctx context.Context, client *api.Client) error {
+	if err := destroySparseVectorFixture(ctx, client); err != nil {
+		return err
+	}
+
 	if err := cleanupAppEndpointTestEnvironment(ctx, client); err != nil {
 		return err
 	}
