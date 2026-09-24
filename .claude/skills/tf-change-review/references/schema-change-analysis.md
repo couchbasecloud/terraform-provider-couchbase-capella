@@ -128,6 +128,33 @@ for _, u := range b.Urls {                         // zero iterations
 Both idioms frequently sit in the same file, which is a useful tell - if one
 helper uses `make` and another builds from nil, the second is probably the bug.
 
+### Where the nil ends up decides whether it matters
+
+A nil slice is only a defect if it reaches state as null, and the framework
+constructors disagree about that. This is the single thing that separates a real
+finding from the dozens of harmless hits the sweep returns, so check it on every
+hit rather than reasoning from the `append` alone:
+
+| what consumes the nil slice | result | verdict |
+|---|---|---|
+| `types.ListValue` / `types.SetValue(t, nil)` | **empty** `[]` | safe |
+| `types.ListValueFrom` / `types.SetValueFrom(ctx, t, nil)` | **null** | bug |
+| a plain `[]T` field with a `tfsdk` tag | **null** | bug |
+
+The `ValueFrom` constructors reflect over the Go value and preserve its nil-ness;
+the direct constructors treat a nil element slice as zero elements. So `append`
+onto nil is harmless when the result is handed to `types.SetValue` - which is why
+`MorphAllowedCidrs` in `internal/schema/apikey.go` is fine - and a real defect
+when it is handed to `SetValueFrom` or assigned straight to a model field.
+
+Do not recall which is which; it is four lines and the answer is not intuitive:
+
+```go
+var nilStrs []types.String
+lf, _ := types.ListValueFrom(ctx, types.StringType, nilStrs)  // IsNull=true
+lv, _ := types.ListValue(types.StringType, nil)               // IsNull=false, len 0
+```
+
 **A nested guard that drops a level.** This shape looks careful but leaves the
 container nil whenever the outer value is present and the inner one is absent:
 
@@ -174,11 +201,24 @@ done
 Then, over the same file list, `grep -n 'len(.*) == 0'` and `grep -n '!= nil'`
 inside the mapping helpers.
 
-A hit is a question, not a finding. It only matters when the attribute is one a
-practitioner can legitimately write as `[]` or `{}` - a `Required` attribute with
-`SizeAtLeast(1)` cannot reach the empty case, and an accumulator that feeds an
-API request rather than state has no plan to be inconsistent with. Check the
-schema declaration before you write anything down.
+Expect most hits to be noise; the sweep is wide on purpose. Three filters, in
+this order, take a repository-wide run down to a handful:
+
+1. **Does the nil reach state as null?** Apply the constructor table above. This
+   discards the majority on its own.
+2. **Can the practitioner write the empty value?** A `Computed`-only attribute
+   has no configuration to contradict, so null versus `[]` cannot be an
+   inconsistent result - it is at most a cosmetic wart. A `Required` attribute
+   carrying `SizeAtLeast(1)` cannot reach the empty case either. The dangerous
+   profile is `Optional` **without** `Computed`, where state must round-trip the
+   configured value exactly.
+3. **Is it on a state path at all?** An accumulator that feeds an API request has
+   no plan to be inconsistent with.
+
+Then read the validators before concluding, because they often cover part of the
+surface and not the rest - and the part they miss is the finding. AV-145137 is
+exactly that: `ValidateConfig` rejected an empty `cors.origin`, but returned early
+when `cors.disabled` was true and never looked at `login_origin` or `headers`.
 
 ### Prove it offline, in seconds
 
