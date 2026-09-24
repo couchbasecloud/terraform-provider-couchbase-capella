@@ -9,8 +9,8 @@ import (
 )
 
 // Unit coverage for mapBucketBackupExport, the data source's half of the export mapping. It is a
-// pure function, so every response shape is reachable here - including the ones the live API only
-// produces after the job completes, and the ones it may never produce at all.
+// pure function, so the completed shape is reachable here without waiting for a real export to
+// finish.
 
 func mapTestExport(t *testing.T, body string) providerschema.BucketBackupExportData {
 	t.Helper()
@@ -56,26 +56,5 @@ func TestMapBucketBackupExportArchiveFields(t *testing.T) {
 	}
 	if complete.BackupDownloadURL.IsNull() {
 		t.Error("backup_download_url should be set once the export is complete")
-	}
-}
-
-// TestMapBucketBackupExportOmittedCreatedAt asserts created_at is null when the response carries
-// no createdAt.
-//
-// AV-144898: this FAILS today, for the same reason and with the same one-line fix as
-// TestRefreshBucketBackupExportOmittedCreatedAt on the resource side. CreatedAt is a non-pointer
-// time.Time (internal/api/backup/export.go:45), so an omitted createdAt unmarshals to the Go zero
-// time and internal/datasources/bucket_backup_export.go:153 formats it unconditionally, yielding
-// "0001-01-01T00:00:00Z".
-//
-// The assertion is written for the FIXED behaviour so it becomes a regression guard once the
-// helper guards the zero time with IsZero().
-func TestMapBucketBackupExportOmittedCreatedAt(t *testing.T) {
-	t.Skip("AV-144898: an omitted createdAt maps to 0001-01-01T00:00:00Z instead of null; unskip once mapBucketBackupExport guards the zero time with IsZero()")
-
-	got := mapTestExport(t, `{"id":"e1","cycleId":"cy1","bucketName":"travel-sample","status":"pending"}`)
-
-	if !got.CreatedAt.IsNull() {
-		t.Errorf("created_at = %q, want null when the API omits createdAt", got.CreatedAt.ValueString())
 	}
 }

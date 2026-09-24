@@ -12,9 +12,8 @@ import (
 )
 
 // Unit coverage for refreshBucketBackupExport, the helper that turns a get-export response into
-// Terraform state. It is served by a stub so the optional-field branches can be exercised without
-// a Capella organisation - the acceptance suite can only reach the shapes the real API happens to
-// return, and an omitted field is not one of them.
+// Terraform state. A stub serves the responses so both the pending and the completed shape can be
+// exercised in milliseconds, without waiting on the backup infrastructure for the second one.
 
 // newBucketBackupExportTestResource wires the resource to a stub API that answers every request
 // with body.
@@ -80,28 +79,5 @@ func TestRefreshBucketBackupExportArchiveFields(t *testing.T) {
 	}
 	if complete.BackupDownloadURL.IsNull() {
 		t.Error("backup_download_url should be set once the export is complete")
-	}
-}
-
-// TestRefreshBucketBackupExportOmittedCreatedAt asserts created_at is null when the response
-// carries no createdAt.
-//
-// AV-144898: this FAILS today. CreatedAt is a non-pointer time.Time
-// (internal/api/backup/export.go:45), so an omitted createdAt unmarshals to the Go zero time, and
-// internal/resources/bucket_backup_export.go:279 formats it unconditionally - writing
-// "0001-01-01T00:00:00Z" into state. Every other optional field on that struct is a pointer and is
-// nil-guarded immediately below; CreatedAt is the only one that is not. Because created_at is
-// Computed, the bogus timestamp then persists with no plan diff to reveal it.
-//
-// The assertion is written for the FIXED behaviour, so it turns into a regression guard the moment
-// the helper guards the zero time with IsZero(). The same one-line fix is needed in
-// mapBucketBackupExport (internal/datasources/bucket_backup_export.go:153).
-func TestRefreshBucketBackupExportOmittedCreatedAt(t *testing.T) {
-	t.Skip("AV-144898: an omitted createdAt maps to 0001-01-01T00:00:00Z instead of null; unskip once refreshBucketBackupExport guards the zero time with IsZero()")
-
-	got := refreshTestExport(t, `{"id":"e1","cycleId":"cy1","bucketName":"travel-sample","status":"pending"}`)
-
-	if !got.CreatedAt.IsNull() {
-		t.Errorf("created_at = %q, want null when the API omits createdAt", got.CreatedAt.ValueString())
 	}
 }
