@@ -21,7 +21,7 @@ const (
 	ExportCreatedAtDescription   = "\n - The RFC3339 timestamp at which the export was requested."
 	ExportSizeInBytesDescription = "\n - The size of the exported archive in bytes. Present once the export is complete."
 	ExportChecksumDescription    = "\n - The SHA-256 hash of the exported archive, for verifying the integrity of the downloaded file. Present once the export is complete."
-	ExportExpirationDescription  = "\n - The RFC3339 timestamp at which the exported archive is deleted from cloud storage. After this time the backup must be exported again to be downloaded."
+	ExportExpirationDescription  = "\n - The RFC3339 timestamp after which Capella stops offering the archive for download. Past it the export is reported as `expired` and the backup must be exported again to be downloaded. The archive itself is removed from cloud storage separately, shortly afterwards."
 	ExportDownloadURLDescription = "\n - Pre-signed URL to download the exported backup archive. A fresh URL is generated on every read and each URL is valid for 1 hour. Present only while the export is complete and the archive has not expired."
 )
 
@@ -63,7 +63,7 @@ type BucketBackupExport struct {
 	// Sha256Checksum is the SHA-256 hash of the exported archive.
 	Sha256Checksum types.String `tfsdk:"sha256_checksum"`
 
-	// Expiration is the time at which the exported archive is deleted from cloud storage.
+	// Expiration is the time after which the archive is no longer offered for download.
 	Expiration types.String `tfsdk:"expiration"`
 
 	// BackupDownloadURL is a pre-signed URL to download the exported archive.
@@ -109,7 +109,7 @@ type BucketBackupExportData struct {
 	// Sha256Checksum is the SHA-256 hash of the exported archive.
 	Sha256Checksum types.String `tfsdk:"sha256_checksum"`
 
-	// Expiration is the time at which the exported archive is deleted from cloud storage.
+	// Expiration is the time after which the archive is no longer offered for download.
 	Expiration types.String `tfsdk:"expiration"`
 
 	// BackupDownloadURL is a pre-signed URL to download the exported archive.

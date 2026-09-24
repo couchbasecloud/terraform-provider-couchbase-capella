@@ -63,8 +63,9 @@ Command: `terraform apply`
 
 Command: `terraform apply --refresh-only`
 
-Repeat until `status` is `complete`. The archive is deleted from cloud storage at `expiration`,
-roughly 12 hours after the export completes, after which the backup must be exported again.
+Repeat until `status` is `complete`. The archive can be downloaded until `expiration`, 12 hours
+after the export completes, after which the backup must be exported again.
+See [Export lifecycle](#export-lifecycle) for how to do that.
 
 ## Read the download URL
 
@@ -83,5 +84,34 @@ Command: `terraform import couchbase-capella_bucket_backup_export.new_bucket_bac
 Command: `terraform destroy`
 
 There is no API to cancel or delete an export, so destroy only removes the export from Terraform
-state. The archive expires from cloud storage on its own and Capella drops the export record after
-about 7 days.
+state. Capella removes the archive from cloud storage on its own about a day after the export
+completes, and drops the export record about 7 days after it completes.
+
+# Export lifecycle
+
+An export is a server side job that Capella cannot cancel or delete, so it behaves differently from
+most resources over time.
+
+| Stage                                     | `status`                  | `terraform plan` | Replacing the resource |
+|-------------------------------------------|---------------------------|------------------|------------------------|
+| Running                                   | `pending` or `processing` | No changes       | Fails with error 14061 |
+| Up to 12 hours after completing           | `complete`                | No changes       | Fails with error 14062 |
+| 12 hours to about 7 days after completing | `expired`                 | No changes       | Starts a new export    |
+| About 7 days after completing             | Removed from state        | `+ create`       | Not applicable         |
+
+- **The archive expires 12 hours after the export completes.** `status` becomes `expired` and
+  `backup_download_url` becomes null. Both are computed attributes, so `terraform plan` proposes no
+  change. Check `status` or `expiration` directly rather than relying on the plan. To get a new
+  archive, run
+  `terraform apply -replace=couchbase-capella_bucket_backup_export.new_bucket_backup_export`.
+- **Replacing fails until the archive expires.** Only one active export can exist per backup
+  cycle, so `-replace` and `taint` fail with error 14061 ("already pending or being processed") or
+  14062 ("already completed"). Wait for `expiration` to pass and try again.
+- **The export is re-created about 7 days after it completes.** Capella then drops the export
+  record, so the resource is removed from state and the next `terraform apply` starts a new export
+  of the same backup, which can be up to 5 TB. Each export is charged as backup storage while its
+  archive exists, and downloading it incurs data transfer charges. Configurations applied on a
+  schedule or from CI will keep re-exporting without anything in the configuration changing, so
+  remove the resource from the configuration once you have the download.
+- **A failed export stays in state** until you replace it, since Capella keeps failed export
+  records indefinitely. A failed export does not block the cycle, so `-replace` works straight away.

@@ -3,12 +3,27 @@
 page_title: "couchbase-capella_bucket_backup_export Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  This resource allows you to export a bucket backup for an operational cluster into a downloadable zip archive. The export runs asynchronously on the backup infrastructure, so it is still pending when the apply returns; refresh the resource until its status is complete to obtain backup_download_url, a pre-signed URL valid for one hour. The archive is deleted from cloud storage at expiration, roughly 12 hours after the export completes, after which the backup must be exported again.
+  This resource allows you to export a bucket backup for an operational cluster into a downloadable zip archive. The export runs asynchronously on the backup infrastructure, so it is still pending when the apply returns; refresh the resource until its status is complete to obtain backup_download_url, a pre-signed URL valid for one hour.
+  An export is a server side job that Capella cannot cancel or delete, so its lifecycle differs from most resources. Destroy only removes the export from state.
+  The archive expires 12 hours after the export completes. status becomes expired and backup_download_url becomes null. Both are computed, so terraform plan proposes no change when this happens; check status or expiration directly. To get a new archive, run terraform apply -replace=RESOURCE_ADDRESS.
+  Replacing fails until then. Only one active export can exist per backup cycle, so -replace and taint fail with error 14061 while the export is pending or processing, and 14062 while it is complete and not yet expired.
+  The export is re-created about 7 days after it completes. Capella then drops the export record, so the resource is removed from state and the next terraform apply starts a new export. Configurations applied on a schedule or from CI will keep re-exporting, so remove the resource from the configuration once you have the download.
+  A failed export stays in state until you replace it, since Capella keeps failed export records indefinitely.
 ---
 
 # couchbase-capella_bucket_backup_export (Resource)
 
-This resource allows you to export a bucket backup for an operational cluster into a downloadable zip archive. The export runs asynchronously on the backup infrastructure, so it is still pending when the apply returns; refresh the resource until its status is complete to obtain `backup_download_url`, a pre-signed URL valid for one hour. The archive is deleted from cloud storage at `expiration`, roughly 12 hours after the export completes, after which the backup must be exported again.
+This resource allows you to export a bucket backup for an operational cluster into a downloadable zip archive. The export runs asynchronously on the backup infrastructure, so it is still pending when the apply returns; refresh the resource until its status is complete to obtain `backup_download_url`, a pre-signed URL valid for one hour.
+
+An export is a server side job that Capella cannot cancel or delete, so its lifecycle differs from most resources. Destroy only removes the export from state.
+
+**The archive expires 12 hours after the export completes.** `status` becomes `expired` and `backup_download_url` becomes null. Both are computed, so `terraform plan` proposes no change when this happens; check `status` or `expiration` directly. To get a new archive, run `terraform apply -replace=RESOURCE_ADDRESS`.
+
+**Replacing fails until then.** Only one active export can exist per backup cycle, so `-replace` and `taint` fail with error 14061 while the export is pending or processing, and 14062 while it is complete and not yet expired.
+
+**The export is re-created about 7 days after it completes.** Capella then drops the export record, so the resource is removed from state and the next `terraform apply` starts a new export. Configurations applied on a schedule or from CI will keep re-exporting, so remove the resource from the configuration once you have the download.
+
+**A failed export stays in state** until you replace it, since Capella keeps failed export records indefinitely.
 
 ## Example Usage
 
@@ -39,7 +54,7 @@ resource "couchbase-capella_bucket_backup_export" "new_bucket_backup_export" {
 - `bucket_name` (String) - The name of the bucket the exported backup belongs to.
 - `created_at` (String) - The RFC3339 timestamp at which the export was requested.
 - `cycle_id` (String) The GUID4 ID of the cycle.
-- `expiration` (String) - The RFC3339 timestamp at which the exported archive is deleted from cloud storage. After this time the backup must be exported again to be downloaded.
+- `expiration` (String) - The RFC3339 timestamp after which Capella stops offering the archive for download. Past it the export is reported as `expired` and the backup must be exported again to be downloaded. The archive itself is removed from cloud storage separately, shortly afterwards.
 - `id` (String) - The ID of the backup export job, returned when the export was created.
 - `sha256_checksum` (String) - The SHA-256 hash of the exported archive, for verifying the integrity of the downloaded file. Present once the export is complete.
 - `size_in_bytes` (Number) - The size of the exported archive in bytes. Present once the export is complete.
