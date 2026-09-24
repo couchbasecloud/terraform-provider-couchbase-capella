@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // Error tracks the error structure received from Capella V4 APIs.
@@ -70,4 +71,23 @@ func CheckResourceNotFoundError(err error) (bool, string) {
 func IsForbiddenError(err error) bool {
 	var apiError *Error
 	return errors.As(err, &apiError) && apiError.HttpStatusCode == http.StatusForbidden
+}
+
+// RetriesExhaustedError is returned when all retry attempts have been exhausted
+// for a retryable error (rate limit, service unavailable, or gateway timeout).
+// It wraps the original sentinel error so callers can still inspect the cause
+// with errors.Is.
+type RetriesExhaustedError struct {
+	Original error
+	Attempts int
+	Elapsed  time.Duration
+}
+
+func (e *RetriesExhaustedError) Error() string {
+	return fmt.Sprintf("request failed after %d attempts over %s: %s",
+		e.Attempts, e.Elapsed.Truncate(time.Millisecond), e.Original.Error())
+}
+
+func (e *RetriesExhaustedError) Unwrap() error {
+	return e.Original
 }
