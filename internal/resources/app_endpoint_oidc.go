@@ -108,7 +108,9 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	initOidcProviderNullsBeforeRefresh(&plan)
+	plan.ProviderId = types.StringValue(created.ProviderID)
+	plan.IsDefault = types.BoolNull()
+	nullifyUnsetOidcProviderFields(&plan)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -216,6 +218,12 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	plan.ProviderId = state.ProviderId
+	plan.IsDefault = state.IsDefault
+	nullifyUnsetOidcProviderFields(&plan)
+	diags = resp.State.Set(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
 	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
 	if err != nil {
 		resp.Diagnostics.AddWarning("Error reading OIDC Provider after update", api.ParseError(err))
@@ -312,11 +320,14 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 
 }
 
-// initOidcProviderNullsBeforeRefresh initializes computed attributes to null
-// prior to the first refresh after create.
-func initOidcProviderNullsBeforeRefresh(plan *providerschema.AppEndpointOidcProvider) {
-	plan.IsDefault = types.BoolNull()
-	plan.ProviderId = types.StringNull()
+// nullifyUnsetOidcProviderFields sets unknown optional values to null, so the plan is a valid state if the refresh
+// after a POST or PUT fails.
+func nullifyUnsetOidcProviderFields(plan *providerschema.AppEndpointOidcProvider) {
+	plan.Register = nullBoolIfUnset(plan.Register)
+	plan.DiscoveryUrl = nullStringIfUnset(plan.DiscoveryUrl)
+	plan.UsernameClaim = nullStringIfUnset(plan.UsernameClaim)
+	plan.RolesClaim = nullStringIfUnset(plan.RolesClaim)
+	plan.UserPrefix = nullStringIfUnset(plan.UserPrefix)
 }
 
 func buildAppEndpointOIDCProviderPayload(plan providerschema.AppEndpointOidcProvider) api.AppEndpointOIDCProviderRequest {

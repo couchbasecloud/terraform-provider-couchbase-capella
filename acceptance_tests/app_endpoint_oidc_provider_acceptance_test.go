@@ -42,6 +42,9 @@ func TestAccAppEndpointOidcProvider(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "user_prefix", "google_"),
 					resource.TestCheckResourceAttr(resourceReference, "username_claim", "email"),
 					resource.TestCheckResourceAttr(resourceReference, "roles_claim", "roles"),
+					resource.TestCheckResourceAttr(
+						resourceReference, "discovery_url", "https://accounts.google.com/.well-known/openid-configuration",
+					),
 				),
 			},
 			{
@@ -144,6 +147,7 @@ resource "couchbase-capella_app_endpoint_oidc_provider" "%[2]s" {
 	user_prefix       = "google_"
 	username_claim    = "email"
 	roles_claim       = "roles"
+	discovery_url     = "https://accounts.google.com/.well-known/openid-configuration"
 }
 `,
 		globalProviderBlock,
