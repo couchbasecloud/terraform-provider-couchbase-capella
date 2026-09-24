@@ -92,17 +92,18 @@ state. The archive expires from cloud storage on its own and Capella drops the e
 An export is a server side job that Capella cannot cancel or delete, so it behaves differently from
 most resources over time.
 
-| Stage                                     | `status`                  | `terraform plan` | `terraform apply -replace` |
-|-------------------------------------------|---------------------------|------------------|----------------------------|
-| Running                                   | `pending` or `processing` | No changes       | Fails with error 14061     |
-| Up to 12 hours after completing           | `complete`                | No changes       | Fails with error 14062     |
-| 12 hours to about 7 days after completing | `expired`                 | No changes       | Starts a new export        |
-| About 7 days after completing             | Removed from state        | `+ create`       | Not applicable             |
+| Stage                                     | `status`                  | `terraform plan` | Replacing the resource |
+|-------------------------------------------|---------------------------|------------------|------------------------|
+| Running                                   | `pending` or `processing` | No changes       | Fails with error 14061 |
+| Up to 12 hours after completing           | `complete`                | No changes       | Fails with error 14062 |
+| 12 hours to about 7 days after completing | `expired`                 | No changes       | Starts a new export    |
+| About 7 days after completing             | Removed from state        | `+ create`       | Not applicable         |
 
 - **The archive expires 12 hours after the export completes.** `status` becomes `expired` and
   `backup_download_url` becomes null. Both are computed attributes, so `terraform plan` proposes no
   change. Check `status` or `expiration` directly rather than relying on the plan. To get a new
-  archive, run `terraform apply -replace` on the resource.
+  archive, run
+  `terraform apply -replace=couchbase-capella_bucket_backup_export.new_bucket_backup_export`.
 - **Replacing fails until the archive expires.** Only one active export can exist per backup
   cycle, so `-replace` and `taint` fail with error 14061 ("already pending or being processed") or
   14062 ("already completed"). Wait for `expiration` to pass and try again.

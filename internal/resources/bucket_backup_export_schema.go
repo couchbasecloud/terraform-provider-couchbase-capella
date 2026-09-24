@@ -34,7 +34,7 @@ func BucketBackupExportSchema() schema.Schema {
 			"Destroy only removes the export from state.\n\n" +
 			"**The archive expires 12 hours after the export completes.** `status` becomes `expired` and `backup_download_url` becomes null. " +
 			"Both are computed, so `terraform plan` proposes no change when this happens; check `status` or `expiration` directly. " +
-			"To get a new archive, run `terraform apply -replace` on this resource.\n\n" +
+			"To get a new archive, run `terraform apply -replace=RESOURCE_ADDRESS`.\n\n" +
 			"**Replacing fails until then.** Only one active export can exist per backup cycle, so `-replace` and `taint` fail with " +
 			"error 14061 while the export is pending or processing, and 14062 while it is complete and not yet expired.\n\n" +
 			"**The export is re-created about 7 days after it completes.** Capella then drops the export record, so the resource is removed " +
