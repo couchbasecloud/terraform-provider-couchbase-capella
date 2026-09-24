@@ -95,7 +95,30 @@ consequences rather than syntax. Three questions carry most of the signal:
 3. **Is `nil` distinguished from empty at every nesting level?** Terraform treats
    an absent list and an empty list as different values, and a mapping helper
    that collapses one into the other produces "Provider produced inconsistent
-   result after apply" - an error that aborts the apply.
+   result after apply" - an error that aborts the apply *and* leaves the resource
+   tainted, so the next apply replaces infrastructure nobody asked it to touch.
+   Models built on plain `[]T` slices are where this lives, because `len(x) == 0`
+   and `append` onto a nil accumulator both erase the distinction while looking
+   like ordinary Go. Do not read for this - sweep for it; the recipe is in
+   `references/schema-change-analysis.md` section 5, and a scratch test against
+   the mapping helper settles it offline in seconds.
+
+Two greps are cheap enough to run on every diff, and both catch defects that
+survive review because the code reads as correct:
+
+```bash
+grep -n "func [a-zA-Z]*Changed(" <changed files>   # does "cleared" count as changed?
+grep -n "diag\.Diagnostics" <changed files>        # is every returned diag appended?
+```
+
+The first finds the hand-rolled predicates that decide what to send in an update.
+Their usual shape, `if plan == nil { return false }`, reads as "nothing to send"
+but means "clearing this field is not a change" - so the request omits it, the
+server keeps the old value, and the read-back contradicts the plan. The second
+finds diagnostics that are silently dropped: a helper returning
+`diag.Diagnostics` whose result is discarded at one call site and appended at
+another is a swallowed error, and the mismatch between the two call sites is the
+proof. Both classes were live in AV-145093.
 
 When the diff touches a schema file, read
 `references/schema-change-analysis.md`. It covers the specific failure modes of

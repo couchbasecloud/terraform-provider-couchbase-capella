@@ -83,7 +83,53 @@ plan, and Terraform aborts with:
 Provider produced inconsistent result after apply
 ```
 
-The bug hides in nested guards. This shape looks careful but drops a level:
+The apply is not merely noisy. The resource is still written to state, and it is
+written **tainted**, so the next `terraform apply` destroys and recreates
+infrastructure the practitioner never asked to touch. Rate this class high
+severity even when the mismatched value itself looks cosmetic, and always say in
+the report whether recovery needs `terraform untaint`.
+
+### Why it keeps happening in this provider
+
+Models in `internal/schema/` come in two styles, and only one is safe by
+construction:
+
+| Model field style | how null and `[]` differ | risk |
+|---|---|---|
+| `types.List` / `types.Set` | distinct values, tested with `IsNull()` | explicit, hard to get wrong |
+| `[]T` plain slice | nil slice versus empty slice | erased by ordinary Go idioms |
+
+With a plain slice the distinction survives only as long as nobody writes
+`len(x) == 0` and nobody lets `append` build the slice up from nil - both of
+which are unremarkable Go that reads as correct. That is why this needs a
+deliberate sweep rather than a careful read: the defect looks like good code.
+
+### The three idioms that erase it
+
+**A `len(...) == 0` guard**, which conflates "absent" with "present but empty":
+
+```go
+if b == nil || (len(b.Buckets) == 0 && len(b.Urls) == 0) {
+    return nil, nil          // configuration said {}, state now says null
+}
+```
+
+**`append` onto a nil accumulator.** When the loop runs zero times the slice is
+still nil, and nil becomes a null list rather than `[]`:
+
+```go
+bindings := &Bindings{}                            // Urls is nil
+for _, u := range b.Urls {                         // zero iterations
+    bindings.Urls = append(bindings.Urls, ...)
+}                                                  // still nil -> null in state
+```
+
+`make([]T, 0, len(src))` is the safe form: zero iterations still yields `[]`.
+Both idioms frequently sit in the same file, which is a useful tell - if one
+helper uses `make` and another builds from nil, the second is probably the bug.
+
+**A nested guard that drops a level.** This shape looks careful but leaves the
+container nil whenever the outer value is present and the inner one is absent:
 
 ```go
 if acc.Resources != nil {
@@ -108,8 +154,75 @@ if acc.Resources.Buckets == nil {
 }
 ```
 
-Check the request-building helper too. The two directions usually have mirrored
-gaps, and fixing only the state side leaves the API receiving nothing.
+### Sweep for it mechanically
+
+The first two idioms are greppable, so sweep the changed files instead of hoping
+to notice them. This lists every `append` accumulator in the diff and reports the
+ones that were never `make`-initialised:
+
+```bash
+for f in $(git diff --cached main --name-only -- '*.go' | grep -v openapi.gen.go); do
+  grep -oE '[A-Za-z_][A-Za-z0-9_.]*[[:space:]]*=[[:space:]]*append\(' "$f" |
+    sed -E 's/[[:space:]]*=[[:space:]]*append\(//' | sort -u |
+  while read -r v; do
+    grep -qE "(^|[^A-Za-z0-9_])${v##*.}[[:space:]]*:?=[[:space:]]*make\(" "$f" ||
+      echo "$f: $v is nil when the loop does not run"
+  done
+done
+```
+
+Then, over the same file list, `grep -n 'len(.*) == 0'` and `grep -n '!= nil'`
+inside the mapping helpers.
+
+A hit is a question, not a finding. It only matters when the attribute is one a
+practitioner can legitimately write as `[]` or `{}` - a `Required` attribute with
+`SizeAtLeast(1)` cannot reach the empty case, and an accumulator that feeds an
+API request rather than state has no plan to be inconsistent with. Check the
+schema declaration before you write anything down.
+
+### Prove it offline, in seconds
+
+These are ordinary Go functions, so you never need a cluster or an hour-long
+acceptance run to settle whether the collapse is real. Call the helper directly
+from a scratch test in its own package - unexported helpers are reachable there -
+and print what comes back for the empty case:
+
+```go
+got, err := bindingsToSchema(&eventingapi.Bindings{
+    Buckets: []eventingapi.BucketBinding{{Alias: "src", Bucket: "travel"}},
+})
+t.Logf("Urls nil=%t Constants nil=%t", got.Urls == nil, got.Constants == nil)
+```
+
+Anything that prints `nil=true` for an attribute the configuration set to `[]` is
+a confirmed inconsistent-result bug, and you can say so in the ticket without
+hedging. Delete the scratch file afterwards and prove you did:
+
+```bash
+git status --short
+```
+
+This is real: AV-145093 is exactly the above. `bindingsToSchema`
+(`internal/schema/eventing_function.go:396`) returns `nil` when all three binding
+lists are empty, and builds `Buckets`, `Urls` and `Constants` by appending onto
+nil - so `bindings.urls = []` applies, errors, and taints the function, while
+`newEventingFunctionBindingsObject` in the same file uses `make` and is correct.
+
+### Check the mirrored directions
+
+Fixing only the state side leaves two matching gaps, and both were live in
+AV-145093. Look at all three directions before calling the class closed:
+
+- **The request builder.** If state-mapping drops empty collections, the helper
+  building the API payload usually drops them too, so the server never learns the
+  practitioner cleared the field.
+- **Change-detection helpers.** This provider hand-rolls `<thing>Changed()`
+  predicates to decide what to PUT, and the usual shape is `if plan == nil {
+  return false }`. That reads as "nothing to send" but means "clearing is not a
+  change": the PUT omits the field, the server keeps the old value, and the
+  read-back contradicts the plan. `eventingBindingsChanged`
+  (`internal/resources/eventing_function.go:248`) does this. Grep the diff for
+  `func [a-zA-Z]*Changed(` and test each predicate against a cleared plan.
 
 ## 6. Ordering: what a Set/List change actually does
 

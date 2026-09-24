@@ -126,6 +126,40 @@ An update step that checks only the field that changed will not notice that
 updating field A silently reset field B. Assert the whole shape after each
 update; this is where mapping helpers with mirrored gaps get caught.
 
+## The empty collection is the standard blind spot
+
+Acceptance configurations are written to demonstrate a feature, so every optional
+list in them is populated. That leaves the two configurations most likely to
+break entirely unexercised: the attribute set to `[]`, and the attribute set and
+then removed. Both are shapes a practitioner reaches naturally - commenting out
+the contents of a block, or clearing a field they no longer want - and both are
+where nil-versus-empty mapping bugs surface as
+`Provider produced inconsistent result after apply`.
+
+So when the change touches a resource with optional nested collections, check
+whether any existing step sets one to `[]`. Usually none does. The fix is cheap:
+it is an extra step on an existing test, not a new test.
+
+```go
+{
+    // AV-145093: empty list must round-trip as [] and not collapse to null
+    Config: testAccConfigWithEmptyBindings(...),
+    Check: resource.ComposeAggregateTestCheckFunc(
+        resource.TestCheckResourceAttr(name, "bindings.urls.#", "0"),
+        resource.TestCheckResourceAttr(name, "bindings.constants.#", "0"),
+    ),
+},
+```
+
+Assert `<attr>.#` is `"0"`, not that the attribute is absent - those are the two
+states being confused, so an assertion that accepts either proves nothing. Follow
+it with a step that clears the whole block while the server still holds values,
+which is what catches a `Changed()` predicate treating "cleared" as "unchanged".
+
+Note that a plain `terraform plan` will not show you this class either: the
+inconsistency appears at apply, when the provider's returned state is compared
+against the plan. It needs a real apply step.
+
 ## Writing the tests
 
 Use the `tf-acceptance-test-gen` skill so structure, naming and helper usage match
