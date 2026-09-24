@@ -54,7 +54,7 @@ resource "couchbase-capella_bucket_backup_export" "new_bucket_backup_export" {
 - `bucket_name` (String) - The name of the bucket the exported backup belongs to.
 - `created_at` (String) - The RFC3339 timestamp at which the export was requested.
 - `cycle_id` (String) The GUID4 ID of the cycle.
-- `expiration` (String) - The RFC3339 timestamp at which the exported archive is deleted from cloud storage. After this time the backup must be exported again to be downloaded.
+- `expiration` (String) - The RFC3339 timestamp after which Capella stops offering the archive for download. Past it the export is reported as `expired` and the backup must be exported again to be downloaded. The archive itself is removed from cloud storage separately, shortly afterwards.
 - `id` (String) - The ID of the backup export job, returned when the export was created.
 - `sha256_checksum` (String) - The SHA-256 hash of the exported archive, for verifying the integrity of the downloaded file. Present once the export is complete.
 - `size_in_bytes` (Number) - The size of the exported archive in bytes. Present once the export is complete.

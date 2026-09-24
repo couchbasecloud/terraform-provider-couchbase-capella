@@ -205,7 +205,8 @@ func (b *BucketBackupExport) Update(_ context.Context, _ resource.UpdateRequest,
 }
 
 // Delete is intentionally a no-op. There is no endpoint to cancel or delete an export; the archive
-// expires from cloud storage on its own and Capella drops the export record after about 7 days.
+// is removed from cloud storage on its own and Capella drops the export record about 7 days after
+// the export completes.
 //
 // The framework will automatically update the state file. See:
 // https://developer.hashicorp.com/terraform/plugin/framework/resources/delete#recommendations

@@ -50,7 +50,7 @@ type GetBucketBackupExportResponse struct {
 	// Sha256Checksum is the SHA-256 hash of the exported archive.
 	Sha256Checksum *string `json:"sha256Checksum,omitempty"`
 
-	// Expiration is the time at which the exported archive is deleted from cloud storage.
+	// Expiration is the time after which the archive is no longer offered for download.
 	Expiration *time.Time `json:"expiration,omitempty"`
 
 	// BackupDownloadURL is a pre-signed URL to download the exported archive. Capella generates a
