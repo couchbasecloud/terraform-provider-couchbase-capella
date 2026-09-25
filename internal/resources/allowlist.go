@@ -85,6 +85,11 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		return
 	}
 
+	// Lock for this cluster to ensure only one allowlist operation at a time
+	clusterId := plan.ClusterId.ValueString()
+	r.AllowlistMutex.Lock(clusterId)
+	defer r.AllowlistMutex.Unlock(clusterId)
+
 	allowListRequest := api.CreateAllowListRequest{
 		Cidr:      plan.Cidr.ValueString(),
 		Comment:   plan.Comment.ValueString(),
@@ -246,6 +251,10 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		clusterId      = IDs[providerschema.ClusterId]
 		allowListId    = IDs[providerschema.Id]
 	)
+
+	// Lock for this cluster to ensure only one allowlist operation at a time
+	r.AllowlistMutex.Lock(clusterId)
+	defer r.AllowlistMutex.Unlock(clusterId)
 	// Execute request to delete existing allowlist
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
