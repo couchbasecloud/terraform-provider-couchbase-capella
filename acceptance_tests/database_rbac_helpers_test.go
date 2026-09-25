@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"slices"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -174,4 +177,118 @@ func testAccCheckResourceIDChanged(resourceReference string, previous *string) r
 		}
 		return nil
 	}
+}
+
+// accessShape is an order-insensitive description of one database role access entry.
+//
+// access and its nested buckets, scopes and collections are Lists, so Terraform
+// compares them positionally. The V4 API does not echo back the order it was sent,
+// and reconcileAccess can only realign the response against prior state. Import has
+// no prior state, so an imported role's entries arrive in whatever order the API
+// chose and a blanket ImportStateVerify fails on any role with more than one entry -
+// not because anything was lost, but because entry 0 is no longer the same entry.
+// Tests describe the grants they expect with accessShape instead and compare them as
+// an unordered collection. See AV-143880.
+//
+// The shape covers what these tests configure: at most one bucket per entry and at
+// most one scope per bucket. Granting several buckets in a single entry needs a
+// richer comparison than this.
+type accessShape struct {
+	// privileges is compared as a set, matching the schema attribute.
+	privileges []string
+
+	// bucket is empty for an entry with no resources block.
+	bucket string
+
+	// scope is empty when the grant stops at bucket level.
+	scope string
+
+	// collections is nil when the grant stops at scope level.
+	collections []string
+}
+
+// key renders the shape so that two shapes describing the same grant compare equal
+// whatever order their privileges and collections happen to be stored in.
+func (s accessShape) key() string {
+	return strings.Join([]string{
+		strings.Join(sortedCopy(s.privileges), ","),
+		s.bucket,
+		s.scope,
+		strings.Join(sortedCopy(s.collections), ","),
+	}, "|")
+}
+
+func sortedCopy(values []string) []string {
+	sorted := append([]string(nil), values...)
+	sort.Strings(sorted)
+	return sorted
+}
+
+func accessShapeKeys(shapes []accessShape) []string {
+	keys := make([]string, len(shapes))
+	for i, shape := range shapes {
+		keys[i] = shape.key()
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// checkImportedAccess asserts the imported access list holds exactly the wanted
+// grants, ignoring the order the API returned them in. Pair it with
+// ImportStateVerifyIgnore on "access" so every attribute outside the access list is
+// still compared attribute by attribute.
+func checkImportedAccess(want ...accessShape) resource.ImportStateCheckFunc {
+	return func(states []*terraform.InstanceState) error {
+		if len(states) != 1 {
+			return fmt.Errorf("expected 1 imported state, got %d", len(states))
+		}
+		got, err := parseAccessShapes(states[0].Attributes)
+		if err != nil {
+			return err
+		}
+		gotKeys, wantKeys := accessShapeKeys(got), accessShapeKeys(want)
+		if !slices.Equal(gotKeys, wantKeys) {
+			return fmt.Errorf(
+				"imported access entries (order ignored) = %v, want %v",
+				gotKeys, wantKeys,
+			)
+		}
+		return nil
+	}
+}
+
+// parseAccessShapes reads a database role's access list out of the flat attribute map
+// Terraform keeps instance state in.
+func parseAccessShapes(attrs map[string]string) ([]accessShape, error) {
+	count, err := strconv.Atoi(attrs["access.#"])
+	if err != nil {
+		return nil, fmt.Errorf("access.# is %q, want a count: %w", attrs["access.#"], err)
+	}
+	shapes := make([]accessShape, count)
+	for i := range shapes {
+		bucket := fmt.Sprintf("access.%d.resources.buckets.0.", i)
+		scope := bucket + "scopes.0."
+		shapes[i] = accessShape{
+			privileges:  elementsOf(attrs, fmt.Sprintf("access.%d.privileges", i)),
+			bucket:      attrs[bucket+"name"],
+			scope:       attrs[scope+"name"],
+			collections: elementsOf(attrs, scope+"collections"),
+		}
+	}
+	return shapes, nil
+}
+
+// elementsOf collects the elements of a flat list or set attribute. A missing count
+// means the attribute is absent from state, which is reported as nil rather than as
+// an error so callers can distinguish an omitted block from an empty one.
+func elementsOf(attrs map[string]string, key string) []string {
+	count, err := strconv.Atoi(attrs[key+".#"])
+	if err != nil || count == 0 {
+		return nil
+	}
+	elements := make([]string, count)
+	for i := range elements {
+		elements[i] = attrs[fmt.Sprintf("%s.%d", key, i)]
+	}
+	return elements
 }
