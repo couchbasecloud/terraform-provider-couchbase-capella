@@ -624,11 +624,7 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 	})
 }
 
-// ── U3: cors.disabled false → true (AV-128229) ───────────────────────────────
-// The API rejects disabling CORS while origin, login_origin or max_age still carry
-// values, and accepts but discards headers, so the provider rejects every one of those
-// combinations at plan time. Dropping the other attributes — or setting the lists to []
-// — must then disable CORS without carrying the previous max_age into the request.
+// ── U3: cors.disabled false → true 
 func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 	ensureFixtureCollection(t, globalCorsDisableToggleEPCollectionName)
 
@@ -688,7 +684,7 @@ func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
-			// Phase 3 (AV-145137): explicitly empty lists are a distinct state from omitted
+			// Phase 3: explicitly empty lists are a distinct state from omitted
 			// ones, so they must round-trip as empty sets rather than collapsing to null.
 			{
 				Config: testAccAppEndpointCorsDisabledTrueEmptyListsResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),

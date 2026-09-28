@@ -534,10 +534,7 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 }
 
 // preserveDisabledCorsAttributes keeps the cors list attributes in state exactly as configured
-// while CORS is disabled. A disabled App Endpoint is reported back as {"disabled": true,
-// "origin": []}, so a refresh alone would collapse both an omitted list and an explicitly empty
-// one to null; origin, login_origin and headers are Optional without Computed, so Terraform
-// rejects that as an inconsistent result (AV-145137).
+// while CORS is disabled.
 func preserveDisabledCorsAttributes(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
 	if config.Cors == nil || state.Cors == nil {
 		return
