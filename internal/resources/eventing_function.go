@@ -144,10 +144,14 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 }
 
 // setEventingFunctionComputedAttributesToNull sets the computed attributes on the plan to null. It is
-// used when setting state after create if the post-create read fails, so the resulting state holds no
+// used when setting state after create or update if the read-back fails, so the resulting state holds no
 // unknown values.
 func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if plan.Code.IsUnknown() {
+		plan.Code = types.StringNull()
+	}
 
 	setComputedAttributesInKeyspaceToNull(plan.EventSource)
 	setComputedAttributesInKeyspaceToNull(plan.EventMetadataStorage)
@@ -244,14 +248,14 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 }
 
 // eventingBindingsChanged determines if any of the bindings have changed,
-// except for secrets (password or bearer token).
+// except for secrets (password or bearer token). Null and empty bindings are equal.
 func eventingBindingsChanged(ctx context.Context, plan, state *providerschema.EventingFunctionBindingsResource) (bool, error) {
 	if plan == nil {
-		return false, nil
+		plan = &providerschema.EventingFunctionBindingsResource{}
 	}
 
 	if state == nil {
-		return true, nil
+		state = &providerschema.EventingFunctionBindingsResource{}
 	}
 
 	if len(plan.Buckets) != len(state.Buckets) ||
@@ -489,58 +493,57 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		}
 	}
 
-	// if only eventing function state was changed skip update step.
-	if plan.State.ValueString() == eventingStateDeployed ||
-		plan.State.ValueString() == eventingStateResumed ||
-		!eventingFunctionHasChanged {
-		return
-	}
-
-	updateBindings, err := bindingsToAPI(ctx, plan.Bindings)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating eventing function",
-			"Could not convert eventing function bindings: "+err.Error(),
-		)
-		return
-	}
-
-	updateReq := eventingapi.UpdateEventingFunctionRequest{
-		// ValueStringPointer not used for description as null is a valid value to clear the description
-		Description:          ptr.To(plan.Description.ValueString()),
-		Code:                 plan.Code.ValueStringPointer(),
-		EventSource:          keyspaceToAPIPtr(plan.EventSource),
-		EventMetadataStorage: keyspaceToAPIPtr(plan.EventMetadataStorage),
-		Settings:             settingsToAPI(plannedSettings),
-		Bindings:             updateBindings,
-	}
-
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions/%s", e.HostURL, organizationId, projectId, clusterId, name)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = e.ClientV1.ExecuteWithRetry(ctx, cfg, updateReq, e.Token, nil)
-	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
+	if eventingFunctionHasChanged {
+		updateBindings, err := bindingsToAPI(ctx, plan.Bindings)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating eventing function",
+				"Could not convert eventing function bindings: "+err.Error(),
+			)
 			return
 		}
-		resp.Diagnostics.AddError(
-			"Error updating eventing function",
-			"Could not update eventing function "+name+": "+errString,
-		)
-		return
+
+		updateReq := eventingapi.UpdateEventingFunctionRequest{
+			// ValueStringPointer not used for description as null is a valid value to clear the description
+			Description:          ptr.To(plan.Description.ValueString()),
+			Code:                 plan.Code.ValueStringPointer(),
+			EventSource:          keyspaceToAPIPtr(plan.EventSource),
+			EventMetadataStorage: keyspaceToAPIPtr(plan.EventMetadataStorage),
+			Settings:             settingsToAPI(plannedSettings),
+			Bindings:             updateBindings,
+		}
+
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions/%s", e.HostURL, organizationId, projectId, clusterId, name)
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+		_, err = e.ClientV1.ExecuteWithRetry(ctx, cfg, updateReq, e.Token, nil)
+		if err != nil {
+			resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+			if resourceNotFound {
+				tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(
+				"Error updating eventing function",
+				"Could not update eventing function "+name+": "+errString,
+			)
+			return
+		}
 	}
 
+	// Read the function back even when no update was sent
 	refreshedState, err := e.retrieveEventingFunction(ctx, organizationId, projectId, clusterId, name, &plan)
 	if err != nil {
-		// The function was created, so do not error out and orphan it; fall back to the plan.
+		// The update was applied, so do not error out; fall back to the plan.
 		resp.Diagnostics.AddWarning(
-			"Error reading eventing function after create",
-			"Eventing function was created but could not be read back: "+api.ParseError(err),
+			"Error reading eventing function after update",
+			"Eventing function was updated but could not be read back: "+api.ParseError(err),
 		)
 
-		setEventingFunctionComputedAttributesToNull(ctx, &plan)
+		resp.Diagnostics.Append(setEventingFunctionComputedAttributesToNull(ctx, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		refreshedState = &plan
 	}
@@ -782,10 +785,14 @@ func settingsToAPI(s *providerschema.EventingFunctionSettings) *eventingapi.Sett
 
 func bindingsToAPI(ctx context.Context, b *providerschema.EventingFunctionBindingsResource) (*eventingapi.Bindings, error) {
 	if b == nil {
-		return nil, nil
+		b = &providerschema.EventingFunctionBindingsResource{}
 	}
 
-	bindings := &eventingapi.Bindings{}
+	bindings := &eventingapi.Bindings{
+		Buckets:   make([]eventingapi.BucketBinding, 0, len(b.Buckets)),
+		Urls:      make([]eventingapi.UrlBinding, 0, len(b.Urls)),
+		Constants: make([]eventingapi.ConstantBinding, 0, len(b.Constants)),
+	}
 
 	for _, bucket := range b.Buckets {
 		bindings.Buckets = append(bindings.Buckets, eventingapi.BucketBinding{

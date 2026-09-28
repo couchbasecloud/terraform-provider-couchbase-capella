@@ -15,6 +15,7 @@ var (
 		"project_id":        ProjectId,
 		"cluster_id":        ClusterId,
 		"bucket_id":         BucketId,
+		"backup_id":         BackupId,
 		"id":                Id,
 		"bucket_name":       BucketName,
 		"scope_name":        ScopeName,

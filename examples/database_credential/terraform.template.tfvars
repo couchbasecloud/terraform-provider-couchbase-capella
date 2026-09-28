@@ -8,6 +8,13 @@ database_credential = {
   password                 = "Secret12$#"
 }
 
+advanced_database_credential = {
+  database_credential_name = "test_advanced_db_user"
+  password                 = "Secret12$#"
+}
+
+user_roles = ["developer", "bucket_admin"]
+
 access = [
   {
     privileges = ["data_writer"]

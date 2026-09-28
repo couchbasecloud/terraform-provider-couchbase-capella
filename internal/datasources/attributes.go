@@ -96,6 +96,59 @@ func computedStringSet() *schema.SetAttribute {
 	}
 }
 
+func computedStringList() *schema.ListAttribute {
+	return &schema.ListAttribute{
+		ElementType: types.StringType,
+		Computed:    true,
+	}
+}
+
+// computedResourcesAttribute builds the resources schema block (buckets.scopes.collections)
+// using List types, matching the corresponding resource schemas. This is reused by both access
+// and privilege schemas.
+func computedResourcesAttribute(builder *capellaschema.SchemaBuilder) *schema.SingleNestedAttribute {
+	scopeAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(scopeAttrs, "name", builder, computedString())
+	capellaschema.AddAttr(scopeAttrs, "collections", builder, computedStringList())
+
+	bucketAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(bucketAttrs, "name", builder, computedString())
+	capellaschema.AddAttr(bucketAttrs, "scopes", builder, &schema.ListNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: scopeAttrs,
+		},
+	})
+
+	resourcesAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(resourcesAttrs, "buckets", builder, &schema.ListNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: bucketAttrs,
+		},
+	})
+
+	return &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: resourcesAttrs,
+	}
+}
+
+// computedAccessAttribute builds the access schema block (privileges, resources.buckets.scopes.collections)
+// using List types, so consumers can index entries as data[n].access[n].privileges[n].
+func computedAccessAttribute(builder *capellaschema.SchemaBuilder) *schema.ListNestedAttribute {
+	accessAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(accessAttrs, "privileges", builder, computedStringList())
+	capellaschema.AddAttr(accessAttrs, "resources", builder, computedResourcesAttribute(builder))
+
+	return &schema.ListNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: accessAttrs,
+		},
+	}
+}
+
 func computedAudit() *schema.SingleNestedAttribute {
 	tempBuilder := capellaschema.NewSchemaBuilder("audit")
 	auditAttrs := make(map[string]schema.Attribute)

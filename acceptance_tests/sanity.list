@@ -118,6 +118,10 @@ TestAccDatabaseCredentialWithOptionalFields
 # Tests listing database credentials via data source
 TestAccDatasourceDatabaseCredentials
 
+# Tests that credential configs still reach a plan, guarding the schema attribute
+# types against drifting from what the provider reads back (AV-139978)
+TestAccDatabaseCredentialPlanOnly
+
 # ----------------------------------------
 # 8. SECURITY & NETWORKING
 # ----------------------------------------
@@ -163,6 +167,11 @@ TestAccAppServiceLogStreaming
 # ----------------------------------------
 # Tests app endpoint creation (includes resync and logging config steps)
 TestAccAppEndpoint
+
+# Tests oidc round trip for both, an absent oidc block must stay null,
+# and an explicitly empty list must stay empty.
+TestAccAppEndpointNoOIDC
+TestAccAppEndpointEmptyOIDCList
 
 # Tests app endpoint activation status management
 TestAccAppEndpointActivationStatus
@@ -231,6 +240,12 @@ TestAccBackupResource
 
 # Tests backup schedule configuration
 TestAccBackupScheduleResource
+
+# Tests exporting a bucket backup to a downloadable archive
+TestAccBucketBackupExportResource
+
+# Tests reading a bucket backup export via data source
+TestAccDatasourceBucketBackupExport
 
 # Tests snapshot backup creation
 TestAccSnapshotBackupResource
