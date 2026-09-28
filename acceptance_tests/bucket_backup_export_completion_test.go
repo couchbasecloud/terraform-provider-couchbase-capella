@@ -29,6 +29,11 @@ import (
 // are kept out of sanity.list. Both export a bucket that was created empty moments earlier,
 // so the archive itself is small.
 
+// archiveDownloadTimeout bounds the archive fetch. These tests export a bucket created empty
+// moments earlier, so the archive is small and this is generous; it exists to fail the step
+// rather than the suite if the pre-signed URL stalls.
+const archiveDownloadTimeout = 5 * time.Minute
+
 // Statuses the export job reports. Only "complete" publishes an archive.
 const (
 	bucketBackupExportStatusComplete = "complete"
@@ -278,7 +283,14 @@ func testAccDownloadBucketBackupExportArchive(resourceReference string) resource
 		}
 
 		// The URL is pre-signed, so it is fetched without the Capella auth header.
-		resp, err := http.Get(downloadURL) // #nosec G107 -- the URL is minted by the Capella API
+		//
+		// It also gets its own client rather than http.DefaultClient, which has no timeout at
+		// all: a pre-signed URL that accepts the connection and then stalls would otherwise
+		// hang here until the whole `go test -timeout` elapsed, reporting a suite-wide timeout
+		// instead of failing this step. Client.Timeout covers reading the body too, which is
+		// where a stall would actually happen.
+		client := &http.Client{Timeout: archiveDownloadTimeout}
+		resp, err := client.Get(downloadURL) // #nosec G107 -- the URL is minted by the Capella API
 		if err != nil {
 			return fmt.Errorf("downloading export archive for %s: %w", resourceReference, err)
 		}

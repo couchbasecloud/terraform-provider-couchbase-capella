@@ -108,8 +108,12 @@ func TestAccBucketBackupExportResource(t *testing.T) {
 // leaves the working directory holding a configuration whose IDs are real, so the test case's
 // own destroy runs against the fixtures it created.
 //
-// PlanOnly steps skip the pre-apply plan entirely, so ConfigPlanChecks.PreApply would never
-// run here - the checks have to hang off PostApplyPostRefresh.
+// The checks hang off PostApplyPostRefresh, not PreApply, and that is deliberate.
+// terraform-plugin-testing guards the entire pre-apply block behind `if !step.PlanOnly`
+// (helper/resource/testing_new_config.go, L101-L244 in v1.13.0) and the PreApply checks sit
+// inside it at L138, so on a PlanOnly step they never run. PostApplyPreRefresh (L293) and
+// PostApplyPostRefresh (L366) are outside that guard and do run. Moving these assertions to
+// PreApply would leave a test that compiles, passes, and checks nothing.
 func bucketBackupExportRequiresReplaceSteps(bucketName, backupName, exportName, resourceReference string) []resource.TestStep {
 	defaults := defaultBucketBackupExportInputs(bucketName, backupName)
 
