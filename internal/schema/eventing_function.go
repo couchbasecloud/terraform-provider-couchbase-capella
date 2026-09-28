@@ -336,9 +336,8 @@ func NewEventingFunctionResource(
 		return nil, err
 	}
 
-	// handle binding is empty object
-	if bindings == nil && prior != nil && prior.Bindings != nil {
-		bindings = &EventingFunctionBindingsResource{}
+	if prior != nil {
+		bindings = preserveEmptyBindings(bindings, prior.Bindings)
 	}
 
 	fn := &EventingFunctionResource{
@@ -443,6 +442,34 @@ func bindingsToSchema(b *eventingapi.Bindings) (*EventingFunctionBindingsResourc
 	}
 
 	return bindings, nil
+}
+
+// preserveEmptyBindings keeps the prior form, null or empty, of the bindings and of each binding list that has
+// no entries. The API returns the same response for both forms, so without this the state does not match the plan.
+func preserveEmptyBindings(refreshed, prior *EventingFunctionBindingsResource) *EventingFunctionBindingsResource {
+	if prior == nil {
+		return refreshed
+	}
+
+	if refreshed == nil {
+		refreshed = &EventingFunctionBindingsResource{}
+	}
+
+	refreshed.Buckets = preserveEmptyList(refreshed.Buckets, prior.Buckets)
+	refreshed.Urls = preserveEmptyList(refreshed.Urls, prior.Urls)
+	refreshed.Constants = preserveEmptyList(refreshed.Constants, prior.Constants)
+
+	return refreshed
+}
+
+// preserveEmptyList returns prior when neither list has entries. terraform-plugin-framework sets a nil slice
+// as a null list and a non-nil empty slice as an empty list.
+func preserveEmptyList[T any](refreshed, prior []T) []T {
+	if len(refreshed) > 0 || len(prior) > 0 {
+		return refreshed
+	}
+
+	return prior
 }
 
 // carryForwardURLSecrets copies sensitive URL binding authentication values (password,

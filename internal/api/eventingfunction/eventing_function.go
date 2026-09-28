@@ -103,16 +103,17 @@ type ConstantBinding struct {
 	Value string `json:"value"`
 }
 
-// Bindings groups the bucket, URL and constant bindings of an eventing function.
+// Bindings groups the bucket, URL and constant bindings of an eventing function. The lists are sent even when
+// empty, because an update keeps a list that is omitted and clears a list that is empty.
 type Bindings struct {
 	// Buckets are the bucket bindings.
-	Buckets []BucketBinding `json:"buckets,omitempty"`
+	Buckets []BucketBinding `json:"buckets"`
 
 	// Urls are the URL bindings.
-	Urls []UrlBinding `json:"urls,omitempty"`
+	Urls []UrlBinding `json:"urls"`
 
 	// Constants are the constant bindings.
-	Constants []ConstantBinding `json:"constants,omitempty"`
+	Constants []ConstantBinding `json:"constants"`
 }
 
 // CreateEventingFunctionRequest is the payload for creating an eventing function.
