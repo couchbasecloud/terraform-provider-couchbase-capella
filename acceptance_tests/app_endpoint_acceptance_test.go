@@ -603,6 +603,7 @@ func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
 // Once cors is set, the API rejects any PUT that omits the cors body entirely.
 // cors is effectively write-once via Terraform.
 func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
+	t.Skip("AV-128228: removing the cors block after it is set should succeed once the bug is fixed")
 	ensureFixtureCollection(t, globalRemoveCorsEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
@@ -623,7 +624,11 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 	})
 }
 
-
+// ── U3: cors.disabled false → true (AV-128229) ───────────────────────────────
+// The API rejects disabling CORS while origin, login_origin or max_age still carry
+// values, and accepts but discards headers, so the provider rejects every one of those
+// combinations at plan time. Dropping the other attributes — or setting the lists to []
+// — must then disable CORS without carrying the previous max_age into the request.
 func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 	ensureFixtureCollection(t, globalCorsDisableToggleEPCollectionName)
 
@@ -646,11 +651,23 @@ func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
 				),
 			},
-			// Disabling CORS while origin is still set must fail provider validation rather than
-			// reaching the API and returning a 409.
+			// Disabling CORS while any other cors attribute still carries a value must fail
+			// provider validation, naming that attribute, rather than reaching the API.
 			{
-				Config:      testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
-				ExpectError: re.MustCompile(`(?s).*cors\.origin.*when cors\.disabled is true.*`),
+				Config:      testAccAppEndpointCorsDisabledTrueConflictResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName, `origin = ["*"]`),
+				ExpectError: re.MustCompile(`(?s)Invalid Attribute Combination.*cors\.origin`),
+			},
+			{
+				Config:      testAccAppEndpointCorsDisabledTrueConflictResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName, `login_origin = ["*"]`),
+				ExpectError: re.MustCompile(`(?s)Invalid Attribute Combination.*cors\.login_origin`),
+			},
+			{
+				Config:      testAccAppEndpointCorsDisabledTrueConflictResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName, `headers = ["Authorization"]`),
+				ExpectError: re.MustCompile(`(?s)Invalid Attribute Combination.*cors\.headers`),
+			},
+			{
+				Config:      testAccAppEndpointCorsDisabledTrueConflictResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName, `max_age = 3600`),
+				ExpectError: re.MustCompile(`(?s)Invalid Attribute Combination.*cors\.max_age`),
 			},
 			// Phase 2: dropping the other CORS attributes disables CORS, and the max_age from
 			// phase 1 is not carried into the update.
@@ -668,6 +685,24 @@ func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 			// Re-apply the disabled config; expect no changes (no perpetual drift).
 			{
 				Config:             testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			// Phase 3 (AV-145137): explicitly empty lists are a distinct state from omitted
+			// ones, so they must round-trip as empty sets rather than collapsing to null.
+			{
+				Config: testAccAppEndpointCorsDisabledTrueEmptyListsResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "true"),
+					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "0"),
+					resource.TestCheckResourceAttr(resourceReference, "cors.origin.#", "0"),
+					resource.TestCheckResourceAttr(resourceReference, "cors.login_origin.#", "0"),
+					resource.TestCheckResourceAttr(resourceReference, "cors.headers.#", "0"),
+				),
+			},
+			{
+				Config:             testAccAppEndpointCorsDisabledTrueEmptyListsResourceConfig(resourceName, epName, globalCorsDisableToggleEPCollectionName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -935,7 +970,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 }
 
 // testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig creates an endpoint with
-// cors { disabled=true } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
+// cors { disabled=true } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin,
+// TestAccAppEndpointUpdateCorsDisableToggle (U3 phase 2).
 func testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -1104,7 +1140,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 
 // testAccAppEndpointCorsAllFieldsResourceConfig creates an endpoint with all
 // cors fields set. Used by: TestAccAppEndpointCorsFullConfig (S6),
-// TestAccAppEndpointUpdateCorsExpand (U1 phase 2), TestAccAppEndpointUpdateRemoveCors (U2 phase 1, skipped).
+// TestAccAppEndpointUpdateCorsExpand (U1 phase 2), TestAccAppEndpointUpdateRemoveCors (U2 phase 1, skipped),
+// TestAccAppEndpointUpdateCorsDisableToggle (U3 phase 1).
 func testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -1324,7 +1361,10 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	)
 }
 
-func testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, endpointName, collectionName string) string {
+// testAccAppEndpointCorsDisabledTrueConflictResourceConfig creates an endpoint with
+// cors.disabled=true plus conflictingAttribute, an HCL assignment inserted verbatim into the
+// cors block. Used by: TestAccAppEndpointUpdateCorsDisableToggle (U3 validation steps).
+func testAccAppEndpointCorsDisabledTrueConflictResourceConfig(resourceName, endpointName, collectionName, conflictingAttribute string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1338,7 +1378,50 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 
 	cors = {
 		disabled = true
-		origin   = ["*"]
+		%[9]s
+	}
+
+	scopes = {
+		"_default" = {
+			collections = {
+				"%[7]s" = {}
+			}
+		}
+	}
+}
+`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		collectionName,
+		endpointName,
+		conflictingAttribute,
+	)
+}
+
+// testAccAppEndpointCorsDisabledTrueEmptyListsResourceConfig creates an endpoint with
+// cors.disabled=true and all three cors lists explicitly set to []. Used by:
+// TestAccAppEndpointUpdateCorsDisableToggle (U3 phase 3).
+func testAccAppEndpointCorsDisabledTrueEmptyListsResourceConfig(resourceName, endpointName, collectionName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_endpoint" "%[2]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[6]s"
+	bucket          = "`+appEndpointBucketName+`"
+	name            = "%[8]s"
+
+	cors = {
+		disabled     = true
+		origin       = []
+		login_origin = []
+		headers      = []
 	}
 
 	scopes = {

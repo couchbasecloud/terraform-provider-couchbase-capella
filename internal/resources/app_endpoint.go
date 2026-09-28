@@ -92,17 +92,28 @@ func (a *AppEndpoint) ValidateConfig(ctx context.Context, req resource.ValidateC
 	}
 }
 
+// validateDisabledCors rejects a cors block that disables CORS while another cors attribute
+// still carries a value. The API refuses the two kinds of attribute differently, so each
+// carries its own reason: origin, login_origin and max_age are rejected outright, while
+// headers is accepted and discarded, which would surface later as drift.
 func validateDisabledCors(cors *providerschema.AppEndpointCors, resp *resource.ValidateConfigResponse) {
-	const conflictDetail = "Expected cors.%s to be %s when cors.disabled is true. " +
-		"The App Endpoint API discards the CORS configuration when CORS is disabled and rejects a request that still specifies one."
+	const (
+		conflictDetail = "Expected cors.%s to be %s when cors.disabled is true. %s"
+
+		rejectedByAPI = "The App Endpoint API rejects a request that disables CORS while this attribute is set."
+
+		discardedByAPI = "The App Endpoint API accepts this attribute when CORS is disabled but discards it, " +
+			"leaving the configuration permanently out of sync with the App Endpoint."
+	)
 
 	for _, attribute := range []struct {
-		name  string
-		value types.Set
+		name   string
+		value  types.Set
+		reason string
 	}{
-		{"origin", cors.Origin},
-		{"login_origin", cors.LoginOrigin},
-		{"headers", cors.Headers},
+		{"origin", cors.Origin, rejectedByAPI},
+		{"login_origin", cors.LoginOrigin, rejectedByAPI},
+		{"headers", cors.Headers, discardedByAPI},
 	} {
 		if attribute.value.IsNull() || attribute.value.IsUnknown() || len(attribute.value.Elements()) == 0 {
 			continue
@@ -111,7 +122,7 @@ func validateDisabledCors(cors *providerschema.AppEndpointCors, resp *resource.V
 		resp.Diagnostics.AddAttributeError(
 			path.Root("cors").AtName(attribute.name),
 			"Invalid Attribute Combination",
-			fmt.Sprintf(conflictDetail, attribute.name, "empty or unset"),
+			fmt.Sprintf(conflictDetail, attribute.name, "empty or unset", attribute.reason),
 		)
 	}
 
@@ -119,7 +130,7 @@ func validateDisabledCors(cors *providerschema.AppEndpointCors, resp *resource.V
 		resp.Diagnostics.AddAttributeError(
 			path.Root("cors").AtName("max_age"),
 			"Invalid Attribute Combination",
-			fmt.Sprintf(conflictDetail, "max_age", "0 or unset"),
+			fmt.Sprintf(conflictDetail, "max_age", "0 or unset", rejectedByAPI),
 		)
 	}
 }
@@ -522,6 +533,11 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	resp.Diagnostics.Append(diags...)
 }
 
+// preserveDisabledCorsAttributes keeps the cors list attributes in state exactly as configured
+// while CORS is disabled. A disabled App Endpoint is reported back as {"disabled": true,
+// "origin": []}, so a refresh alone would collapse both an omitted list and an explicitly empty
+// one to null; origin, login_origin and headers are Optional without Computed, so Terraform
+// rejects that as an inconsistent result (AV-145137).
 func preserveDisabledCorsAttributes(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
 	if config.Cors == nil || state.Cors == nil {
 		return
