@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -180,6 +181,110 @@ func Test_setEventingFunctionComputedAttributesToNull(t *testing.T) {
 			diags := setEventingFunctionComputedAttributesToNull(context.Background(), plan)
 			require.False(t, diags.HasError())
 			assert.Equal(t, test.expected, plan.Code)
+		})
+	}
+}
+
+// Test_setEventingFunctionComputedAttributesToNull_bindings guards AV-145491: the read-back fallback must
+// resolve only unknown binding attributes. Overwriting a configured value with null makes the state
+// disagree with the plan, which Terraform rejects as an inconsistent result and leaves tainted.
+func Test_setEventingFunctionComputedAttributesToNull_bindings(t *testing.T) {
+	authTypes := providerschema.EventingFunctionURLBindingAuthentication{}.AttributeTypes()
+	auth, d := types.ObjectValue(authTypes, map[string]attr.Value{
+		"type":         types.StringValue("basic"),
+		"username":     types.StringValue("user"),
+		"password":     types.StringValue("secret"),
+		"bearer_token": types.StringNull(),
+	})
+	require.False(t, d.HasError())
+
+	configured := func() *providerschema.EventingFunctionBindingsResource {
+		return &providerschema.EventingFunctionBindingsResource{
+			Buckets: []providerschema.EventingFunctionBucketBinding{{
+				Alias:      types.StringValue("b1"),
+				Bucket:     types.StringValue("travel-sample"),
+				Scope:      types.StringValue("_default"),
+				Collection: types.StringValue("_default"),
+				Permission: types.StringValue("read"),
+			}},
+			Urls: []providerschema.EventingFunctionUrlBinding{{
+				Alias:                  types.StringValue("u1"),
+				Url:                    types.StringValue("https://example.com/api"),
+				AllowCookies:           types.BoolValue(true),
+				ValidateTLSCertificate: types.BoolValue(true),
+				Authentication:         auth,
+			}},
+		}
+	}
+
+	unknown := func() *providerschema.EventingFunctionBindingsResource {
+		return &providerschema.EventingFunctionBindingsResource{
+			Buckets: []providerschema.EventingFunctionBucketBinding{{
+				Alias:      types.StringValue("b1"),
+				Bucket:     types.StringValue("travel-sample"),
+				Scope:      types.StringUnknown(),
+				Collection: types.StringUnknown(),
+				Permission: types.StringUnknown(),
+			}},
+			Urls: []providerschema.EventingFunctionUrlBinding{{
+				Alias:                  types.StringValue("u1"),
+				Url:                    types.StringValue("https://example.com/api"),
+				AllowCookies:           types.BoolUnknown(),
+				ValidateTLSCertificate: types.BoolUnknown(),
+				Authentication:         types.ObjectUnknown(authTypes),
+			}},
+		}
+	}
+
+	resolved := &providerschema.EventingFunctionBindingsResource{
+		Buckets: []providerschema.EventingFunctionBucketBinding{{
+			Alias:      types.StringValue("b1"),
+			Bucket:     types.StringValue("travel-sample"),
+			Scope:      types.StringNull(),
+			Collection: types.StringNull(),
+			Permission: types.StringNull(),
+		}},
+		Urls: []providerschema.EventingFunctionUrlBinding{{
+			Alias:                  types.StringValue("u1"),
+			Url:                    types.StringValue("https://example.com/api"),
+			AllowCookies:           types.BoolNull(),
+			ValidateTLSCertificate: types.BoolNull(),
+			Authentication:         types.ObjectNull(authTypes),
+		}},
+	}
+
+	tests := []struct {
+		name     string
+		bindings *providerschema.EventingFunctionBindingsResource
+		expected *providerschema.EventingFunctionBindingsResource
+	}{
+		{
+			name:     "configured binding values are kept",
+			bindings: configured(),
+			expected: configured(),
+		},
+		{
+			name:     "unknown binding values are set to null",
+			bindings: unknown(),
+			expected: resolved,
+		},
+		{
+			name:     "null bindings are left alone",
+			bindings: nil,
+			expected: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			plan := &providerschema.EventingFunctionResource{
+				Code:     types.StringValue("function OnUpdate(doc, meta) {}"),
+				Bindings: test.bindings,
+			}
+
+			diags := setEventingFunctionComputedAttributesToNull(context.Background(), plan)
+			require.False(t, diags.HasError())
+			assert.Equal(t, test.expected, plan.Bindings)
 		})
 	}
 }
