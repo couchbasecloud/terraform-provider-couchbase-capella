@@ -59,22 +59,13 @@ func TestAccBucketBackupExportResource(t *testing.T) {
 				resource.TestCheckResourceAttrSet(resourceReference, "status"),
 			),
 		},
-		// ImportState testing. The resource does not support update, so Create / Read /
-		// Import / Delete is the whole lifecycle.
-		//
-		// ImportStateVerify is what makes this step worth having: ImportState alone only
-		// proves the six-part composite ID parses, and would pass just as happily against
-		// an import that returned every attribute empty.
+		// ImportStateVerify is the point: ImportState alone passes even if import returns nothing.
 		{
 			ResourceName:      resourceReference,
 			ImportStateIdFunc: generateBucketBackupExportImportIdForResource(resourceReference),
 			ImportState:       true,
 			ImportStateVerify: true,
-			// The job advances on its own between the create refresh and this import, and
-			// Capella mints a fresh pre-signed URL on every read, so these five cannot be
-			// compared. What stays verified is the part import can actually get wrong:
-			// that the composite ID repopulates every ID, plus cycle_id, bucket_name and
-			// created_at.
+			// These five move on their own between create and import; the IDs and created_at still match.
 			ImportStateVerifyIgnore: []string{
 				"status",
 				"size_in_bytes",
@@ -85,11 +76,7 @@ func TestAccBucketBackupExportResource(t *testing.T) {
 		},
 	}
 
-	// Each of the five inputs carries RequiresReplace, which is the only reason Update is
-	// unreachable - and Update returns an unconditional error, so if a modifier were dropped,
-	// every change to this resource would start failing at apply instead. These plan-only
-	// steps assert the replacement is still planned. Nothing is applied, so no further exports
-	// are created and no further Capella resources are touched.
+	// RequiresReplace on all five inputs is the only reason Update, which always errors, is unreachable.
 	steps = append(steps, bucketBackupExportRequiresReplaceSteps(
 		bucketResourceName, backupResourceName, resourceName, resourceReference,
 	)...)
@@ -100,29 +87,11 @@ func TestAccBucketBackupExportResource(t *testing.T) {
 	})
 }
 
-// bucketBackupExportRequiresReplaceSteps returns one plan-only step per required input, each
-// changing exactly that input and asserting Terraform plans a replacement, followed by a step
-// that restores the original configuration and asserts the plan is then empty.
-//
-// The restore step earns its place twice over: it guards against a perpetual diff, and it
-// leaves the working directory holding a configuration whose IDs are real, so the test case's
-// own destroy runs against the fixtures it created.
-//
-// The checks hang off PostApplyPostRefresh, not PreApply, and the library enforces that:
-// terraform-plugin-testing rejects the other combination outright with "TestStep
-// ConfigPlanChecks.PreApply cannot be run with PlanOnly". PreApply sits inside the
-// `if !step.PlanOnly` guard (helper/resource/testing_new_config.go L101-L244 in v1.13.0,
-// checks at L138) so it could never fire; PostApplyPostRefresh (L366) is outside it.
-//
-// That these checks really run was confirmed with a negative control rather than assumed - a
-// deliberately wrong ExpectResourceAction here fails the step with "expected NoOp, got
-// action(s): [delete create]". A passing test alone would not have distinguished a check that
-// ran from one that was skipped.
+// bucketBackupExportRequiresReplaceSteps: one plan-only step per input asserting Replace, then a restore step expecting an empty plan.
 func bucketBackupExportRequiresReplaceSteps(bucketName, backupName, exportName, resourceReference string) []resource.TestStep {
 	defaults := defaultBucketBackupExportInputs(bucketName, backupName)
 
-	// Well formed but different from the fixtures, so the change is a value change rather than
-	// a validation failure.
+	// Well formed but different from the fixtures, so this is a value change not a rejection.
 	const (
 		otherUUID     = "99999999-9999-4999-8999-999999999999"
 		otherBucketId = "dGZfYWNjX290aGVyX2J1Y2tldA=="
@@ -137,6 +106,7 @@ func bucketBackupExportRequiresReplaceSteps(bucketName, backupName, exportName, 
 			PlanOnly:           true,
 			ExpectNonEmptyPlan: true,
 			ConfigPlanChecks: resource.ConfigPlanChecks{
+				// PostApplyPostRefresh, not PreApply: the library rejects PreApply with PlanOnly.
 				PostApplyPostRefresh: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionReplace),
 				},
@@ -162,22 +132,7 @@ func bucketBackupExportRequiresReplaceSteps(bucketName, backupName, exportName, 
 	}
 }
 
-// TestAccBucketBackupExportResourceDriftRemoval covers the branch Read takes when Capella no
-// longer has the export: CheckResourceNotFoundError recognises the 404 and the resource is
-// dropped from state instead of the refresh failing.
-//
-// That is the same branch a practitioner reaches roughly seven days after creating an export,
-// when Capella drops the record and the next plan proposes a fresh export. The timeline cannot
-// be reproduced and there is no endpoint to delete an export early, so importing an ID that was
-// never real is the only way to execute the code path.
-//
-// It is worth executing. The 404 is only recognised when the response body carries a non-zero
-// "code": without one, ExecuteWithRetry returns a plain error rather than an *api.Error,
-// CheckResourceNotFoundError answers false, and every refresh after the record expires would
-// hard-fail rather than removing the resource.
-//
-// The IDs are the pair TestAccDatasourceBucketBackupExportUnknownExport already establishes
-// return 404/5019 together.
+// TestAccBucketBackupExportResourceDriftRemoval reaches the Read 404 branch that drops the resource from state.
 func TestAccBucketBackupExportResourceDriftRemoval(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_export_drift_")
 	resourceReference := "couchbase-capella_bucket_backup_export." + resourceName
@@ -202,10 +157,7 @@ func TestAccBucketBackupExportResourceDriftRemoval(t *testing.T) {
 				ResourceName:  resourceReference,
 				ImportState:   true,
 				ImportStateId: importId,
-				// Read removes the resource, so Terraform reports that the import produced
-				// nothing rather than surfacing the 404 itself. Seeing the provider's own
-				// "Error Reading Capella Bucket Backup Export" here instead would mean the
-				// 404 was not recognised and drift is no longer handled.
+				// Read removes the resource, so Terraform reports the import produced nothing, not the 404.
 				ExpectError: regexp.MustCompile(`(?s)` + terraformDiagnosticPattern("Cannot import non-existent remote object")),
 			},
 		},
@@ -402,9 +354,7 @@ resource "couchbase-capella_bucket_backup_export" "%[8]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, bucketName, backupName, firstName, secondName)
 }
 
-// bucketBackupExportInputs holds the export resource's five required inputs as raw HCL
-// expressions, so a step can change exactly one of them and leave the rest pointing at the
-// per-run fixtures.
+// bucketBackupExportInputs holds the five required inputs as HCL expressions so a step can vary one.
 type bucketBackupExportInputs struct {
 	organizationId string
 	projectId      string
@@ -413,9 +363,7 @@ type bucketBackupExportInputs struct {
 	backupId       string
 }
 
-// defaultBucketBackupExportInputs returns what the happy-path configuration uses: quoted
-// literals for the three Capella IDs, and references to the bucket and backup created by the
-// same configuration.
+// defaultBucketBackupExportInputs returns what the happy-path configuration uses.
 func defaultBucketBackupExportInputs(bucketName, backupName string) bucketBackupExportInputs {
 	return bucketBackupExportInputs{
 		organizationId: strconv.Quote(globalOrgId),
@@ -426,10 +374,7 @@ func defaultBucketBackupExportInputs(bucketName, backupName string) bucketBackup
 	}
 }
 
-// testAccBucketBackupExportResourceConfigInputs builds the same bucket / backup / export trio
-// as testAccBucketBackupExportResourceConfig, but takes the export's inputs as expressions so
-// one of them can be varied. The bucket and backup always use the real IDs, so a step that
-// points the export elsewhere still destroys its own fixtures cleanly.
+// testAccBucketBackupExportResourceConfigInputs is the same trio, with the export's inputs as expressions.
 func testAccBucketBackupExportResourceConfigInputs(bucketName, backupName, exportName string, in bucketBackupExportInputs) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -493,9 +438,7 @@ func generateBucketBackupExportImportIdForResource(resourceReference string) res
 	}
 }
 
-// retrieveBucketBackupExportFromServer fetches one export directly from the V4 API, bypassing
-// the provider. It returns the response so callers that need more than existence - polling for
-// completion, for instance - do not have to repeat the request.
+// retrieveBucketBackupExportFromServer fetches one export directly from the V4 API, bypassing the provider.
 func retrieveBucketBackupExportFromServer(data *providerschema.Data, organizationId, projectId, clusterId, bucketId, backupId, exportId string) (*backupapi.GetBucketBackupExportResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backups/%s/exports/%s",
@@ -517,9 +460,7 @@ func retrieveBucketBackupExportFromServer(data *providerschema.Data, organizatio
 	return &exportResp, nil
 }
 
-// bucketBackupExportAttributes returns the flat state attributes of one export resource or data
-// source, failing loudly when the address is not in state. Reporting that as an error matters:
-// a check that silently read a nil map would compare empty strings and pass.
+// bucketBackupExportAttributes returns one address's state attributes, erroring when it is absent.
 func bucketBackupExportAttributes(s *terraform.State, resourceReference string) (map[string]string, error) {
 	for _, m := range s.Modules {
 		if v, ok := m.Resources[resourceReference]; ok && v.Primary != nil {

@@ -8,9 +8,7 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// Unit coverage for mapBucketBackupExport, the data source's half of the export mapping. It is a
-// pure function, so the completed shape is reachable here without waiting for a real export to
-// finish.
+// Unit coverage for mapBucketBackupExport; a pure function, so the completed shape is cheap.
 
 func mapTestExport(t *testing.T, body string) providerschema.BucketBackupExportData {
 	t.Helper()
@@ -22,9 +20,7 @@ func mapTestExport(t *testing.T, body string) providerschema.BucketBackupExportD
 	return mapBucketBackupExport(&resp, providerschema.BucketBackupExportData{})
 }
 
-// TestMapBucketBackupExportArchiveFields pins the four optional archive attributes in both
-// directions, mirroring TestRefreshBucketBackupExportArchiveFields on the resource side. The two
-// helpers are separate code that must agree, so they need separate guards.
+// TestMapBucketBackupExportArchiveFields mirrors the resource-side test; the helpers must agree.
 func TestMapBucketBackupExportArchiveFields(t *testing.T) {
 	pending := mapTestExport(t, `{"id":"e1","cycleId":"cy1","bucketName":"travel-sample",`+
 		`"status":"pending","createdAt":"2026-09-20T10:00:00Z"}`)

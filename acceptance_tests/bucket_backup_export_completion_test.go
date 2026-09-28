@@ -17,21 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// Coverage for the half of the bucket backup export lifecycle that only exists once the job
-// has finished: the archive attributes, the download URL, and the API's refusal to export a
-// cycle that already has a completed export.
-//
-// The rest of the export suite deliberately stops at the pending state, which leaves the
-// `if ... != nil` branch of every archive attribute unexecuted in both mapping helpers. These
-// tests are the only thing that reaches them.
-//
-// They wait on the backup infrastructure, so they are slower than the rest of the suite and
-// are kept out of sanity.list. Both export a bucket that was created empty moments earlier,
-// so the archive itself is small.
+// Coverage for what only exists once the export completes: archive attributes, download URL, 14062.
 
-// archiveDownloadTimeout bounds the archive fetch. These tests export a bucket created empty
-// moments earlier, so the archive is small and this is generous; it exists to fail the step
-// rather than the suite if the pre-signed URL stalls.
+// archiveDownloadTimeout bounds the fetch so a stalled URL fails this step, not the whole suite.
 const archiveDownloadTimeout = 5 * time.Minute
 
 // Statuses the export job reports. Only "complete" publishes an archive.
@@ -41,8 +29,7 @@ const (
 	bucketBackupExportStatusExpired  = "expired"
 )
 
-// bucketBackupExportRef is the set of IDs needed to poll one export job. A step's PreConfig
-// cannot read Terraform state, so the preceding step's Check records them here instead.
+// bucketBackupExportRef carries the IDs a later PreConfig needs, since PreConfig cannot read state.
 type bucketBackupExportRef struct {
 	organizationId string
 	projectId      string
@@ -52,12 +39,7 @@ type bucketBackupExportRef struct {
 	exportId       string
 }
 
-// TestAccBucketBackupExportDownloadArchive proves the exported backup is actually retrievable:
-// it waits for the job to complete, then downloads the archive from the pre-signed URL and
-// checks the bytes against the size and checksum Capella reported.
-//
-// It also covers the completed-export read path through both the resource and the data source,
-// which nothing else in the suite does.
+// TestAccBucketBackupExportDownloadArchive downloads the archive and checks size and checksum.
 func TestAccBucketBackupExportDownloadArchive(t *testing.T) {
 	bucketResourceName := randomStringWithPrefix("tf_acc_export_dl_bucket_")
 	backupResourceName := randomStringWithPrefix("tf_acc_export_dl_backup_")
@@ -72,8 +54,7 @@ func TestAccBucketBackupExportDownloadArchive(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
-			// The export is still pending here. This step exists to create it and record the
-			// IDs the next step's PreConfig needs.
+			// Still pending here; this step creates the export and records its IDs for the next PreConfig.
 			{
 				Config: testAccBucketBackupExportDownloadConfig(bucketResourceName, backupResourceName, exportResourceName, dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -81,9 +62,7 @@ func TestAccBucketBackupExportDownloadArchive(t *testing.T) {
 					captureBucketBackupExportRef(exportReference, &export),
 				),
 			},
-			// The same configuration, applied again once the job has finished. The resource is
-			// refreshed and the data source re-read, so both mapping helpers take their
-			// archive branches.
+			// Same config once the job has finished, so both mapping helpers take their archive branches.
 			{
 				PreConfig: func() { waitForBucketBackupExportComplete(t, export) },
 				Config:    testAccBucketBackupExportDownloadConfig(bucketResourceName, backupResourceName, exportResourceName, dsName),
@@ -99,9 +78,7 @@ func TestAccBucketBackupExportDownloadArchive(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dsReference, "size_in_bytes", exportReference, "size_in_bytes"),
 					resource.TestCheckResourceAttrPair(dsReference, "sha256_checksum", exportReference, "sha256_checksum"),
 					resource.TestCheckResourceAttrPair(dsReference, "expiration", exportReference, "expiration"),
-					// The URL is the one attribute that must NOT match: Capella mints a fresh
-					// pre-signed URL on every read, so a pair assertion here would be wrong.
-					// Assert instead that the data source's own URL works.
+					// A fresh URL is minted per read, so the two must not match; assert the data source's works.
 					resource.TestCheckResourceAttrSet(dsReference, "backup_download_url"),
 
 					testAccDownloadBucketBackupExportArchive(exportReference),
@@ -112,13 +89,7 @@ func TestAccBucketBackupExportDownloadArchive(t *testing.T) {
 	})
 }
 
-// TestAccBucketBackupExportDuplicateCompletedCycle asserts the 14062 rejection specifically -
-// the cycle already has a *completed* export.
-//
-// TestAccBucketBackupExportResourceDuplicateCycle accepts either 14061 or 14062, and because
-// create does not wait, the second export there almost always races in while the first is
-// still pending and gets 14061. So without this test the completed-export rejection is never
-// exercised at all.
+// TestAccBucketBackupExportDuplicateCompletedCycle pins 14062; the older test accepts either code.
 func TestAccBucketBackupExportDuplicateCompletedCycle(t *testing.T) {
 	bucketResourceName := randomStringWithPrefix("tf_acc_export_dupc_bucket_")
 	backupResourceName := randomStringWithPrefix("tf_acc_export_dupc_backup_")
@@ -129,8 +100,7 @@ func TestAccBucketBackupExportDuplicateCompletedCycle(t *testing.T) {
 
 	var first bucketBackupExportRef
 
-	// Both halves are asserted on purpose. The code pins which rejection this is; the prose
-	// pins the message support will actually see quoted in a ticket.
+	// The code pins which rejection this is; the prose pins the message support will see quoted.
 	duplicateCompleted := regexp.MustCompile(
 		`(?s)Error creating backup export job.*` +
 			terraformDiagnosticPattern("An export for this backup cycle has already completed.") +
@@ -147,8 +117,7 @@ func TestAccBucketBackupExportDuplicateCompletedCycle(t *testing.T) {
 					captureBucketBackupExportRef(firstReference, &first),
 				),
 			},
-			// Only once the first export has completed does a second one get 14062 rather
-			// than 14061.
+			// Only once the first export has completed does a second one get 14062 rather than 14061.
 			{
 				PreConfig:   func() { waitForBucketBackupExportComplete(t, first) },
 				Config:      testAccBucketBackupExportDuplicateConfig(bucketResourceName, backupResourceName, firstName, secondName),
@@ -158,8 +127,7 @@ func TestAccBucketBackupExportDuplicateCompletedCycle(t *testing.T) {
 	})
 }
 
-// testAccBucketBackupExportDownloadConfig declares a bucket, a backup, an export and a data
-// source reading that export back, so one apply exercises both read paths.
+// testAccBucketBackupExportDownloadConfig declares bucket, backup, export and a data source.
 func testAccBucketBackupExportDownloadConfig(bucketName, backupName, exportName, dsName string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -197,8 +165,7 @@ data "couchbase-capella_bucket_backup_export" "%[8]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, bucketName, backupName, exportName, dsName)
 }
 
-// captureBucketBackupExportRef records the IDs of an applied export so a later step can poll
-// it. Check functions run before the next step's PreConfig, which is what makes this work.
+// captureBucketBackupExportRef records an export's IDs; Checks run before the next PreConfig.
 func captureBucketBackupExportRef(resourceReference string, out *bucketBackupExportRef) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attrs, err := bucketBackupExportAttributes(s, resourceReference)
@@ -218,13 +185,7 @@ func captureBucketBackupExportRef(resourceReference string, out *bucketBackupExp
 	}
 }
 
-// waitForBucketBackupExportComplete polls until the export job publishes an archive, and fails
-// the test rather than returning if it reaches any other terminal state - a test that carried
-// on past a failed export would assert against null archive attributes and be confusing.
-//
-// Export duration scales with backup size. These tests export a bucket created empty moments
-// earlier, so the wait is normally short; the ceiling is generous only to absorb a busy
-// backup fleet.
+// waitForBucketBackupExportComplete polls until the archive exists, failing on any other status.
 func waitForBucketBackupExportComplete(t *testing.T, ref bucketBackupExportRef) {
 	t.Helper()
 
@@ -264,12 +225,7 @@ func waitForBucketBackupExportComplete(t *testing.T, ref bucketBackupExportRef) 
 	}
 }
 
-// testAccDownloadBucketBackupExportArchive downloads the archive from the pre-signed URL held
-// in state and checks it against the size and checksum Capella reported for it.
-//
-// Asserting that backup_download_url is merely set would pass against a URL that 403s or
-// serves an error document. This is the only assertion in the suite that proves an exported
-// backup can actually be retrieved.
+// testAccDownloadBucketBackupExportArchive fetches the archive and verifies its size and checksum.
 func testAccDownloadBucketBackupExportArchive(resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attrs, err := bucketBackupExportAttributes(s, resourceReference)
@@ -282,13 +238,7 @@ func testAccDownloadBucketBackupExportArchive(resourceReference string) resource
 			return fmt.Errorf("%s has no backup_download_url in state", resourceReference)
 		}
 
-		// The URL is pre-signed, so it is fetched without the Capella auth header.
-		//
-		// It also gets its own client rather than http.DefaultClient, which has no timeout at
-		// all: a pre-signed URL that accepts the connection and then stalls would otherwise
-		// hang here until the whole `go test -timeout` elapsed, reporting a suite-wide timeout
-		// instead of failing this step. Client.Timeout covers reading the body too, which is
-		// where a stall would actually happen.
+		// Pre-signed, so no auth header; its own client because http.DefaultClient has no timeout.
 		client := &http.Client{Timeout: archiveDownloadTimeout}
 		resp, err := client.Get(downloadURL) // #nosec G107 -- the URL is minted by the Capella API
 		if err != nil {
@@ -318,10 +268,7 @@ func testAccDownloadBucketBackupExportArchive(resourceReference string) resource
 	}
 }
 
-// terraformDiagnosticPattern turns a plain sentence into a regex that still matches once the
-// Terraform CLI has wrapped the diagnostic across lines and prefixed each continuation with
-// "│". Asserting on a message longer than the diagnostic box without this is a coin flip that
-// depends on where the wrap happens to land.
+// terraformDiagnosticPattern tolerates the line wrapping and "│" the Terraform CLI inserts.
 func terraformDiagnosticPattern(sentence string) string {
 	words := strings.Fields(sentence)
 	for i, word := range words {

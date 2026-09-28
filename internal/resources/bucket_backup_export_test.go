@@ -11,12 +11,9 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// Unit coverage for refreshBucketBackupExport, the helper that turns a get-export response into
-// Terraform state. A stub serves the responses so both the pending and the completed shape can be
-// exercised in milliseconds, without waiting on the backup infrastructure for the second one.
+// Unit coverage for refreshBucketBackupExport, stub-driven so both response shapes are cheap.
 
-// newBucketBackupExportTestResource wires the resource to a stub API that answers every request
-// with body.
+// newBucketBackupExportTestResource wires the resource to a stub answering every request with body.
 func newBucketBackupExportTestResource(t *testing.T, body string) *BucketBackupExport {
 	t.Helper()
 
@@ -45,9 +42,7 @@ func refreshTestExport(t *testing.T, body string) *providerschema.BucketBackupEx
 	return state
 }
 
-// TestRefreshBucketBackupExportArchiveFields pins the four optional archive attributes in both
-// directions: absent from the response means null in state, present means carried through. These
-// are the branches no acceptance test could reach until the export completed.
+// TestRefreshBucketBackupExportArchiveFields pins the four optional archive attributes both ways.
 func TestRefreshBucketBackupExportArchiveFields(t *testing.T) {
 	pending := refreshTestExport(t, `{"id":"e1","cycleId":"cy1","bucketName":"travel-sample",`+
 		`"status":"pending","createdAt":"2026-09-20T10:00:00Z"}`)
