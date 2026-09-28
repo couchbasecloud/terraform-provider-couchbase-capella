@@ -51,10 +51,15 @@ func TestAccAppEndpointOidcProvider(t *testing.T) {
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateOidcProviderImportId(resourceReference),
 				ImportState:       true,
-				// ImportStateVerify cannot be used here: ImportStatePassthroughID
-				// stores the full composite ID in app_endpoint_name, but Read
-				// normalises it to just the endpoint name. The verifier then
-				// fails to locate the resource by the original composite value.
+				// AV-145496: Read does not restore the identity attributes after an
+				// import. organization_id, project_id, cluster_id and app_service_id
+				// stay null and app_endpoint_name keeps the whole composite import ID,
+				// and all five are requiresReplace, so the first plan after a
+				// successful import replaces the provider. app_endpoint_cors runs the
+				// same composite import with verification on, so this is the resource
+				// and not a harness limitation.
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "app_endpoint_name",
 			},
 		},
 	})
@@ -92,10 +97,11 @@ func TestAccAppEndpointDefaultOidcProvider(t *testing.T) {
 				ResourceName:      defaultResourceReference,
 				ImportStateIdFunc: generateDefaultOidcProviderImportId(defaultResourceReference),
 				ImportState:       true,
-				// ImportStateVerify cannot be used here: ImportStatePassthroughID
-				// stores the full composite ID in app_endpoint_name, but Read
-				// normalises it to just the endpoint name. The verifier then
-				// fails to locate the resource by the original composite value.
+				// AV-145496: the default provider resource has the same defect. Its
+				// Read sets only provider_id, leaving the other identity attributes as
+				// the import left them, and all of them are requiresReplace.
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "app_endpoint_name",
 			},
 		},
 	})
