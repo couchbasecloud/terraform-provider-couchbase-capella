@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -37,34 +39,126 @@ func TestAccBucketBackupExportResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_bucket_backup_export_")
 	resourceReference := "couchbase-capella_bucket_backup_export." + resourceName
 
+	steps := []resource.TestStep{
+		// Create and Read testing.
+		{
+			Config: testAccBucketBackupExportResourceConfig(bucketResourceName, backupResourceName, resourceName),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccExistsBucketBackupExportResource(t, resourceReference),
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttrPair(resourceReference, "bucket_id", bucketResourceReference, "id"),
+				resource.TestCheckResourceAttrPair(resourceReference, "backup_id", backupResourceReference, "id"),
+				resource.TestCheckResourceAttrPair(resourceReference, "bucket_name", bucketResourceReference, "name"),
+				// The export belongs to the cycle of the backup it was created from.
+				resource.TestCheckResourceAttrPair(resourceReference, "cycle_id", backupResourceReference, "cycle_id"),
+				resource.TestCheckResourceAttrSet(resourceReference, "id"),
+				resource.TestCheckResourceAttrSet(resourceReference, "created_at"),
+				// Status is whatever the job has reached by the time of the refresh.
+				resource.TestCheckResourceAttrSet(resourceReference, "status"),
+			),
+		},
+		// ImportStateVerify is the point: ImportState alone passes even if import returns nothing.
+		{
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateBucketBackupExportImportIdForResource(resourceReference),
+			ImportState:       true,
+			ImportStateVerify: true,
+			// These five move on their own between create and import; the IDs and created_at still match.
+			ImportStateVerifyIgnore: []string{
+				"status",
+				"size_in_bytes",
+				"sha256_checksum",
+				"expiration",
+				"backup_download_url",
+			},
+		},
+	}
+
+	// RequiresReplace on all five inputs is the only reason Update, which always errors, is unreachable.
+	steps = append(steps, bucketBackupExportRequiresReplaceSteps(
+		bucketResourceName, backupResourceName, resourceName, resourceReference,
+	)...)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps:                    steps,
+	})
+}
+
+// bucketBackupExportRequiresReplaceSteps: one plan-only step per input asserting Replace, then a restore step expecting an empty plan.
+func bucketBackupExportRequiresReplaceSteps(bucketName, backupName, exportName, resourceReference string) []resource.TestStep {
+	defaults := defaultBucketBackupExportInputs(bucketName, backupName)
+
+	// Well formed but different from the fixtures, so this is a value change not a rejection.
+	const (
+		otherUUID     = "99999999-9999-4999-8999-999999999999"
+		otherBucketId = "dGZfYWNjX290aGVyX2J1Y2tldA=="
+	)
+
+	changed := func(mutate func(*bucketBackupExportInputs)) resource.TestStep {
+		inputs := defaults
+		mutate(&inputs)
+
+		return resource.TestStep{
+			Config:             testAccBucketBackupExportResourceConfigInputs(bucketName, backupName, exportName, inputs),
+			PlanOnly:           true,
+			ExpectNonEmptyPlan: true,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				// PostApplyPostRefresh, not PreApply: the library rejects PreApply with PlanOnly.
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionReplace),
+				},
+			},
+		}
+	}
+
+	return []resource.TestStep{
+		changed(func(in *bucketBackupExportInputs) { in.organizationId = strconv.Quote(otherUUID) }),
+		changed(func(in *bucketBackupExportInputs) { in.projectId = strconv.Quote(otherUUID) }),
+		changed(func(in *bucketBackupExportInputs) { in.clusterId = strconv.Quote(otherUUID) }),
+		changed(func(in *bucketBackupExportInputs) { in.bucketId = strconv.Quote(otherBucketId) }),
+		changed(func(in *bucketBackupExportInputs) { in.backupId = strconv.Quote(otherUUID) }),
+		{
+			Config:   testAccBucketBackupExportResourceConfigInputs(bucketName, backupName, exportName, defaults),
+			PlanOnly: true,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionNoop),
+				},
+			},
+		},
+	}
+}
+
+// TestAccBucketBackupExportResourceDriftRemoval reaches the Read 404 branch that drops the resource from state.
+func TestAccBucketBackupExportResourceDriftRemoval(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_export_drift_")
+	resourceReference := "couchbase-capella_bucket_backup_export." + resourceName
+
+	const (
+		missingBackupId = "00000000-0000-0000-0000-000000000000"
+		missingExportId = "11111111-1111-1111-1111-111111111111"
+	)
+
+	importId := fmt.Sprintf(
+		"id=%s,backup_id=%s,bucket_id=%s,cluster_id=%s,project_id=%s,organization_id=%s",
+		missingExportId, missingBackupId, globalBucketId, globalClusterId, globalProjectId, globalOrgId,
+	)
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
-			// Create and Read testing.
 			{
-				Config: testAccBucketBackupExportResourceConfig(bucketResourceName, backupResourceName, resourceName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsBucketBackupExportResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttrPair(resourceReference, "bucket_id", bucketResourceReference, "id"),
-					resource.TestCheckResourceAttrPair(resourceReference, "backup_id", backupResourceReference, "id"),
-					resource.TestCheckResourceAttrPair(resourceReference, "bucket_name", bucketResourceReference, "name"),
-					// The export belongs to the cycle of the backup it was created from.
-					resource.TestCheckResourceAttrPair(resourceReference, "cycle_id", backupResourceReference, "cycle_id"),
-					resource.TestCheckResourceAttrSet(resourceReference, "id"),
-					resource.TestCheckResourceAttrSet(resourceReference, "created_at"),
-					// Status is whatever the job has reached by the time of the refresh.
-					resource.TestCheckResourceAttrSet(resourceReference, "status"),
+				Config: testAccBucketBackupExportResourceConfigWithIDs(
+					resourceName, globalOrgId, globalProjectId, globalClusterId, globalBucketId, missingBackupId,
 				),
-			},
-			// ImportState testing. The resource does not support update, so Create / Read /
-			// Import / Delete is the whole lifecycle.
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateBucketBackupExportImportIdForResource(resourceReference),
-				ImportState:       true,
+				ResourceName:  resourceReference,
+				ImportState:   true,
+				ImportStateId: importId,
+				// Read removes the resource, so Terraform reports the import produced nothing, not the 404.
+				ExpectError: regexp.MustCompile(`(?s)` + terraformDiagnosticPattern("Cannot import non-existent remote object")),
 			},
 		},
 	})
@@ -260,6 +354,56 @@ resource "couchbase-capella_bucket_backup_export" "%[8]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, bucketName, backupName, firstName, secondName)
 }
 
+// bucketBackupExportInputs holds the five required inputs as HCL expressions so a step can vary one.
+type bucketBackupExportInputs struct {
+	organizationId string
+	projectId      string
+	clusterId      string
+	bucketId       string
+	backupId       string
+}
+
+// defaultBucketBackupExportInputs returns what the happy-path configuration uses.
+func defaultBucketBackupExportInputs(bucketName, backupName string) bucketBackupExportInputs {
+	return bucketBackupExportInputs{
+		organizationId: strconv.Quote(globalOrgId),
+		projectId:      strconv.Quote(globalProjectId),
+		clusterId:      strconv.Quote(globalClusterId),
+		bucketId:       "couchbase-capella_bucket." + bucketName + ".id",
+		backupId:       "couchbase-capella_backup." + backupName + ".id",
+	}
+}
+
+// testAccBucketBackupExportResourceConfigInputs is the same trio, with the export's inputs as expressions.
+func testAccBucketBackupExportResourceConfigInputs(bucketName, backupName, exportName string, in bucketBackupExportInputs) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_bucket" "%[5]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  name            = "%[5]s"
+}
+
+resource "couchbase-capella_backup" "%[6]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_id       = couchbase-capella_bucket.%[5]s.id
+}
+
+resource "couchbase-capella_bucket_backup_export" "%[7]s" {
+  organization_id = %[8]s
+  project_id      = %[9]s
+  cluster_id      = %[10]s
+  bucket_id       = %[11]s
+  backup_id       = %[12]s
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, bucketName, backupName, exportName,
+		in.organizationId, in.projectId, in.clusterId, in.bucketId, in.backupId)
+}
+
 // testAccBucketBackupExportResourceConfigWithIDs is used by the invalid-input tests, which fail
 // before an export is created and so need no bucket or backup of their own.
 func testAccBucketBackupExportResourceConfigWithIDs(resourceName, organizationId, projectId, clusterId, bucketId, backupId string) string {
@@ -294,7 +438,8 @@ func generateBucketBackupExportImportIdForResource(resourceReference string) res
 	}
 }
 
-func retrieveBucketBackupExportFromServer(data *providerschema.Data, organizationId, projectId, clusterId, bucketId, backupId, exportId string) error {
+// retrieveBucketBackupExportFromServer fetches one export directly from the V4 API, bypassing the provider.
+func retrieveBucketBackupExportFromServer(data *providerschema.Data, organizationId, projectId, clusterId, bucketId, backupId, exportId string) (*backupapi.GetBucketBackupExportResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backups/%s/exports/%s",
 		data.HostURL, organizationId, projectId, clusterId, bucketId, backupId, exportId,
@@ -302,34 +447,41 @@ func retrieveBucketBackupExportFromServer(data *providerschema.Data, organizatio
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, data.Token, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	exportResp := backupapi.GetBucketBackupExportResponse{}
 	if err := json.Unmarshal(response.Body, &exportResp); err != nil {
-		return err
+		return nil, err
 	}
 	if exportResp.Id != exportId {
-		return errors.ErrNotFound
+		return nil, errors.ErrNotFound
 	}
-	return nil
+	return &exportResp, nil
+}
+
+// bucketBackupExportAttributes returns one address's state attributes, erroring when it is absent.
+func bucketBackupExportAttributes(s *terraform.State, resourceReference string) (map[string]string, error) {
+	for _, m := range s.Modules {
+		if v, ok := m.Resources[resourceReference]; ok && v.Primary != nil {
+			return v.Primary.Attributes, nil
+		}
+	}
+	return nil, fmt.Errorf("%s not found in state", resourceReference)
 }
 
 func testAccExistsBucketBackupExportResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		var rawState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
+		rawState, err := bucketBackupExportAttributes(s, resourceReference)
+		if err != nil {
+			return err
 		}
 		data := newTestClient(t)
-		return retrieveBucketBackupExportFromServer(
+		_, err = retrieveBucketBackupExportFromServer(
 			data,
 			rawState["organization_id"], rawState["project_id"], rawState["cluster_id"],
 			rawState["bucket_id"], rawState["backup_id"], rawState["id"],
 		)
+		return err
 	}
 }
