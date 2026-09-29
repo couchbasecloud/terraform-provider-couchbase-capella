@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -127,8 +126,15 @@ func (r *AppEndpointDefaultOidcProvider) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.ProviderId = types.StringValue(selected.ProviderID)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	refreshedState := providerschema.NewAppEndpointDefaultOidcProvider(
+		IDs[providerschema.OrganizationId],
+		IDs[providerschema.ProjectId],
+		IDs[providerschema.ClusterId],
+		IDs[providerschema.AppServiceId],
+		IDs[providerschema.AppEndpointName],
+		selected.ProviderID,
+	)
+	resp.Diagnostics.Append(resp.State.Set(ctx, refreshedState)...)
 }
 
 // Update sets the default provider (idempotent with Create).

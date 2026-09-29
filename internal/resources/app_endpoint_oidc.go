@@ -123,8 +123,8 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		)
 		return
 	}
-	r.mapResponseToState(&plan, details)
-	diags = resp.State.Set(ctx, plan)
+	refreshedState := providerschema.NewAppEndpointOidcProvider(organizationId, projectId, clusterId, appServiceId, appEndpointName, details)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -161,10 +161,16 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	// On Read, populate all fields from remote
-	r.mapResponseToState(&state, details)
+	refreshedState := providerschema.NewAppEndpointOidcProvider(
+		IDs[providerschema.OrganizationId],
+		IDs[providerschema.ProjectId],
+		IDs[providerschema.ClusterId],
+		IDs[providerschema.AppServiceId],
+		IDs[providerschema.AppEndpointName],
+		details,
+	)
 
-	diags = resp.State.Set(ctx, state)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -230,9 +236,9 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	r.mapResponseToState(&plan, details)
+	refreshedState := providerschema.NewAppEndpointOidcProvider(organizationId, projectId, clusterId, appServiceId, appEndpointName, details)
 
-	diags = resp.State.Set(ctx, &plan)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -297,27 +303,6 @@ func (r *AppEndpointOidcProvider) getOidcProvider(ctx context.Context, organizat
 		return api.AppEndpointOIDCProviderResponse{}, fmt.Errorf("failed to parse response: %w", err)
 	}
 	return out, nil
-}
-
-// mapResponseToState maps get OIDC provider response fields to state.
-func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse) {
-	// optional fields
-	state.Issuer = types.StringValue(resp.Issuer)
-	state.ClientId = types.StringValue(resp.ClientID)
-	state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
-	state.UserPrefix = types.StringValue(resp.UserPrefix)
-	state.UsernameClaim = types.StringValue(resp.UsernameClaim)
-	state.RolesClaim = types.StringValue(resp.RolesClaim)
-	state.Register = types.BoolValue(resp.Register)
-
-	// required fields, updating state for drift detection
-	state.Issuer = types.StringValue(resp.Issuer)
-	state.ClientId = types.StringValue(resp.ClientID)
-
-	// Computed fields
-	state.ProviderId = types.StringValue(resp.ProviderID)
-	state.IsDefault = types.BoolValue(resp.IsDefault)
-
 }
 
 // nullifyUnsetOidcProviderFields sets unknown optional values to null, so the plan is a valid state if the refresh
