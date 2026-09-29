@@ -29,9 +29,18 @@ func BucketBackupExportSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to export a bucket backup for an operational cluster into a downloadable zip archive. " +
 			"The export runs asynchronously on the backup infrastructure, so it is still pending when the apply returns; " +
-			"refresh the resource until its status is complete to obtain `backup_download_url`, a pre-signed URL valid for one hour. " +
-			"The archive is deleted from cloud storage at `expiration`, roughly 12 hours after the export completes, " +
-			"after which the backup must be exported again.",
+			"refresh the resource until its status is complete to obtain `backup_download_url`, a pre-signed URL valid for one hour.\n\n" +
+			"An export is a server side job that Capella cannot cancel or delete, so its lifecycle differs from most resources. " +
+			"Destroy only removes the export from state.\n\n" +
+			"**The archive expires 12 hours after the export completes.** `status` becomes `expired` and `backup_download_url` becomes null. " +
+			"Both are computed, so `terraform plan` proposes no change when this happens; check `status` or `expiration` directly. " +
+			"To get a new archive, run `terraform apply -replace=RESOURCE_ADDRESS`.\n\n" +
+			"**Replacing fails until then.** Only one active export can exist per backup cycle, so `-replace` and `taint` fail with " +
+			"error 14061 while the export is pending or processing, and 14062 while it is complete and not yet expired.\n\n" +
+			"**The export is re-created about 7 days after it completes.** Capella then drops the export record, so the resource is removed " +
+			"from state and the next `terraform apply` starts a new export. Configurations applied on a schedule or from CI will keep " +
+			"re-exporting, so remove the resource from the configuration once you have the download.\n\n" +
+			"**A failed export stays in state** until you replace it, since Capella keeps failed export records indefinitely.",
 		Attributes: attrs,
 	}
 }

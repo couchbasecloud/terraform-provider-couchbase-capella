@@ -10,8 +10,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	eventingapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventingfunction"
@@ -2707,6 +2710,134 @@ func TestAccEventingFunctionResourceEmptyBindings(t *testing.T) {
 				Config: testAccEventingFunctionResourceConfigBindings(funcName, "undeployed", ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+const eventingEmptyBindingListsBody = `buckets   = []
+    urls      = []
+    constants = []`
+
+const eventingURLBindingsBody = `urls = [
+      {
+        alias = "u1"
+        url   = "https://example.com/api"
+      },
+    ]`
+
+const eventingConstantBindingsBody = `constants = [
+      {
+        alias = "c1"
+        value = "1"
+      },
+    ]`
+
+func testAccEventingBucketBindingsBody() string {
+	return fmt.Sprintf(`buckets = [
+      {
+        alias      = "b1"
+        bucket     = %[1]q
+        scope      = %[2]q
+        collection = %[3]q
+      },
+    ]`, globalBucketName, globalScopeName, globalCollectionName)
+}
+
+func testAccEventingBindingsBody(lists ...string) string {
+	return strings.Join(lists, "\n\n    ")
+}
+
+func testAccEventingAllBindingsBody() string {
+	return testAccEventingBindingsBody(testAccEventingBucketBindingsBody(), eventingURLBindingsBody, eventingConstantBindingsBody)
+}
+
+// expectEventingBindingLists checks the value of each binding list in state.
+func expectEventingBindingLists(funcReference string, buckets, urls, constants knownvalue.Check) []statecheck.StateCheck {
+	bindings := tfjsonpath.New("bindings")
+	return []statecheck.StateCheck{
+		statecheck.ExpectKnownValue(funcReference, bindings.AtMapKey("buckets"), buckets),
+		statecheck.ExpectKnownValue(funcReference, bindings.AtMapKey("urls"), urls),
+		statecheck.ExpectKnownValue(funcReference, bindings.AtMapKey("constants"), constants),
+	}
+}
+
+// TestAccEventingFunctionResourceEmptyBindingLists: the state keeps the configured form, empty or null, of each
+// binding list on create, on update and on a state change.
+func TestAccEventingFunctionResourceEmptyBindingLists(t *testing.T) {
+	funcName := randomStringWithPrefix("tf_acc_evt_empty_lists_fn_")
+	funcReference := "couchbase-capella_eventing_function." + funcName
+	empty := knownvalue.ListSizeExact(0)
+	null := knownvalue.Null()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:            testAccEventingFunctionResourceConfigBindings(funcName, "undeployed", eventingEmptyBindingListsBody),
+				ConfigStateChecks: expectEventingBindingLists(funcReference, empty, empty, empty),
+			},
+			{
+				Config:            testAccEventingFunctionResourceConfigBindings(funcName, "undeployed", ""),
+				ConfigStateChecks: expectEventingBindingLists(funcReference, null, null, null),
+			},
+			{
+				// A state change with no function change must still set the planned empty lists.
+				Config:            testAccEventingFunctionResourceConfigBindings(funcName, "deployed", eventingEmptyBindingListsBody),
+				Check:             resource.TestCheckResourceAttr(funcReference, "state", "deployed"),
+				ConfigStateChecks: expectEventingBindingLists(funcReference, empty, empty, empty),
+			},
+		},
+	})
+}
+
+// TestAccEventingFunctionResourceClearBindingLists: setting each binding list to [] removes its bindings.
+func TestAccEventingFunctionResourceClearBindingLists(t *testing.T) {
+	funcName := randomStringWithPrefix("tf_acc_evt_clear_lists_fn_")
+	funcReference := "couchbase-capella_eventing_function." + funcName
+	one := knownvalue.ListSizeExact(1)
+	empty := knownvalue.ListSizeExact(0)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:            testAccEventingFunctionResourceConfigBindings(funcName, "undeployed", testAccEventingAllBindingsBody()),
+				ConfigStateChecks: expectEventingBindingLists(funcReference, one, one, one),
+			},
+			{
+				Config:            testAccEventingFunctionResourceConfigBindings(funcName, "undeployed", eventingEmptyBindingListsBody),
+				ConfigStateChecks: expectEventingBindingLists(funcReference, empty, empty, empty),
+			},
+		},
+	})
+}
+
+// TestAccEventingFunctionResourceRemoveBindings: removing a binding list, then the whole bindings block, removes
+// the bindings from the function.
+func TestAccEventingFunctionResourceRemoveBindings(t *testing.T) {
+	funcName := randomStringWithPrefix("tf_acc_evt_rm_bind_fn_")
+	funcReference := "couchbase-capella_eventing_function." + funcName
+	one := knownvalue.ListSizeExact(1)
+	null := knownvalue.Null()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:            testAccEventingFunctionResourceConfigBindings(funcName, "undeployed", testAccEventingAllBindingsBody()),
+				ConfigStateChecks: expectEventingBindingLists(funcReference, one, one, one),
+			},
+			{
+				Config: testAccEventingFunctionResourceConfigBindings(funcName, "undeployed", testAccEventingBindingsBody(
+					testAccEventingBucketBindingsBody(), eventingConstantBindingsBody)),
+				ConfigStateChecks: expectEventingBindingLists(funcReference, one, null, one),
+			},
+			{
+				Config: testAccEventingFunctionResourceConfigCodeState(funcName, eventingFunctionCode, "undeployed"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(funcReference, tfjsonpath.New("bindings"), null),
 				},
 			},
 		},
