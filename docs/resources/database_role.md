@@ -17,20 +17,22 @@ Resource to create and manage a database user role for a cluster. Database roles
 
 ### Required
 
-- `access` (Attributes List) (see [below for nested schema](#nestedatt--access))
+- `access` (Attributes List) - Describes the access information of the database user role. (see [below for nested schema](#nestedatt--access))
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String)
+- `name` (String) - Name for the database user role. The name should adhere to the following rules: The name must be between 2 & 32 characters. The name cannot contain spaces. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {` The name cannot begin with `@` character.
+ - **Constraints**: Minimum length: 2 characters, Maximum length: 32 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String)
+- `description` (String) - Description for the database user role.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) The ID of this resource.
+- `id` (String) - The ID of the database user role.
+ - **Format**: UUID (GUID4)
 
 <a id="nestedatt--access"></a>
 ### Nested Schema for `access`
@@ -55,7 +57,8 @@ Optional:
 
 Required:
 
-- `name` (String)
+- `name` (String) - Name for the database user role. The name should adhere to the following rules: The name must be between 2 & 32 characters. The name cannot contain spaces. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {` The name cannot begin with `@` character.
+ - **Constraints**: Minimum length: 2 characters, Maximum length: 32 characters
 
 Optional:
 
@@ -66,7 +69,8 @@ Optional:
 
 Required:
 
-- `name` (String)
+- `name` (String) - Name for the database user role. The name should adhere to the following rules: The name must be between 2 & 32 characters. The name cannot contain spaces. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {` The name cannot begin with `@` character.
+ - **Constraints**: Minimum length: 2 characters, Maximum length: 32 characters
 
 Optional:
 
@@ -86,5 +90,5 @@ Read-Only:
 - `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
 - `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
  - **Format**: Date-time in RFC3339 format
-- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
 - `version` (Number) - The version of the document. This value is incremented each time the resource is modified.

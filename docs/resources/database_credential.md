@@ -60,11 +60,13 @@ resource "couchbase-capella_database_credential" "new_advanced_database_credenti
 
 ### Optional
 
-- `access` (Attributes Set) - Describes the access information of the database credential. (see [below for nested schema](#nestedatt--access))
-- `credential_type` (String)
+- `access` (Attributes Set) - Describes the access information of the database credential. Required when creating a basic credential type. Must not be provided when creating an advanced credential type with user roles. (see [below for nested schema](#nestedatt--access))
+- `credential_type` (String) - The type of credential to create. Credential types determine the level of access control: `basic`: Uses bucket-level access permissions. When omitted, this is the default. `advanced`: Uses capella user roles for fine-grained RBAC access. When `basic` is used, the `access` field is required and `userRoles` must not be provided. When `advanced` is used, the `userRoles` field is required and `access` must not be provided.
+ - **Valid Values**: `basic`, `advanced`
+ - **Default**: `basic`
 - `password` (String, Sensitive) - A password associated with the database credential. If this field is left empty, a password will be auto-generated. The password should adhere to the following rules: The password should have at least 8 characters. Characters used for the password should contain at least one uppercase (A-Z), one lowercase (a-z), one numerical (0-9), and one special character. The password must not contain any of the following characters: `< > ; . * & | £`
  - **Constraints**: Minimum length: 8 characters
-- `user_roles` (Set of String)
+- `user_roles` (Set of String) - A list of Capella user role names to assign to the database credential. Required when creating an advanced credential type. Must not be provided when creating a basic credential type with access. The provided user roles must already exist in the cluster.
 
 ### Read-Only
 
