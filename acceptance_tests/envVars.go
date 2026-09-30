@@ -28,6 +28,7 @@ func getEnvVars() error {
 		globalBucketName = bucketName
 	}
 	dmClusterId = os.Getenv("TF_VAR_dm_cluster_id")
+	sparseVectorClusterId = os.Getenv("TF_VAR_sparse_vector_cluster_id")
 
 	// ACC_SKIP_APP_SERVICE skips the shared app service + app endpoint setup in
 	// TestMain (see setup). Accepts standard bool forms (1/true/...); anything
