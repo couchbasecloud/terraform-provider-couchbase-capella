@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.12.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.12.0) (2026-09-30)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.11.1...v1.12.0)
+
+**Implemented enhancements:**
+
+- \[AV-143191\] Add bucket backup export data source [\#799](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/799) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-124932\] Fine Grain RBAC Phase 3 [\#673](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/673) ([stanleefdz](https://github.com/stanleefdz))
+
+**Fixed bugs:**
+
+- \[AV-145075\] Set OIDC fields to null when left in an unknown state after failed refresh [\#805](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/805) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-143946\] Fix App Services OIDC Create [\#795](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/795) ([cbbruno](https://github.com/cbbruno))
+- \[AV-143880\] Fix flaky database role access import assertion [\#794](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/794) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-143040\] Fix Azure disk autoexpansion default when unset [\#792](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/792) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-142880\] Update grpc, x/net, x/crypto and kin-openapi to clear all reachable vulnerabilities [\#788](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/788) ([allabalakrishna9](https://github.com/allabalakrishna9))
+
+**Merged pull requests:**
+
+- \[AV-145093\] Allow empty list for eventing function bindings [\#806](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/806) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-144922\] Document bucket backup export lifecycle [\#804](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/804) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-143189\] Add bucket backup export resource [\#797](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/797) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-139797\] Add Azure autoexpansion default/update validation tests [\#793](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/793) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+
 ## [v1.11.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.11.1) (2026-09-01)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.11.0...v1.11.1)
