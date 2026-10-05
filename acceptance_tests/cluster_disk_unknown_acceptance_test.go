@@ -22,17 +22,16 @@ import (
 // AV-143040 and AV-143042 fixed the two Azure occurrences of this in
 // morphToApiServiceGroups (internal/resources/cluster.go:702-726). Two gaps remain:
 //
-//   - the AWS branch (cluster.go:681-687) still has it, and unlike Azure cannot be fixed by
-//     adding an IsUnknown() guard - see AV-145015 and the skipped tests below, which assert
-//     the intended behaviour rather than the current one;
+//   - the AWS branch (cluster.go:681-687) still shapes the request this way, and unlike
+//     Azure cannot be fixed by adding an IsUnknown() guard. AV-145015 fixed the practitioner
+//     experience instead, by rejecting the config in validateCreateCluster before it is
+//     mapped - the AWS tests below guard that;
 //   - on Azure updates the provider now omits `autoexpansion` whenever set-element
 //     correlation breaks, and relies on the server treating an absent field as "leave
 //     as-is" (AV-143041, Capella 2.2.288) rather than upholding the contract itself.
 //
 // The Azure assertions below were run live on 2026-09-23; the per-test comments record what
-// each one established, including one expectation that turned out to be wrong. The AWS tests
-// are skipped: they state the contract AV-145015 will deliver, and fail against today's
-// behaviour by design.
+// each one established, including one expectation that turned out to be wrong.
 //
 // The request-shaping itself is pinned deterministically by the unit test in
 // internal/resources/cluster_azure_disk_test.go. These tests cover what the practitioner
@@ -91,35 +90,27 @@ func TestAccClusterResourceAzureUltraDiskIopsInvalid_AV_143042(t *testing.T) {
 	})
 }
 
-// TestAccClusterResourceAwsDiskIopsOmitted_AV_145015 and its `storage` sibling below state
-// the behaviour the provider should have and does not yet, so both are skipped.
+// TestAccClusterResourceAwsDiskIopsOmitted_AV_145015 and its `storage` sibling below guard
+// the AV-145015 fix: the provider rejects the config itself, naming the missing attribute.
 //
-// They assert a provider-side rejection naming the missing attribute. Today the config is
-// accepted, `iops: 0` goes on the wire, and Capella answers with a range error about a value
-// the practitioner never wrote:
+// Before the fix the config was accepted, `iops: 0` went on the wire, and Capella answered
+// with a range error about a value the practitioner never wrote:
 //
 //	"The storage IOPS value is invalid for the service group '...', should be between
 //	 3000 and 16000 inclusive but is 0."
 //
-// The patterns below do not match that, so these tests genuinely fail today - which is why
-// they are skipped rather than left red, and what makes them one line from becoming a
-// regression guard.
+// The patterns below deliberately do not match that text, so these tests fail if the
+// provider-side check is ever removed and the config reaches Capella again.
 //
 // Rejection rather than omission is the right contract: `storage` and `iops` are plain ints
 // with no `omitempty` in the API contract on both sides, so leaving them out of the JSON
 // still unmarshals to 0 server-side and produces the identical 422. There is no AWS default
 // for Capella to apply. See AV-145015 for the full analysis.
 //
-// The patterns accept either plausible fix shape - a validateCreateCluster check following
-// the existing AWS `autoexpansion` and GCP `iops` rules (internal/resources/cluster.go:833-849),
-// or making the attributes Required in the schema. Tighten to whichever ships.
-//
-// When unskipping, add both tests to acceptance_tests/sanity.list: they are rejected before
-// anything is provisioned and cost under two seconds each.
+// The patterns also accept a schema-level `Required`, the other plausible fix shape. The fix
+// that shipped is the validateCreateCluster check, because `diskAttrs` is shared by all
+// three cloud providers and Azure Premium disks must not set these attributes at all.
 func TestAccClusterResourceAwsDiskIopsOmitted_AV_145015(t *testing.T) {
-	t.Skip("AV-145015: an omitted AWS iops is unknown, serialised as 0 and rejected by " +
-		"Capella with a range error; unskip once the provider rejects the config itself")
-
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := generateRandomCIDR()
 
@@ -137,9 +128,6 @@ func TestAccClusterResourceAwsDiskIopsOmitted_AV_145015(t *testing.T) {
 // TestAccClusterResourceAwsDiskStorageOmitted_AV_145015 is the `storage` half of the same
 // defect. See the comment above for why this asserts rejection and is skipped.
 func TestAccClusterResourceAwsDiskStorageOmitted_AV_145015(t *testing.T) {
-	t.Skip("AV-145015: an omitted AWS storage is unknown, serialised as 0 and rejected by " +
-		"Capella with a range error; unskip once the provider rejects the config itself")
-
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := generateRandomCIDR()
 

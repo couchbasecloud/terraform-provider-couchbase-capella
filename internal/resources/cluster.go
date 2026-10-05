@@ -848,6 +848,23 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 		}
 	}
 
+	if csp == string(clusterapi.Aws) {
+		for _, sg := range plan.ServiceGroups {
+			// storage and iops are declared Optional+Computed because the disk block is
+			// shared by all three cloud providers, but AWS has no server-side default for
+			// either. An attribute the practitioner leaves out is unknown here, and it is
+			// sent as 0 because DiskAWS has plain int fields with no omitempty, so Capella
+			// rejects the create with a range error naming a 0 nobody wrote. Reject it here
+			// instead, naming the attribute that is actually missing.
+			if sg.Node.Disk.Storage.IsNull() || sg.Node.Disk.Storage.IsUnknown() {
+				return fmt.Errorf("invalid configuration: storage must be set for %s cloud provider", csp)
+			}
+			if sg.Node.Disk.IOPS.IsNull() || sg.Node.Disk.IOPS.IsUnknown() {
+				return fmt.Errorf("invalid configuration: iops must be set for %s cloud provider", csp)
+			}
+		}
+	}
+
 	return c.validateClusterAttributesTrimmed(plan)
 }
 
