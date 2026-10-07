@@ -162,13 +162,13 @@ func testAccClusterConfigAzureDiskAutoExpansionOffOmittedUpdate(resourceName, ci
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
-  couchbase_server = {
-    version = var.server_version
-  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion off update omitted"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -205,13 +205,13 @@ func testAccClusterConfigAzureDiskAutoExpansionUnset(resourceName, cidr string) 
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
-  couchbase_server = {
-    version = var.server_version
-  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion default"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -248,13 +248,13 @@ func testAccClusterConfigAzureDiskAutoExpansion(resourceName, cidr string) strin
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
-  couchbase_server = {
-    version = var.server_version
-  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -292,13 +292,13 @@ func testAccClusterConfigAzureDiskAutoExpansionOff(resourceName, cidr string) st
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
-  couchbase_server = {
-    version = var.server_version
-  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"

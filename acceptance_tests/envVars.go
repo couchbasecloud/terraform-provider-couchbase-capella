@@ -1,9 +1,16 @@
 package acceptance_tests
 
 import (
+	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 )
+
+// serverVersionPattern matches the MAJOR.MINOR form the cluster resource keeps in state.
+// The provider strips the patch component from the version the API reports, so a
+// patch-level value would never match state. See the check in getEnvVars.
+var serverVersionPattern = regexp.MustCompile(`^\d+\.\d+$`)
 
 func getEnvVars() error {
 	globalHost = os.Getenv("TF_VAR_host")
@@ -35,6 +42,12 @@ func getEnvVars() error {
 	globalServerVersion = os.Getenv("TF_VAR_server_version")
 	if globalServerVersion == "" {
 		globalServerVersion = defaultServerVersion
+	}
+	// couchbase_server is RequiresReplace and the provider stores only MAJOR.MINOR, so a
+	// patch-level value here would never match state: every plan after create would be
+	// non-empty and would propose replacing the cluster. Fail loudly instead.
+	if !serverVersionPattern.MatchString(globalServerVersion) {
+		return fmt.Errorf("%w  Got %q", ErrInvalidServerVersion, globalServerVersion)
 	}
 
 	// ACC_SKIP_APP_SERVICE skips the shared app service + app endpoint setup in

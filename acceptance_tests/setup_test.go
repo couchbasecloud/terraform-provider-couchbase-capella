@@ -36,6 +36,7 @@ variable "auth_token" {
 
 variable "server_version" {
   description = "Couchbase Server version for clusters created by acceptance tests."
+  type        = string
   default     = %q
 }
 

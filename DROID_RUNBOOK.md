@@ -274,9 +274,24 @@ to `defaultServerVersion` in `acceptance_tests/globals.go`; override it per run 
 export TF_VAR_server_version="8.0"
 ```
 
+The value must be `MAJOR.MINOR`. The provider stores only the major and minor components of
+the version Capella reports, and `couchbase_server` forces replacement when it changes, so a
+patch-level value such as `7.6.6` would never match state and would make every plan after
+create propose replacing the cluster. `getEnvVars` rejects anything else up front.
+
 The same variable is exposed to test HCL as `var.server_version`, so any new cluster config
 should set `couchbase_server = { version = var.server_version }` rather than hardcoding a
 version or letting Capella pick its default.
+
+Two things this does not cover:
+
+- **Free tier clusters.** `couchbase-capella_free_tier_cluster` exposes `couchbase_server` as
+  computed only, so free tier tests still get whatever version Capella deploys by default.
+- **App Services.** The suite pins App Services separately via `pinnedAppServiceVersion` in
+  `acceptance_tests/globals.go`, and that value does not move with `TF_VAR_server_version`.
+  If you change the server version, check the pairing is supported first — an incompatible
+  combination fails in `TestMain` while it builds the shared app service, before any test
+  runs. Setting `ACC_SKIP_APP_SERVICE=1` skips that fixture if you only need cluster tests.
 
 #### Writing Acceptance Tests
 

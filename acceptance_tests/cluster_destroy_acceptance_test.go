@@ -70,12 +70,12 @@ func testAccClusterResourceConfigForDestroy(resourceName, cidr string) string {
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
-  couchbase_server = {
-    version = var.server_version
-  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
