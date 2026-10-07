@@ -316,6 +316,9 @@ func testAccClusterConfigAzureUltraDisk(resourceName, cidr, diskFields string) s
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -360,6 +363,9 @@ func testAccClusterConfigAwsDisk(resourceName, cidr, diskBlock string) string {
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -402,6 +408,9 @@ func testAccClusterConfigAzureScale(resourceName, cidr string, numOfNodes int, a
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -445,6 +454,9 @@ func testAccClusterConfigAzureTwoServiceGroups(resourceName, cidr string) string
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"

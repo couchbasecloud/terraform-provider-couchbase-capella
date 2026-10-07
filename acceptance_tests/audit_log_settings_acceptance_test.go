@@ -394,6 +394,9 @@ func testAccAuditLogSettingsResourceConfigWithSupportPlan(clusterResourceName, a
 %[1]s
 
 resource "couchbase-capella_cluster" "%[2]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "%[3]s"
 	project_id      = "%[4]s"
 	name            = "%[2]s"

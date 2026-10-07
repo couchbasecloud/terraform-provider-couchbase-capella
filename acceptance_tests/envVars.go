@@ -29,6 +29,14 @@ func getEnvVars() error {
 	}
 	dmClusterId = os.Getenv("TF_VAR_dm_cluster_id")
 
+	// TF_VAR_server_version pins the Couchbase Server version for every cluster the
+	// suite creates. It is also picked up by Terraform itself as the value for
+	// var.server_version, which the cluster HCL in the tests references.
+	globalServerVersion = os.Getenv("TF_VAR_server_version")
+	if globalServerVersion == "" {
+		globalServerVersion = defaultServerVersion
+	}
+
 	// ACC_SKIP_APP_SERVICE skips the shared app service + app endpoint setup in
 	// TestMain (see setup). Accepts standard bool forms (1/true/...); anything
 	// unparseable, including unset, leaves it false.

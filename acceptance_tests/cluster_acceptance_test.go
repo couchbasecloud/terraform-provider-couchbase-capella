@@ -432,6 +432,9 @@ func testAccClusterResourceConfigWithOnlyReqField(resourceName, cidr string) str
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -475,6 +478,9 @@ func testAccClusterResourceConfigWithAllField(resourceName, cidr string) string 
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -536,6 +542,9 @@ func testAccClusterResourceConfigWithAllFieldInvalidScenario(resourceName, cidr 
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -579,6 +588,9 @@ func testAccClusterResourceInvalidAvailabilityTypeConfig(resourceName string) st
 %[1]s
 
 resource "couchbase-capella_cluster" "%[2]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "00000000-0000-0000-0000-000000000000"
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
@@ -624,6 +636,9 @@ func testAccClusterResourceInvalidCloudProviderTypeConfig(resourceName string) s
 %[1]s
 
 resource "couchbase-capella_cluster" "%[2]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "00000000-0000-0000-0000-000000000000"
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
@@ -669,6 +684,9 @@ func testAccClusterResourceInvalidDiskTypeConfig(resourceName string) string {
 %[1]s
 
 resource "couchbase-capella_cluster" "%[2]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "00000000-0000-0000-0000-000000000000"
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
@@ -714,6 +732,9 @@ func testAccClusterResourceEmptyServiceGroupsConfig(resourceName string) string 
 %[1]s
 
 resource "couchbase-capella_cluster" "%[2]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "00000000-0000-0000-0000-000000000000"
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
@@ -743,6 +764,9 @@ func testAccClusterResourceEmptyServicesConfig(resourceName string) string {
 %[1]s
 
 resource "couchbase-capella_cluster" "%[2]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "00000000-0000-0000-0000-000000000000"
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
@@ -792,6 +816,9 @@ locals {
 }
 
 resource "couchbase-capella_cluster" "%[2]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "00000000-0000-0000-0000-000000000000"
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = local.too_long_name
@@ -839,6 +866,9 @@ func testAccClusterResourceConfigWithConfigurationTypeFieldAdded(resourceName, c
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -884,6 +914,9 @@ func testAccClusterResourceConfigAwsWithAutoexpansionInvalidConfig(resourceName,
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -929,6 +962,9 @@ func testAccClusterResourceConfigGCP(resourceName, cidr string) string {
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -973,6 +1009,9 @@ func testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(res
 %[1]s
 
 resource "couchbase-capella_cluster"  "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -1048,6 +1087,9 @@ data "http" "cluster_info" {
 }
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            =  "%[4]s"
@@ -1093,6 +1135,9 @@ func testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, ci
 %[1]s
 
 resource "couchbase-capella_cluster"  "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
@@ -1173,6 +1218,9 @@ func testAccClusterResourceConfigThreeServiceGroups(resourceName, cidr string) s
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"

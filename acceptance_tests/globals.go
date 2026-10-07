@@ -19,6 +19,13 @@ var (
 	globalToken string
 	globalOrgId string
 
+	// globalServerVersion is the Couchbase Server version every cluster the suite
+	// creates is pinned to, set from TF_VAR_server_version and falling back to
+	// defaultServerVersion. It is applied both to the clusters created through the
+	// API here and, via var.server_version in globalProviderBlock, to the clusters
+	// test HCL creates through the provider.
+	globalServerVersion string
+
 	// these global variables are set by setup().
 	globalProjectId      string
 	globalClusterId      string
@@ -149,4 +156,9 @@ const (
 	// CBG-5539, which slows Sync Gateway database deletes and makes cleanups time out. Remove once 4.1.2+ is
 	// the default version.
 	pinnedAppServiceVersion = "4.0"
+
+	// defaultServerVersion is the Couchbase Server version used when TF_VAR_server_version
+	// is unset. Pinning a version keeps runs reproducible rather than silently following
+	// whatever Capella currently deploys by default.
+	defaultServerVersion = "7.6"
 )

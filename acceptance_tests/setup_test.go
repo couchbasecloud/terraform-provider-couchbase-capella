@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -19,7 +20,11 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	globalProviderBlock = `
+	// The server_version default is injected from globalServerVersion so HCL that
+	// references var.server_version resolves to the same version the API-created
+	// fixture clusters use. Terraform also reads TF_VAR_server_version directly
+	// when it is set, which yields the same value.
+	globalProviderBlock = fmt.Sprintf(`
 variable "host" {
   description = "The globalHost URL of Couchbase Cloud."
 }
@@ -29,11 +34,16 @@ variable "auth_token" {
   sensitive   = true
 }
 
+variable "server_version" {
+  description = "Couchbase Server version for clusters created by acceptance tests."
+  default     = %q
+}
+
 provider "couchbase-capella" {
   host                 = var.host
   authentication_token = var.auth_token
 }
-`
+`, globalServerVersion)
 
 	var code int
 	ctx := context.Background()

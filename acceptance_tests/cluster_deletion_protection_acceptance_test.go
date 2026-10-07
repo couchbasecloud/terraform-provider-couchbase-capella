@@ -238,6 +238,9 @@ func testAccClusterDeletionProtectionProtectedClusterConfig(clusterResourceName,
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "%[2]s"
 	project_id      = "%[3]s"
 	name            = "%[4]s"
@@ -302,6 +305,9 @@ resource "couchbase-capella_bucket" %[1]q {
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "%[2]s"
 	project_id      = "%[3]s"
 	name            = "%[4]s"
@@ -367,6 +373,9 @@ resource "couchbase-capella_flush" %[1]q {
 %[1]s
 
 resource "couchbase-capella_cluster" "%[4]s" {
+	couchbase_server = {
+		version = var.server_version
+	}
 	organization_id = "%[2]s"
 	project_id      = "%[3]s"
 	name            = "%[4]s"

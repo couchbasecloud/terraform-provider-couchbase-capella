@@ -70,6 +70,9 @@ func createCluster(ctx context.Context, client *api.Client) error {
 			Plan:     "enterprise",
 			Timezone: "PT",
 		},
+		CouchbaseServer: &clusterapi.CouchbaseServer{
+			Version: ptr.To(globalServerVersion),
+		},
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)
@@ -189,6 +192,9 @@ func createDMCluster(ctx context.Context, client *api.Client) error {
 		Support: clusterapi.Support{
 			Plan:     "enterprise",
 			Timezone: "PT",
+		},
+		CouchbaseServer: &clusterapi.CouchbaseServer{
+			Version: ptr.To(globalServerVersion),
 		},
 	}
 

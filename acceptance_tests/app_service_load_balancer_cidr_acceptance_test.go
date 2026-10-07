@@ -152,6 +152,9 @@ resource "couchbase-capella_app_service" "%[4]s" {
 func testAccAzureClusterForAppServiceConfig(clusterName, clusterCIDR string) string {
 	return fmt.Sprintf(`
 resource "couchbase-capella_cluster" "%[3]s" {
+  couchbase_server = {
+    version = var.server_version
+  }
   organization_id = "%[1]s"
   project_id      = "%[2]s"
   name            = "%[3]s"

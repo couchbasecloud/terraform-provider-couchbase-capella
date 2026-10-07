@@ -264,6 +264,20 @@ export TF_VAR_app_service_id="<existing app service ID>"
 
 Anything unset will be created by setup and torn down when the suite finishes.
 
+#### Choosing the Couchbase Server version
+
+Every cluster the suite creates — the shared fixture clusters and the clusters individual
+tests create through the provider — is pinned to one Couchbase Server version. It defaults
+to `defaultServerVersion` in `acceptance_tests/globals.go`; override it per run with:
+
+```bash
+export TF_VAR_server_version="8.0"
+```
+
+The same variable is exposed to test HCL as `var.server_version`, so any new cluster config
+should set `couchbase_server = { version = var.server_version }` rather than hardcoding a
+version or letting Capella pick its default.
+
 #### Writing Acceptance Tests
 
 Use the `tf-acceptance-test-gen` skill. See [Example 6](#run-the-droid-examples) above for a ready-to-paste prompt. Minimal form:
