@@ -104,7 +104,16 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 
 	var created api.AppEndpointOIDCProviderResponse
 	if err := json.Unmarshal(res.Body, &created); err != nil {
-		resp.Diagnostics.AddError("Error unmarshalling create OIDC Provider response", api.ParseError(err))
+		resp.Diagnostics.AddError(
+			"Error Creating OIDC Provider",
+			fmt.Sprintf(
+				"An OIDC provider was created on App Endpoint %s, but the create response could not be parsed, "+
+					"so its provider ID is unknown and it was not saved to Terraform state. "+
+					"You may need to remove the OIDC provider manually in Capella before applying again, "+
+					"otherwise a duplicate provider will be created. Error: %s",
+				appEndpointName, err.Error(),
+			),
+		)
 		return
 	}
 
