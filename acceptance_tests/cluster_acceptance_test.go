@@ -435,6 +435,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -481,6 +484,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   description     = "AWS cluster with all fields"
   enable_private_dns_resolution = false
 
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -541,6 +547,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   name            = "%[4]s"
   description     = "AWS cluster with invalid disk type"
 
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -583,6 +592,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
 
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "aws"
 		region = "us-east-1"
@@ -628,6 +640,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
 
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "oracle"
 		region = "us-east-1"
@@ -673,6 +688,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
 
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "aws"
 		region = "us-east-1"
@@ -718,6 +736,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
 
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "aws"
 		region = "us-east-1"
@@ -747,6 +768,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = "%[2]s"
 
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "aws"
 		region = "us-east-1"
@@ -796,6 +820,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
 	project_id      = "11111111-1111-1111-1111-111111111111"
 	name            = local.too_long_name
 
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "aws"
 		region = "us-east-1"
@@ -842,6 +869,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -887,6 +917,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -933,6 +966,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "GCP cluster"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
 	type = "gcp",
 	region = "us-east1",
@@ -977,6 +1013,9 @@ resource "couchbase-capella_cluster"  "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "GCP with invalid IOPS config"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
 	type = "gcp",
 	region = "us-east1",
@@ -1051,6 +1090,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            =  "%[4]s"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -1097,6 +1139,9 @@ resource "couchbase-capella_cluster"  "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "GCP update with horizontal scaling"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
 	type = "gcp",
 	region = "us-east1",
@@ -1176,6 +1221,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"

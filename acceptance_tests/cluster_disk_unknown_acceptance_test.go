@@ -320,6 +320,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure Ultra disk"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -364,6 +367,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test AWS disk defaults"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -406,6 +412,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure autoexpansion across scaling"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -449,6 +458,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure autoexpansion across scaling"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"

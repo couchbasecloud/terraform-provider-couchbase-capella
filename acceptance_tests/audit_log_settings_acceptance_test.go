@@ -398,6 +398,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
 	project_id      = "%[4]s"
 	name            = "%[2]s"
 
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "aws"
 		region = "us-east-1"

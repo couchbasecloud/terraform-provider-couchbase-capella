@@ -166,6 +166,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion off update omitted"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -206,6 +209,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion default"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -246,6 +252,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -287,6 +296,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
   project_id      = "%[3]s"
   name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion"
+  couchbase_server = {
+    version = var.server_version
+  }
   cloud_provider = {
     type   = "azure"
     region = "eastus"
