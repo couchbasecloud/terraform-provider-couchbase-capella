@@ -283,15 +283,13 @@ The same variable is exposed to test HCL as `var.server_version`, so any new clu
 should set `couchbase_server = { version = var.server_version }` rather than hardcoding a
 version or letting Capella pick its default.
 
-Two things this does not cover:
+This does not cover free tier clusters: `couchbase-capella_free_tier_cluster` exposes
+`couchbase_server` as computed only, so free tier tests still get whatever version Capella
+deploys by default.
 
-- **Free tier clusters.** `couchbase-capella_free_tier_cluster` exposes `couchbase_server` as
-  computed only, so free tier tests still get whatever version Capella deploys by default.
-- **App Services.** The suite pins App Services separately via `pinnedAppServiceVersion` in
-  `acceptance_tests/globals.go`, and that value does not move with `TF_VAR_server_version`.
-  If you change the server version, check the pairing is supported first — an incompatible
-  combination fails in `TestMain` while it builds the shared app service, before any test
-  runs. Setting `ACC_SKIP_APP_SERVICE=1` skips that fixture if you only need cluster tests.
+App Services versions are a separate line from Couchbase Server versions, so they are
+unaffected by this setting. The suite pins them independently via `pinnedAppServiceVersion`
+in `acceptance_tests/globals.go`.
 
 #### Writing Acceptance Tests
 
