@@ -64,6 +64,22 @@ var (
 	dmBucketCreated  bool
 	dmBucketName     = "default"
 
+	// sparseVectorClusterId is a dedicated, pre-provisioned 8.5.0+ cluster for
+	// SPARSE VECTOR index tests (IDEA-1416/AV-141147/SPV-25). Automated 8.5.0
+	// cluster creation is currently blocked by AV-145087, so this must be
+	// supplied via env var; sparse vector tests skip themselves when unset.
+	sparseVectorClusterId        string
+	sparseVectorBucketName       = "tf_acc_sparse_vector"
+	sparseVectorScopeName        = "vector_scope"
+	sparseVectorCollectionName   = "sparse_coll"
+	sparseVectorBucketId         string
+	sparseVectorBucketCreated    bool
+	sparseVectorAllowlistId      string
+	sparseVectorAllowlistCreated bool
+	sparseVectorCredId           string
+	sparseVectorCredName         string
+	sparseVectorCredPassword     string
+
 	appEndpointClusterId          string
 	appEndpointClusterName        string
 	appEndpointBucketId           string
