@@ -7,6 +7,10 @@ const (
 	organizationRoleOwner   = "organizationOwner"
 	organizationRoleCreator = "projectCreator"
 
+	organizationRoleBillingAdmin  = "organizationBillingAdmin"
+	organizationRoleBillingViewer = "organizationBillingViewer"
+	organizationRoleReadOnly      = "organizationReadOnly"
+
 	projectRoleOwner            = "projectOwner"
 	projectRoleManager          = "projectManager"
 	projectRoleViewer           = "projectViewer"
@@ -18,6 +22,9 @@ var validOrganizationRoles = []string{
 	organizationRoleMember,
 	organizationRoleOwner,
 	organizationRoleCreator,
+	organizationRoleBillingAdmin,
+	organizationRoleBillingViewer,
+	organizationRoleReadOnly,
 }
 
 var validProjectRoles = []string{
