@@ -1,0 +1,184 @@
+---
+name: tf-fix-pr
+description: Branch, validate, and open a draft PR for a Terraform Capella provider fix linked to a JIRA ticket. Use after a root cause is identified and a fix + acceptance test are written.
+user-invocable: false
+---
+
+# Terraform Fix & Draft PR Creation
+
+Workflow for turning a diagnosed bug fix into a validated draft pull request in
+`couchbasecloud/terraform-provider-couchbase-capella`, linked back to its JIRA ticket.
+
+## Prerequisites
+
+- A JIRA ticket key for the fix (e.g. `AV-XXXXX`).
+- An identified root cause with the file paths and code changes needed.
+- A fix confidence assessment (0-100%).
+- The fix and its acceptance test already written (see the `tf-bugfix` and
+  `tf-acceptance-test-gen` skills).
+
+## Existing-Fix Search (run BEFORE creating a PR)
+
+Confirm no fix is already in flight for the same root cause.
+
+```bash
+# Open PRs touching the same area or ticket
+gh pr list --state open --search "<JIRA_KEY>" --json number,title,headRefName,author,isDraft
+gh pr list --state open --search "<path or filename>" --json number,title,headRefName,author,isDraft
+
+# Recently merged (last 30 days) — a fix may have shipped already.
+# macOS: date -u -v-30d +%Y-%m-%d   |   Linux (CI): date -u -d '30 days ago' +%Y-%m-%d
+gh pr list --state merged --search "<path or filename> merged:>=$(date -u -d '30 days ago' +%Y-%m-%d)" \
+  --json number,title,mergedAt
+```
+
+Decision:
+- **Open PR already proposes the same fix** → comment on that PR noting the ticket. Do NOT open a new PR.
+- **Recently merged PR shipped it** → comment on the JIRA ticket linking the merged PR. Do NOT open a new PR.
+- **Nothing found** → proceed below.
+
+## PR Creation Workflow
+
+### 1. Branch off main
+
+```bash
+git checkout main && git pull origin main
+git checkout -b <JIRA_KEY>-<short-kebab-description> main
+```
+
+### 2. Apply the fix + acceptance test
+
+- Follow the `tf-bugfix` skill for the source change and the
+  `tf-acceptance-test-gen` skill for the test.
+- New datasources/resources must use `ClientV1` (per `CLAUDE.md`).
+- Name the acceptance test `TestAcc<Feature>_AV_XXXXX`.
+- Error wrapping: `fmt.Errorf("...: %w", err)`.
+
+### 3. Validate — CI-parity gate (do NOT run acceptance tests)
+
+Run the same checks CI runs on every PR and treat them as hard gates. CI runs `golangci-lint`
+(config `.golangci.yml`, `only-new-issues: true`) + `make tfcheck` via `lint.yml`, and
+`make vet` + `make test` via `unit-tests.yml`. Acceptance tests hit live Capella and are only
+compile-checked here.
+
+```bash
+# Format ONLY the files you changed — NOT the whole repo.
+# Do not use `make fmt` or `terraform fmt -recursive .` (they reformat unrelated files).
+gofmt -s -w <changed .go files>
+goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella <changed .go files>
+terraform fmt <changed .tf files>               # only if any .tf changed
+
+# Lint — there is NO `make lint` target; use lint-fix, then confirm clean
+make lint-fix                                   # golangci-lint run --fix
+golangci-lint run                               # must report no new issues in changed files
+
+make vet
+make test                                       # unit tests
+go test -c -o /dev/null ./acceptance_tests/     # compile acceptance tests without running
+
+# Build the binary (per CLAUDE.md)
+VERSION=$(git describe --tags --abbrev=0)
+go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=$VERSION'" \
+  -o ./bin/terraform-provider-couchbase-capella
+```
+
+Fix every error and re-run until all pass clean before opening the PR. Do NOT run `make testacc`.
+
+### 4. Commit
+
+Stage the changed files explicitly (new test files are untracked, so `git commit -a` would
+miss them), then commit. **Commits must be signed** — this repo signs commits, and branch
+protection may reject unsigned ones. Locally `git commit -S` inherits your signing config; in
+headless/CI runs, ensure a signing key (GPG or SSH) is configured first.
+
+```bash
+git add <changed source files> <new/updated test files>   # e.g. internal/... acceptance_tests/...
+git commit -S -m "[<JIRA_KEY>] <fix description>"
+```
+
+### 5. Push & open a DRAFT PR
+
+```bash
+git push -u origin <branch>
+gh pr create --draft --title "[<JIRA_KEY>] <fix description>" --body-file /tmp/pr-body.md
+```
+
+The PR body **must** follow `.github/pull_request_template.md`. Fill every section:
+
+```markdown
+## Jira
+
+* <JIRA_KEY>
+
+## Description
+
+<Root cause summary and what the fix does, and why.>
+
+> **Fix confidence:** <0-100%>
+> **Reviewer action required:** <what to verify — include when confidence < 100%>
+
+## Type of Change
+
+- [x] Bug fix (non-breaking change which fixes an issue).
+
+## Manual Testing Approach
+
+### How was this change tested and do you have evidence?
+
+<!-- Check the box that matches what ACTUALLY ran. Acceptance tests are only
+compile-checked here (no live Capella creds), so do NOT check "Acceptance tested"
+unless they were truly executed. Check "Unit tested" when `make test`/a unit test
+ran. -->
+- [x] Unit tested
+
+### Testing
+
+<details open>
+  <summary>Testing</summary>
+
+`make test` (unit), lint, and build all pass. Any acceptance test added
+(`TestAcc<Feature>_AV_XXXXX`) was **compile-checked only** with
+`go test -c ./acceptance_tests/` and **not executed** (requires live Capella
+credentials) — so "Acceptance tested" is intentionally left unchecked.
+
+</details>
+
+## Further comments
+
+Generated by the tf-ticket-autofix droid. Draft — a human reviewer makes the
+merge decision.
+```
+
+Rules for the template:
+- Check exactly one **Type of Change** box (Bug fix for autofix).
+- Check at least one **Manual Testing Approach** box and give evidence.
+- If confidence < 100%, include the `> **Reviewer action required:**` callout.
+
+### 6. Link the PR back to JIRA
+
+Add a comment to the ticket with the PR URL:
+
+```bash
+curl -fsS -X POST "https://couchbasecloud.atlassian.net/rest/api/3/issue/<JIRA_KEY>/comment" \
+  -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"body":{"type":"doc","version":1,"content":[{"type":"paragraph","content":[
+    {"type":"text","text":"Draft fix PR opened by tf-ticket-autofix droid: "},
+    {"type":"text","text":"<PR_URL>","marks":[{"type":"link","attrs":{"href":"<PR_URL>"}}]}
+  ]}]}}'
+```
+
+## Confidence Thresholds
+
+| Confidence | Action |
+|---|---|
+| 100%      | Open draft PR with the fix. |
+| 80-99%    | Open draft PR with the fix + `Reviewer action required` callouts on uncertain areas. |
+| < 80%     | Do NOT open a PR. Comment the diagnosis on the JIRA ticket as a recommendation only. |
+
+## Rules
+
+- PRs are ALWAYS created as **draft** — the human reviewer decides the merge.
+- Never merge a PR.
+- Never run `make testacc` (no live credentials; would create real Capella resources).
+- Never expose credentials in commits, PR bodies, or output — reference env vars only.
