@@ -101,3 +101,18 @@ resource "couchbase-capella_query_indexes" "idx" {
   index_name      = "idx1"
   index_keys      = ["ram"]
 }
+
+# Example with key modifiers (e.g. INCLUDE MISSING) -
+# Write index_keys in the canonical form Couchbase returns: backtick-quote the
+# identifiers and keep any key modifiers. This ensures an imported index matches
+# the configuration and is not flagged for an unnecessary replacement.
+resource "couchbase-capella_query_indexes" "idx_include_missing" {
+  organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+  project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+  cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+  bucket_name     = "api"
+  scope_name      = "metrics"
+  collection_name = "memory"
+  index_name      = "idx_include_missing"
+  index_keys      = ["`name` INCLUDE MISSING", "`age`"]
+}
