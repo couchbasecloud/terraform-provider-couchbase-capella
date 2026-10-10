@@ -13,6 +13,11 @@ terraform.tfstate
 terraform.tfvars
 *.backup
 *.tfstate.*
+
+# The upgrade tests' state files are hand-maintained fixtures representing state
+# as an older provider version wrote it, not real state, so they are tracked.
+!upgrade_tests/testdata/**/terraform.tfstate
+
 .testCoverage.txt
 
 # Ignore compiled test binaries
