@@ -160,6 +160,155 @@ resource "couchbase-capella_query_indexes" "%[8]s" {
 		resourceName)
 }
 
+// TestAccGSIImportWithoutIsPrimary verifies that importing an existing index
+// without specifying is_primary in the config does not trigger a spurious
+// in-place update. The is_primary attribute is computed, so Terraform uses the
+// imported value and produces no diff.
+func TestAccGSIImportWithoutIsPrimary(t *testing.T) {
+	const resourceType = "couchbase-capella_query_indexes"
+	indexResourceName := "idx"
+	indexResourceReference := fmt.Sprintf("%s.%s", resourceType, indexResourceName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_query_indexes" "%[8]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_name     = "%[5]s"
+  scope_name      = "%[6]s"
+  collection_name = "%[7]s"
+  index_name      = "import_test_idx"
+  index_keys      = ["import_test_key"]
+}
+`, globalProviderBlock,
+					globalOrgId,
+					globalProjectId,
+					globalClusterId,
+					globalBucketName,
+					globalScopeName,
+					globalCollectionName,
+					indexResourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(indexResourceReference, "index_name", "import_test_idx"),
+					resource.TestCheckResourceAttr(indexResourceReference, "index_keys.0", "import_test_key"),
+				),
+			},
+			{
+				ResourceName:            indexResourceReference,
+				ImportStateIdFunc:       generateGsiImportIdForResource(indexResourceReference),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"with"},
+			},
+		},
+	})
+}
+
+// TestAccGSINumReplicaUnchangedNoop verifies that re-applying the same config
+// after an index is created does not trigger a failing ALTER INDEX call when
+// num_replica has not changed. Previously the provider issued an unconditional
+// ALTER INDEX on every in-place update, which Couchbase Server rejects when
+// num_replica is unchanged ("Index already has X number of replica").
+func TestAccGSINumReplicaUnchangedNoop(t *testing.T) {
+	const resourceType = "couchbase-capella_query_indexes"
+	indexResourceName := "idx"
+	indexResourceReference := fmt.Sprintf("%s.%s", resourceType, indexResourceName)
+
+	configWithNumReplica0 := fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_query_indexes" "%[8]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_name     = "%[5]s"
+  scope_name      = "%[6]s"
+  collection_name = "%[7]s"
+  index_name      = "noop_test_idx"
+  index_keys      = ["noop_test_key"]
+  with = {
+    num_replica = 0
+  }
+}
+`, globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalBucketName,
+		globalScopeName,
+		globalCollectionName,
+		indexResourceName)
+
+	configWithNumReplica1 := fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_query_indexes" "%[8]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_name     = "%[5]s"
+  scope_name      = "%[6]s"
+  collection_name = "%[7]s"
+  index_name      = "noop_test_idx"
+  index_keys      = ["noop_test_key"]
+  with = {
+    num_replica = 1
+  }
+}
+`, globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalBucketName,
+		globalScopeName,
+		globalCollectionName,
+		indexResourceName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			// Step 1: Create index with num_replica = 0
+			{
+				Config: configWithNumReplica0,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(indexResourceReference, "index_name", "noop_test_idx"),
+					resource.TestCheckResourceAttr(indexResourceReference, "with.num_replica", "0"),
+				),
+			},
+			// Step 2: Re-apply the same config — should be a no-op, not fail
+			{
+				Config: configWithNumReplica0,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(indexResourceReference, "index_name", "noop_test_idx"),
+					resource.TestCheckResourceAttr(indexResourceReference, "with.num_replica", "0"),
+				),
+			},
+			// Step 3: Update num_replica from 0 to 1
+			{
+				Config: configWithNumReplica1,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(indexResourceReference, "index_name", "noop_test_idx"),
+					resource.TestCheckResourceAttr(indexResourceReference, "with.num_replica", "1"),
+				),
+			},
+			// Step 4: Re-apply with num_replica = 1 — should be a no-op, not fail
+			{
+				Config: configWithNumReplica1,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(indexResourceReference, "index_name", "noop_test_idx"),
+					resource.TestCheckResourceAttr(indexResourceReference, "with.num_replica", "1"),
+				),
+			},
+		},
+	})
+}
+
 func generateGsiImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
