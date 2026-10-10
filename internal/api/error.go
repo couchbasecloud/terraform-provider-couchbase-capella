@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // Error tracks the error structure received from Capella V4 APIs.
@@ -71,3 +72,26 @@ func IsForbiddenError(err error) bool {
 	var apiError *Error
 	return errors.As(err, &apiError) && apiError.HttpStatusCode == http.StatusForbidden
 }
+
+// RetryExhaustedError is returned when a retryable 503 or 504 response persisted
+// past the retry budget. It reports the attempt count and the elapsed time so an
+// operator can tell a genuinely unavailable service from a merely slow one.
+type RetryExhaustedError struct {
+	// LastErr is the error produced by the final attempt.
+	LastErr error
+
+	// Attempts is the number of requests issued, including the first.
+	Attempts int
+
+	// Elapsed is the wall-clock time spent across all attempts.
+	Elapsed time.Duration
+}
+
+func (e *RetryExhaustedError) Error() string {
+	return fmt.Sprintf("%v after %d attempts over %s",
+		e.LastErr, e.Attempts, e.Elapsed.Round(time.Millisecond))
+}
+
+// Unwrap exposes the final attempt's error so that callers can still match the
+// underlying cause with errors.Is.
+func (e *RetryExhaustedError) Unwrap() error { return e.LastErr }
