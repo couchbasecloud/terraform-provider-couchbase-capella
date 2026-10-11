@@ -127,7 +127,7 @@ func getReplicationJob(
 
 	var job replicationapi.GetReplicationJobResponse
 	if err := json.Unmarshal(response.Body, &job); err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	return &job, nil
 }
