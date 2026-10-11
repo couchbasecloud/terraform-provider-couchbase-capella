@@ -266,6 +266,18 @@ var (
 	// ErrAppServiceFailedState is returned when the App Service reports that it is in a terminal failed state (e.g. deployment failed).
 	ErrAppServiceFailedState = errors.New("app service operation failed")
 
+	// ErrReplicationJobFailed is returned when an async replication create job stops in a failed state.
+	ErrReplicationJobFailed = errors.New("replication job failed")
+
+	// ErrReplicationJobTimeout is returned when a replication create job does not finish within the polling timeout.
+	ErrReplicationJobTimeout = errors.New("replication job status transition timed out after initiation")
+
+	// ErrReplicationJobNotFound is returned when the API keeps reporting a replication create job as notfound.
+	ErrReplicationJobNotFound = errors.New("replication job not found")
+
+	// ErrReplicationJobMissingId is returned when a replication create job completes without a replication ID.
+	ErrReplicationJobMissingId = errors.New("replication job completed without a replication ID")
+
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrIndexDeferred = errors.New("index is in Deferred state and will not become Ready without a BUILD INDEX statement")
