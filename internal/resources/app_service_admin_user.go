@@ -26,14 +26,17 @@ var (
 	_ resource.ResourceWithValidateConfig = (*AppServiceAdminUser)(nil)
 )
 
-// appServiceAdminUserRequest is the create and update body. The API expects the access
-// oneOf flattened into the body, which the generated union type does not do.
-// Update sends only the access fields.
-type appServiceAdminUserRequest struct {
-	Name               string   `json:"name,omitempty"`
-	Password           string   `json:"password,omitempty"`
+// appServiceAdminUserAccess is the access oneOf. Update sends it as the whole body,
+// create nests it under "access". The generated union type has no simple constructor.
+type appServiceAdminUserAccess struct {
 	AccessAllEndpoints bool     `json:"accessAllEndpoints,omitempty"`
 	Endpoints          []string `json:"endpoints,omitempty"`
+}
+
+type createAppServiceAdminUserRequest struct {
+	Name     string                    `json:"name"`
+	Password string                    `json:"password"`
+	Access   appServiceAdminUserAccess `json:"access"`
 }
 
 type AppServiceAdminUser struct {
@@ -109,13 +112,16 @@ func (a *AppServiceAdminUser) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	userReq, diags := accessRequest(ctx, plan)
+	access, diags := accessRequest(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	userReq.Name = plan.Name.ValueString()
-	userReq.Password = plan.Password.ValueString()
+	userReq := createAppServiceAdminUserRequest{
+		Name:     plan.Name.ValueString(),
+		Password: plan.Password.ValueString(),
+		Access:   access,
+	}
 
 	var (
 		organizationId = plan.OrganizationId.ValueString()
@@ -308,8 +314,8 @@ func (a *AppServiceAdminUser) ImportState(ctx context.Context, req resource.Impo
 }
 
 // accessRequest builds the access part of the request body from the plan.
-func accessRequest(ctx context.Context, plan providerschema.AppServiceAdminUser) (appServiceAdminUserRequest, diag.Diagnostics) {
-	userReq := appServiceAdminUserRequest{AccessAllEndpoints: plan.AccessAllEndpoints.ValueBool()}
+func accessRequest(ctx context.Context, plan providerschema.AppServiceAdminUser) (appServiceAdminUserAccess, diag.Diagnostics) {
+	userReq := appServiceAdminUserAccess{AccessAllEndpoints: plan.AccessAllEndpoints.ValueBool()}
 	if userReq.AccessAllEndpoints {
 		return userReq, nil
 	}
