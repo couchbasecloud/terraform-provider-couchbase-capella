@@ -96,7 +96,14 @@ func TestWaitForReplicationJob(t *testing.T) {
 			JobId:       "job-1",
 			State:       state,
 			RetryNumber: 1,
-			LastError:   "source bucket not found",
+			LastError:   "job-fatal:source bucket not found",
+		}}
+	}
+	failedWithError := func(lastError string) jobReply {
+		return jobReply{job: replicationapi.GetReplicationJobResponse{
+			JobId:     "job-1",
+			State:     replicationapi.JobStateFailed,
+			LastError: lastError,
 		}}
 	}
 
@@ -117,6 +124,27 @@ func TestWaitForReplicationJob(t *testing.T) {
 			name:      "pending then processing then complete returns the job after three polls",
 			replies:   []jobReply{jobInState(replicationapi.JobStatePending), jobInState(replicationapi.JobStateProcessing), complete},
 			wantCalls: 3,
+		},
+		{
+			name: "failed with a non-fatal error is retried by Capella and the poll continues to complete",
+			replies: []jobReply{
+				failedWithError("job-error:Replication creation rate-limited due to peering deletion"),
+				failedWithError("job-error:Replication creation rate-limited due to peering deletion"),
+				complete,
+			},
+			wantCalls: 3,
+		},
+		{
+			name:      "failed with no last error is not final and the poll continues to complete",
+			replies:   []jobReply{jobInState(replicationapi.JobStateFailed), complete},
+			wantCalls: 2,
+		},
+		{
+			name:        "failed with a goxdcr fatal error returns ErrReplicationJobFailed",
+			replies:     []jobReply{failedWithError("goxdcr-fatal-error:invalid filter expression")},
+			wantErr:     errors.ErrReplicationJobFailed,
+			errContains: []string{"state failed", "invalid filter expression"},
+			wantCalls:   1,
 		},
 		{
 			name:        "failed after processing returns ErrReplicationJobFailed with state, retry number and last error",
@@ -144,13 +172,6 @@ func TestWaitForReplicationJob(t *testing.T) {
 			replies:     []jobReply{failed(replicationapi.JobStateUnknown)},
 			wantErr:     errors.ErrReplicationJobFailed,
 			errContains: []string{"state unknown"},
-			wantCalls:   1,
-		},
-		{
-			name:        "failed state with an empty last error reports last error as none",
-			replies:     []jobReply{jobInState(replicationapi.JobStateFailed)},
-			wantErr:     errors.ErrReplicationJobFailed,
-			errContains: []string{"last error: none"},
 			wantCalls:   1,
 		},
 		{
@@ -201,6 +222,13 @@ func TestWaitForReplicationJob(t *testing.T) {
 			timeout:     50 * time.Millisecond,
 			wantErr:     errors.ErrReplicationJobTimeout,
 			errContains: []string{"last state processing", "retry 1", "source bucket not found"},
+		},
+		{
+			name:        "timeout while a failed attempt waits for a retry reports the last error as none when it is empty",
+			replies:     []jobReply{jobInState(replicationapi.JobStateFailed)},
+			timeout:     50 * time.Millisecond,
+			wantErr:     errors.ErrReplicationJobTimeout,
+			errContains: []string{"last state failed", "last error: none"},
 		},
 		{
 			name:        "timeout with only server errors returns ErrReplicationJobTimeout with no job status seen",
