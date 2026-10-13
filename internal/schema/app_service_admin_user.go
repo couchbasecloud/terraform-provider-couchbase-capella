@@ -53,7 +53,7 @@ func (a *AppServiceAdminUser) Validate() (organizationId, projectId, clusterId, 
 
 	IDs, err := validateSchemaState(state)
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to validate resource state: %s", err)
+		return "", "", "", "", "", fmt.Errorf("failed to validate resource state: %w", err)
 	}
 
 	return IDs[OrganizationId], IDs[ProjectId], IDs[ClusterId], IDs[AppServiceId], IDs[Id], nil

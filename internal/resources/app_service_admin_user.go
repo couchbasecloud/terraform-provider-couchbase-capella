@@ -342,12 +342,12 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
 	}
 
 	user := apigen.AppServiceAdminUser{}
 	if err = json.Unmarshal(response.Body, &user); err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	state := providerschema.AppServiceAdminUser{
@@ -366,20 +366,9 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	if user.AccessAllEndpoints != nil && *user.AccessAllEndpoints {
 		state.AccessAllEndpoints = types.BoolValue(true)
 	} else if user.Endpoints != nil && len(*user.Endpoints) > 0 {
-		var priorEndpoints []string
-		if diags := prior.Endpoints.ElementsAs(ctx, &priorEndpoints, false); diags.HasError() {
-			return nil, fmt.Errorf("error reading prior endpoints")
-		}
-		if len(priorEndpoints) > 0 && !slices.ContainsFunc(priorEndpoints, func(e string) bool {
-			return !slices.Contains(*user.Endpoints, e)
-		}) {
-			state.Endpoints = prior.Endpoints
-		} else {
-			endpoints, diags := types.SetValueFrom(ctx, types.StringType, *user.Endpoints)
-			if diags.HasError() {
-				return nil, fmt.Errorf("error converting endpoints to set")
-			}
-			state.Endpoints = endpoints
+		state.Endpoints, err = endpointsState(ctx, prior.Endpoints, *user.Endpoints)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -393,4 +382,24 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	}
 
 	return &state, nil
+}
+
+// endpointsState keeps the prior endpoints when all of them are in the API response,
+// since the API returns every endpoint that shares a bucket with a configured one.
+func endpointsState(ctx context.Context, prior types.Set, apiEndpoints []string) (types.Set, error) {
+	var priorEndpoints []string
+	if diags := prior.ElementsAs(ctx, &priorEndpoints, false); diags.HasError() {
+		return types.SetNull(types.StringType), fmt.Errorf("error reading prior endpoints")
+	}
+	if len(priorEndpoints) > 0 && !slices.ContainsFunc(priorEndpoints, func(e string) bool {
+		return !slices.Contains(apiEndpoints, e)
+	}) {
+		return prior, nil
+	}
+
+	endpoints, diags := types.SetValueFrom(ctx, types.StringType, apiEndpoints)
+	if diags.HasError() {
+		return types.SetNull(types.StringType), fmt.Errorf("error converting endpoints to set")
+	}
+	return endpoints, nil
 }
