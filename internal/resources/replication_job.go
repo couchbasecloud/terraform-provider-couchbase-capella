@@ -31,7 +31,8 @@ const maxConsecutiveJobNotFound = 3
 // completed job. replicationId and reverseReplicationId are set only on a completed job.
 //
 // Server errors and network errors are logged and polled again, because the job keeps running on
-// the server. Client errors (4xx) stop the poll.
+// the server. Client errors (4xx) stop the poll. A failed job stops the poll only when Capella will
+// not retry it.
 func waitForReplicationJob(
 	ctx context.Context,
 	data *providerschema.Data,
@@ -78,6 +79,16 @@ func waitForReplicationJob(
 			}
 			tflog.Warn(ctx, "replication job is not visible yet, retrying", map[string]interface{}{
 				"job_id": jobId,
+			})
+
+		case job.State == replicationapi.JobStateFailed && !replicationapi.IsFatalJobError(job.LastError):
+			consecutiveNotFound = 0
+			seenAlive = true
+			lastJob = job
+			tflog.Info(ctx, "replication job attempt failed, waiting for Capella to retry it", map[string]interface{}{
+				"job_id":     jobId,
+				"retry":      job.RetryNumber,
+				"last_error": job.LastError,
 			})
 
 		case replicationapi.IsFailedJobState(job.State):

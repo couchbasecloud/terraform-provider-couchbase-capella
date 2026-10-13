@@ -29,3 +29,23 @@ func TestIsFailedJobState(t *testing.T) {
 		})
 	}
 }
+
+func TestIsFatalJobError(t *testing.T) {
+	tests := []struct {
+		name      string
+		lastError string
+		wantFatal bool
+	}{
+		{name: "job-fatal prefix is fatal", lastError: "job-fatal:invalid create replication job params", wantFatal: true},
+		{name: "goxdcr-fatal-error prefix is fatal", lastError: "goxdcr-fatal-error:invalid filter expression", wantFatal: true},
+		{name: "job-error prefix is retried", lastError: "job-error:Replication creation rate-limited due to peering deletion", wantFatal: false},
+		{name: "an error without a prefix is retried", lastError: "connection reset", wantFatal: false},
+		{name: "no error is retried", lastError: "", wantFatal: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.wantFatal, IsFatalJobError(tt.lastError))
+		})
+	}
+}
