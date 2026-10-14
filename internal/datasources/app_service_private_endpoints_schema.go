@@ -1,8 +1,6 @@
 package datasources
 
 import (
-	"strings"
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -26,18 +24,16 @@ func AppServicePrivateEndpointsSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", appServicePrivateEndpointsBuilder, requiredUUIDString())
 	capellaschema.AddAttr(attrs, "app_service_id", appServicePrivateEndpointsBuilder, requiredUUIDString())
 
-	// Set directly, not through AddAttr, so the OpenAPI description of the endpoint status does not
-	// replace the filter description.
-	attrs["status"] = schema.SetAttribute{
-		MarkdownDescription: "Filters the private endpoints by status. If not set, all private endpoints are returned. Valid values: `" +
-			strings.Join(appServicePrivateEndpointStatuses, "`, `") + "`.",
+	// status filters the list in the provider, as the list endpoint has no status query parameter.
+	// When omitted, private endpoints in every state are returned.
+	capellaschema.AddAttr(attrs, "status", appServicePrivateEndpointsBuilder, &schema.SetAttribute{
 		Optional:    true,
 		ElementType: types.StringType,
 		Validators: []validator.Set{
 			setvalidator.SizeAtLeast(1),
 			setvalidator.ValueStringsAre(stringvalidator.OneOf(appServicePrivateEndpointStatuses...)),
 		},
-	}
+	})
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", appServicePrivateEndpointsBuilder, computedString())
@@ -45,8 +41,7 @@ func AppServicePrivateEndpointsSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "status", appServicePrivateEndpointsBuilder, computedString())
 
 	capellaschema.AddAttr(attrs, "data", appServicePrivateEndpointsBuilder, &schema.ListNestedAttribute{
-		Computed:            true,
-		MarkdownDescription: "The list of private endpoints for the App Service.",
+		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: dataAttrs,
 		},
