@@ -298,7 +298,7 @@ func (a *AppServicePrivateEndpointService) checkAppServicePrivateEndpointService
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("App Service private endpoint service did not reach state %s: %w", targetState, ctx.Err())
+			return nil, fmt.Errorf("app service private endpoint service did not reach state %s: %w", targetState, ctx.Err())
 		case <-ticker.C:
 			refreshedState, err := a.refreshAppServicePrivateEndpointService(ctx, organizationId, projectId, clusterId, appServiceId)
 			if err != nil {
@@ -313,7 +313,7 @@ func (a *AppServicePrivateEndpointService) checkAppServicePrivateEndpointService
 			case targetState:
 				return refreshedState, nil
 			case apigen.GetAppServicePrivateEndpointStateResponseStateFailed:
-				return nil, fmt.Errorf("App Service private endpoint service reached state %s while waiting for state %s",
+				return nil, fmt.Errorf("app service private endpoint service reached state %s while waiting for state %s",
 					apigen.GetAppServicePrivateEndpointStateResponseStateFailed, targetState)
 			}
 
