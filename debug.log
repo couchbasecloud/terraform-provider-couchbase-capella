@@ -1,0 +1,19 @@
+2026-09-15T16:36:39.457+0530 [INFO]  Terraform version: 1.15.6
+2026-09-15T16:36:39.457+0530 [DEBUG] using github.com/hashicorp/go-tfe v1.105.0
+2026-09-15T16:36:39.457+0530 [DEBUG] using github.com/hashicorp/hcl/v2 v2.24.0
+2026-09-15T16:36:39.457+0530 [DEBUG] using github.com/hashicorp/terraform-svchost v0.2.1
+2026-09-15T16:36:39.457+0530 [DEBUG] using github.com/zclconf/go-cty v1.18.0
+2026-09-15T16:36:39.457+0530 [INFO]  Go runtime version: go1.25.10
+2026-09-15T16:36:39.457+0530 [INFO]  CLI args: []string{"terraform", "apply"}
+2026-09-15T16:36:39.457+0530 [DEBUG] Attempting to open CLI config file: /Users/aman.l/dev.terraformrc
+2026-09-15T16:36:39.457+0530 [INFO]  Loading CLI configuration from /Users/aman.l/dev.terraformrc
+2026-09-15T16:36:39.458+0530 [DEBUG] Not reading CLI config directory because config location is overridden by environment variable
+2026-09-15T16:36:39.458+0530 [DEBUG] Explicit provider installation configuration is set
+2026-09-15T16:36:39.458+0530 [INFO]  CLI command args: []string{"apply"}
+2026-09-15T16:36:39.459+0530 [DEBUG] Provider registry.terraform.io/couchbasecloud/couchbase-capella is overridden by dev_overrides
+2026-09-15T16:36:39.459+0530 [DEBUG] Provider registry.terraform.io/couchbasecloud/couchbase-capella is overridden by dev_overrides
+2026-09-15T16:36:39.459+0530 [DEBUG] Provider registry.terraform.io/couchbasecloud/couchbase-capella is overridden to load from /Users/aman.l/dev/terraform-provider-couchbase-capella/bin
+2026-09-15T16:36:39.459+0530 [DEBUG] checking for provisioner in "."
+2026-09-15T16:36:39.472+0530 [DEBUG] checking for provisioner in "/opt/homebrew/bin"
+2026-09-15T16:36:39.472+0530 [DEBUG] Provider registry.terraform.io/couchbasecloud/couchbase-capella is overridden by dev_overrides
+2026-09-15T16:36:39.472+0530 [INFO]  backend/local: starting Apply operation
