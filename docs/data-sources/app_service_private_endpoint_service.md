@@ -38,7 +38,7 @@ data "couchbase-capella_app_service_private_endpoint_service" "app_service_priva
 
 ### Optional
 
-- `aws` (Attributes) The AWS network details. Set this to also return the AWS CLI command that creates the private endpoint. (see [below for nested schema](#nestedatt--aws))
+- `aws` (Attributes) (see [below for nested schema](#nestedatt--aws))
 
 ### Read-Only
 
@@ -53,5 +53,5 @@ data "couchbase-capella_app_service_private_endpoint_service" "app_service_priva
 
 Required:
 
-- `subnet_ids` (Set of String) The IDs of the AWS subnets in which to create the private endpoint.
-- `vpc_id` (String) The ID of your AWS VPC.
+- `subnet_ids` (Set of String)
+- `vpc_id` (String)
