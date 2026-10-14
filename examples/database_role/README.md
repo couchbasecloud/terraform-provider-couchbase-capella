@@ -310,81 +310,76 @@ Sample Output:
 ```
 $ terraform apply
 data.couchbase-capella_database_roles.existing_roles: Reading...
-data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
+couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+data.couchbase-capella_database_roles.existing_roles: Read complete after 3s
 
-Do you want to perform these actions?
-  Terraform will perform the actions described above.
-  Only 'yes' will be accepted to approve.
+couchbase-capella_database_role.new_database_role: Modifying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+couchbase-capella_database_role.new_database_role: Modifications complete after 5s [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 
-  Enter a value: yes
-
-couchbase-capella_database_role.new_database_role: Creating...
-couchbase-capella_database_role.new_database_role: Creation complete after 1s [id=d431493a-aed0-4dcd-b9bd-67d9da667573]
-
-Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 
 Outputs:
 
-database_role_id = "d431493a-aed0-4dcd-b9bd-67d9da667573"
 database_roles_list = {
   "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-  "data" = tolist(null) /* of object */
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
-}
-new_database_role = {
-  "access" = tolist([
+  "data" = tolist([
     {
-      "privileges" = toset([
-        "dataRead",
-      ])
-      "resources" = {
-        "buckets" = tolist([
-          {
-            "name" = "travel-sample"
-            "scopes" = tolist([
+      "access" = tolist([
+        {
+          "privileges" = tolist([
+            "dataRead",
+          ])
+          "resources" = {
+            "buckets" = tolist([
               {
-                "collections" = tolist([
-                  "airline",
-                  "airport",
+                "name" = "travel-sample"
+                "scopes" = tolist([
+                  {
+                    "collections" = tolist([
+                      "airline",
+                      "airport",
+                    ])
+                    "name" = "inventory"
+                  },
                 ])
-                "name" = "inventory"
               },
             ])
-          },
-        ])
-      }
-    },
-    {
-      "privileges" = toset([
-        "queryManage",
-      ])
-      "resources" = {
-        "buckets" = tolist([
-          {
-            "name" = "travel-sample"
-            "scopes" = tolist([
+          }
+        },
+        {
+          "privileges" = tolist([
+            "queryManage",
+          ])
+          "resources" = {
+            "buckets" = tolist([
               {
-                "collections" = tolist(null) /* of string */
-                "name" = "inventory"
+                "name" = "travel-sample"
+                "scopes" = tolist([
+                  {
+                    "collections" = tolist(null) /* of string */
+                    "name" = "inventory"
+                  },
+                ])
               },
             ])
-          },
-        ])
+          }
+        },
+      ])
+      "audit" = {
+        "created_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
+        "created_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+        "modified_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
+        "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+        "version" = 1
       }
+      "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "description" = "A test role with read and write access"
+      "id" = "95591a3b-7031-4257-8d9e-7c4620d14618"
+      "name" = "test-role-001"
+      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
     },
   ])
-  "audit" = {
-    "created_at" = "2026-10-14 05:04:39.262285175 +0000 UTC"
-    "created_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
-    "modified_at" = "2026-10-14 05:04:39.262285175 +0000 UTC"
-    "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
-    "version" = 1
-  }
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-  "description" = "A test role with read and write access"
-  "id" = "d431493a-aed0-4dcd-b9bd-67d9da667573"
-  "name" = "test-role-001"
   "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
   "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
 }
@@ -399,7 +394,7 @@ Sample Output:
 ```
 $ terraform apply -var 'access=[{privileges=["dataRead"]}]'
 data.couchbase-capella_database_roles.existing_roles: Reading...
-couchbase-capella_database_role.new_database_role: Refreshing state... [id=d431493a-aed0-4dcd-b9bd-67d9da667573]
+couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
 
 Do you want to perform these actions?
@@ -408,8 +403,8 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_database_role.new_database_role: Modifying... [id=d431493a-aed0-4dcd-b9bd-67d9da667573]
-couchbase-capella_database_role.new_database_role: Modifications complete after 1s [id=d431493a-aed0-4dcd-b9bd-67d9da667573]
+couchbase-capella_database_role.new_database_role: Modifying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+couchbase-capella_database_role.new_database_role: Modifications complete after 1s [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
@@ -423,7 +418,7 @@ Sample Output:
 ```
 $ terraform destroy
 data.couchbase-capella_database_roles.existing_roles: Reading...
-couchbase-capella_database_role.new_database_role: Refreshing state... [id=d431493a-aed0-4dcd-b9bd-67d9da667573]
+couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
 
 Do you really want to destroy all resources?
@@ -432,7 +427,7 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-couchbase-capella_database_role.new_database_role: Destroying... [id=d431493a-aed0-4dcd-b9bd-67d9da667573]
+couchbase-capella_database_role.new_database_role: Destroying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 couchbase-capella_database_role.new_database_role: Destruction complete after 1s
 
 Destroy complete! Resources: 1 destroyed.
