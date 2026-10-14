@@ -36,11 +36,12 @@ data "couchbase-capella_app_service_private_endpoints" "app_service_private_endp
 
 ### Optional
 
-- `status` (Set of String) Filters the private endpoints by status. If not set, all private endpoints are returned. Valid values: `pending`, `pendingAcceptance`, `linked`, `rejected`, `failed`, `unrecognized`.
+- `status` (Set of String) - The status of the private endpoint.
+ - **Valid Values**: `pending`, `pendingAcceptance`, `linked`, `rejected`, `failed`, `unrecognized`
 
 ### Read-Only
 
-- `data` (Attributes List) The list of private endpoints for the App Service. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
