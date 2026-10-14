@@ -20,18 +20,15 @@ func AppServicePrivateEndpointServiceSchema() schema.Schema {
 
 	awsAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(awsAttrs, "vpc_id", appServicePrivateEndpointServiceBuilder, &schema.StringAttribute{
-		Required:            true,
-		MarkdownDescription: "The ID of your AWS VPC.",
+		Required: true,
 	}, "CreateVPCEndpointCommandRequest")
 	capellaschema.AddAttr(awsAttrs, "subnet_ids", appServicePrivateEndpointServiceBuilder, &schema.SetAttribute{
-		Required:            true,
-		ElementType:         types.StringType,
-		MarkdownDescription: "The IDs of the AWS subnets in which to create the private endpoint.",
+		Required:    true,
+		ElementType: types.StringType,
 	}, "CreateVPCEndpointCommandRequest")
 	capellaschema.AddAttr(attrs, "aws", appServicePrivateEndpointServiceBuilder, &schema.SingleNestedAttribute{
-		Optional:            true,
-		MarkdownDescription: "The AWS network details. Set this to also return the AWS CLI command that creates the private endpoint.",
-		Attributes:          awsAttrs,
+		Optional:   true,
+		Attributes: awsAttrs,
 	})
 
 	capellaschema.AddAttr(attrs, "state", appServicePrivateEndpointServiceBuilder, computedString())
