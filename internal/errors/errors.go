@@ -284,6 +284,9 @@ var (
 	// ErrConvertingReplicationDetails is returned when terraform fails to convert replication source or target details.
 	ErrConvertingReplicationDetails = errors.New("failed to convert replication details, please contact Couchbase Capella Support")
 
+	// ErrConvertingReplicationConflictLogging is returned when terraform fails to convert replication conflict logging.
+	ErrConvertingReplicationConflictLogging = errors.New("failed to convert replication conflict logging, please contact Couchbase Capella Support")
+
 	// ErrReplicationDeleteTimeout is returned when a replication is still present after the delete polling timeout.
 	ErrReplicationDeleteTimeout = errors.New("replication was not deleted within the polling timeout")
 

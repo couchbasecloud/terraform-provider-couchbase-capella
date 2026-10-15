@@ -10,9 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -97,6 +99,8 @@ func (r *Replication) ValidateConfig(ctx context.Context, req resource.ValidateC
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("target").AtName("type"), &targetType)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("source_bucket"), &sourceBucket)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("target").AtName("bucket"), &targetBucket)...)
+	var conflictLogging types.Object
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("conflict_logging"), &conflictLogging)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -124,6 +128,69 @@ func (r *Replication) ValidateConfig(ctx context.Context, req resource.ValidateC
 			"Invalid Bucket ID",
 			bucketIdErrorMessage("target.bucket")+" For an external target, set target.type = \"external\" and use the bucket name.",
 		)
+	}
+
+	validateConflictLoggingConfig(ctx, conflictLogging, &resp.Diagnostics)
+}
+
+// validateConflictLoggingConfig rejects a conflict logging block that the API rejects. A value that
+// is not known yet is not checked.
+func validateConflictLoggingConfig(ctx context.Context, value types.Object, diags *diag.Diagnostics) {
+	if value.IsNull() || value.IsUnknown() {
+		return
+	}
+
+	// Local diagnostics, so that errors from the other checks in ValidateConfig do not stop these checks.
+	var conversionDiags diag.Diagnostics
+	var conflictLogging providerschema.ReplicationConflictLogging
+	conversionDiags.Append(value.As(ctx, &conflictLogging, basetypes.ObjectAsOptions{})...)
+	if conversionDiags.HasError() {
+		diags.Append(conversionDiags...)
+		return
+	}
+
+	root := path.Root("conflict_logging")
+	if !conflictLogging.Disabled.IsUnknown() && !conflictLogging.Disabled.ValueBool() {
+		if isKnown(conflictLogging.Bucket) && conflictLogging.Bucket.ValueString() == "" {
+			diags.AddAttributeError(root.AtName("bucket"), "Invalid Conflict Logging Configuration",
+				"conflict_logging.bucket must not be empty when disabled is false.")
+		}
+		if isKnown(conflictLogging.Collection) && conflictLogging.Collection.ValueString() == "" {
+			diags.AddAttributeError(root.AtName("collection"), "Invalid Conflict Logging Configuration",
+				"conflict_logging.collection must not be empty when disabled is false.")
+		}
+	}
+
+	if isKnown(conflictLogging.Bucket) && conflictLogging.Bucket.ValueString() != "" && !isBucketId(conflictLogging.Bucket.ValueString()) {
+		diags.AddAttributeError(root.AtName("bucket"), "Invalid Bucket ID", bucketIdErrorMessage("conflict_logging.bucket"))
+	}
+
+	if conflictLogging.LoggingRules.IsNull() || conflictLogging.LoggingRules.IsUnknown() {
+		return
+	}
+	for namespace, element := range conflictLogging.LoggingRules.Elements() {
+		ruleObject, ok := element.(types.Object)
+		if !ok || ruleObject.IsNull() || ruleObject.IsUnknown() {
+			continue
+		}
+
+		var rule providerschema.ReplicationLoggingRule
+		conversionDiags.Append(ruleObject.As(ctx, &rule, basetypes.ObjectAsOptions{})...)
+		if conversionDiags.HasError() {
+			diags.Append(conversionDiags...)
+			return
+		}
+
+		rulePath := root.AtName("logging_rules").AtMapKey(namespace)
+		if rule.Bucket.IsNull() != rule.Collection.IsNull() {
+			diags.AddAttributeError(rulePath, "Invalid Conflict Logging Rule",
+				fmt.Sprintf("The logging rule for %q must set both bucket and collection, or neither. "+
+					"Use {} to log to the default bucket and collection, or null to not log.", namespace))
+		}
+		if isKnown(rule.Bucket) && !isBucketId(rule.Bucket.ValueString()) {
+			diags.AddAttributeError(rulePath.AtName("bucket"), "Invalid Bucket ID",
+				bucketIdErrorMessage(fmt.Sprintf("conflict_logging.logging_rules[%q].bucket", namespace)))
+		}
 	}
 }
 
@@ -547,6 +614,10 @@ func createReplicationRequest(ctx context.Context, plan providerschema.Replicati
 		NetworkUsageLimit: utils.Int64PointerIfKnown(plan.NetworkUsageLimit),
 		Mappings:          mappings,
 		Filter:            replicationFilterRequest(plan.Filter),
+		ConflictLogging:   conflictLoggingRequest(plan.ConflictLogging),
+	}
+	if plan.MobileSyncMode.ValueString() == providerschema.ReplicationMobileSyncModeActive {
+		request.MobileSyncMode = plan.MobileSyncMode.ValueStringPointer()
 	}
 	if plan.Target != nil {
 		request.Target = replicationapi.CreateReplicationTarget{
@@ -580,6 +651,18 @@ func updateReplicationRequest(ctx context.Context, plan, state providerschema.Re
 
 	if !replicationFiltersEqual(plan.Filter, state.Filter) {
 		request.Filter = fullReplicationFilterRequest(plan.Filter)
+	}
+
+	if !plan.MobileSyncMode.IsUnknown() && !plan.MobileSyncMode.Equal(state.MobileSyncMode) {
+		request.MobileSyncMode = utils.StringPointerIfKnown(plan.MobileSyncMode)
+	}
+
+	if !conflictLoggingEqual(plan.ConflictLogging, state.ConflictLogging) {
+		request.ConflictLogging = conflictLoggingRequest(plan.ConflictLogging)
+		if request.ConflictLogging == nil {
+			// An empty object clears the configuration.
+			request.ConflictLogging = &replicationapi.ConflictLogging{}
+		}
 	}
 
 	return request, nil
@@ -691,4 +774,53 @@ func filterExpressionsEqual(a, b *providerschema.ReplicationFilterExpressions) b
 		return a == nil && b == nil
 	}
 	return a.RegEx.Equal(b.RegEx) && a.SkipRestream.Equal(b.SkipRestream)
+}
+
+// conflictLoggingRequest builds the conflictLogging field of a create or update request from the
+// conflict_logging block. It returns nil when there is no block.
+func conflictLoggingRequest(conflictLogging *providerschema.ReplicationConflictLogging) *replicationapi.ConflictLogging {
+	if conflictLogging == nil {
+		return nil
+	}
+	return &replicationapi.ConflictLogging{
+		Disabled:     utils.BoolPointerIfKnown(conflictLogging.Disabled),
+		Bucket:       utils.StringPointerIfKnown(conflictLogging.Bucket),
+		Collection:   utils.StringPointerIfKnown(conflictLogging.Collection),
+		LoggingRules: loggingRulesRequest(conflictLogging.LoggingRules),
+	}
+}
+
+// loggingRulesRequest builds the loggingRules field from the logging_rules map. A null rule is sent
+// as null (do not log). A rule with no bucket and no collection is sent as {} (log to the default).
+func loggingRulesRequest(rules types.Map) map[string]*replicationapi.ConflictLoggingRule {
+	if rules.IsNull() || rules.IsUnknown() {
+		return nil
+	}
+
+	request := make(map[string]*replicationapi.ConflictLoggingRule, len(rules.Elements()))
+	for namespace, element := range rules.Elements() {
+		rule, ok := element.(types.Object)
+		if !ok || rule.IsNull() || rule.IsUnknown() {
+			request[namespace] = nil
+			continue
+		}
+
+		attributes := rule.Attributes()
+		bucket, _ := attributes["bucket"].(types.String)
+		collection, _ := attributes["collection"].(types.String)
+		request[namespace] = &replicationapi.ConflictLoggingRule{
+			Bucket:     utils.StringPointerIfKnown(bucket),
+			Collection: utils.StringPointerIfKnown(collection),
+		}
+	}
+	return request
+}
+
+// conflictLoggingEqual reports whether two conflict_logging blocks are the same.
+func conflictLoggingEqual(a, b *providerschema.ReplicationConflictLogging) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	return a.Disabled.Equal(b.Disabled) && a.Bucket.Equal(b.Bucket) &&
+		a.Collection.Equal(b.Collection) && a.LoggingRules.Equal(b.LoggingRules)
 }
