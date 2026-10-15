@@ -71,6 +71,20 @@ If you find a related branch, read its version of the changed code. A refactor
 in flight may carry the same defect, which changes your recommendation from
 "fix here" to "fix here and port to that branch".
 
+**Has this area burned us before?** Escalation fixes cluster in the same files,
+so a fix for this month's CBSE regularly breaks last month's - AV-137114 shipped
+and was reverted for regressing CBSE-22798. Before approving anything, read what
+else has been fixed here:
+
+```bash
+git log --oneline -15 -- <changed file>
+git log --all --oneline --grep="CBSE" -- <changed file>
+```
+
+If a previous fix added a guard that this change removes or reorders, that is
+the finding - and name the old ticket, because its reporter will be asked
+whether their case still works.
+
 **What is in the diff?** Follow the repository's own review workflow in
 `CLAUDE.md` - stage the change, list changed Go files, and never read
 `internal/generated/api/openapi.gen.go`; it will consume the context window for
@@ -119,6 +133,15 @@ finds diagnostics that are silently dropped: a helper returning
 `diag.Diagnostics` whose result is discarded at one call site and appended at
 another is a swallowed error, and the mismatch between the two call sites is the
 proof. Both classes were live in AV-145093.
+
+Then read `references/escalation-patterns.md`. It catalogues the seven defect
+classes that customer escalations on this provider have actually been - a zero
+value sent for an unconfigured field, an apply that reports success when the
+operation failed, unknowns surviving an error path, import that forces
+replacement, validation deferred to apply, out-of-band deletion, and a fix that
+reintroduces an earlier escalation - each with the tickets behind it and a way
+to detect it. They recur, and none of them is visible by reading a diff line by
+line.
 
 When the diff touches a schema file, read
 `references/schema-change-analysis.md`. It covers the specific failure modes of
