@@ -319,3 +319,9 @@ TestAccDatasourceProjectEvents
 
 # Tests reading a single project event via data source
 TestAccDatasourceProjectEvent
+
+# ----------------------------------------
+# 19. XDCR REPLICATION
+# ----------------------------------------
+# Tests replication create, import and update from the global cluster to the DM cluster
+TestAccReplicationResource
