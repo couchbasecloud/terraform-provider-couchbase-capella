@@ -62,9 +62,11 @@ func testAccAppEndpointActivationStatus() []resource.TestStep {
 		},
 		{
 			// Import by composite ID (uses endpoint name, not an ID)
-			ResourceName:      resourceReference,
-			ImportStateIdFunc: generateAppEndpointActivationStatusImportId(resourceReference),
-			ImportState:       true,
+			ResourceName:                         resourceReference,
+			ImportStateIdFunc:                    generateAppEndpointActivationStatusImportId(resourceReference),
+			ImportState:                          true,
+			ImportStateVerify:                    true,
+			ImportStateVerifyIdentifierAttribute: "app_endpoint_name",
 		},
 	}
 }

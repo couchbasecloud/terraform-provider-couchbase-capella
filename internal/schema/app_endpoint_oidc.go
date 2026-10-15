@@ -5,6 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 // AppEndpointOidcProvider describes the resource data model.
@@ -23,6 +25,29 @@ type AppEndpointOidcProvider struct {
 	UserPrefix      types.String `tfsdk:"user_prefix"`
 	UsernameClaim   types.String `tfsdk:"username_claim"`
 	IsDefault       types.Bool   `tfsdk:"is_default"`
+}
+
+// NewAppEndpointOidcProvider creates the OIDC provider state from the IDs and the get OIDC provider response.
+func NewAppEndpointOidcProvider(
+	organizationId, projectId, clusterId, appServiceId, appEndpointName string,
+	resp api.AppEndpointOIDCProviderResponse,
+) *AppEndpointOidcProvider {
+	return &AppEndpointOidcProvider{
+		OrganizationId:  types.StringValue(organizationId),
+		ProjectId:       types.StringValue(projectId),
+		ClusterId:       types.StringValue(clusterId),
+		AppServiceId:    types.StringValue(appServiceId),
+		AppEndpointName: types.StringValue(appEndpointName),
+		ProviderId:      types.StringValue(resp.ProviderID),
+		Issuer:          types.StringValue(resp.Issuer),
+		ClientId:        types.StringValue(resp.ClientID),
+		DiscoveryUrl:    types.StringValue(resp.DiscoveryURL),
+		Register:        types.BoolValue(resp.Register),
+		RolesClaim:      types.StringValue(resp.RolesClaim),
+		UserPrefix:      types.StringValue(resp.UserPrefix),
+		UsernameClaim:   types.StringValue(resp.UsernameClaim),
+		IsDefault:       types.BoolValue(resp.IsDefault),
+	}
 }
 
 // Validate validates the AppEndpointActivationStatus resource for import.

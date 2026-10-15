@@ -28,6 +28,20 @@ type AppEndpointActivationStatus struct {
 	State types.String `tfsdk:"state"`
 }
 
+// NewAppEndpointActivationStatus creates the activation status state from the IDs and the App Endpoint state.
+func NewAppEndpointActivationStatus(
+	organizationId, projectId, clusterId, appServiceId, appEndpointName, state string,
+) *AppEndpointActivationStatus {
+	return &AppEndpointActivationStatus{
+		OrganizationId:  types.StringValue(organizationId),
+		ProjectId:       types.StringValue(projectId),
+		ClusterId:       types.StringValue(clusterId),
+		AppServiceId:    types.StringValue(appServiceId),
+		AppEndpointName: types.StringValue(appEndpointName),
+		State:           types.StringValue(state),
+	}
+}
+
 // Validate validates the AppEndpointActivationStatus resource for import.
 func (a *AppEndpointActivationStatus) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{

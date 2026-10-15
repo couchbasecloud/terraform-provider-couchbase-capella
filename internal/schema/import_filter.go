@@ -41,6 +41,22 @@ type ImportFilter struct {
 	ImportFilter types.String `tfsdk:"import_filter"`
 }
 
+// NewImportFilter creates the import filter state from the IDs, the keyspace and the import filter function.
+func NewImportFilter(
+	organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection, importFilter string,
+) *ImportFilter {
+	return &ImportFilter{
+		OrganizationId:  types.StringValue(organizationId),
+		ProjectId:       types.StringValue(projectId),
+		ClusterId:       types.StringValue(clusterId),
+		AppServiceId:    types.StringValue(appServiceId),
+		AppEndpointName: types.StringValue(appEndpointName),
+		Scope:           types.StringValue(scope),
+		Collection:      types.StringValue(collection),
+		ImportFilter:    types.StringValue(importFilter),
+	}
+}
+
 // AttributeTypes returns a map of attribute types for the ImportFilter schema.
 func (i ImportFilter) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{

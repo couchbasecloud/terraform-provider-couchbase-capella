@@ -17,6 +17,20 @@ type AppEndpointDefaultOidcProvider struct {
 	ProviderId      types.String `tfsdk:"provider_id"`
 }
 
+// NewAppEndpointDefaultOidcProvider creates the default OIDC provider state from the IDs.
+func NewAppEndpointDefaultOidcProvider(
+	organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId string,
+) *AppEndpointDefaultOidcProvider {
+	return &AppEndpointDefaultOidcProvider{
+		OrganizationId:  types.StringValue(organizationId),
+		ProjectId:       types.StringValue(projectId),
+		ClusterId:       types.StringValue(clusterId),
+		AppServiceId:    types.StringValue(appServiceId),
+		AppEndpointName: types.StringValue(appEndpointName),
+		ProviderId:      types.StringValue(providerId),
+	}
+}
+
 // Validate validates base identifiers using shared helper.
 func (a *AppEndpointDefaultOidcProvider) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{

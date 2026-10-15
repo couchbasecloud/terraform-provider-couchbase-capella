@@ -160,9 +160,21 @@ func (f *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	keyspace := fmt.Sprintf("%s.%s.%s", IDs["appEndpointName"], IDs["scopeName"], IDs["collectionName"])
+	keyspace := fmt.Sprintf(
+		"%s.%s.%s",
+		IDs[providerschema.AppEndpointName],
+		IDs[providerschema.ScopeName],
+		IDs[providerschema.CollectionName],
+	)
 
-	response, err := f.fetchImportFilter(ctx, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], keyspace)
+	response, err := f.fetchImportFilter(
+		ctx,
+		IDs[providerschema.OrganizationId],
+		IDs[providerschema.ProjectId],
+		IDs[providerschema.ClusterId],
+		IDs[providerschema.AppServiceId],
+		keyspace,
+	)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -170,7 +182,17 @@ func (f *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, f.Data, resp, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], IDs["appEndpointName"]); handled {
+		if handled, forbiddenErr := handleAppEndpointForbidden(
+			ctx,
+			err,
+			f.Data,
+			resp,
+			IDs[providerschema.OrganizationId],
+			IDs[providerschema.ProjectId],
+			IDs[providerschema.ClusterId],
+			IDs[providerschema.AppServiceId],
+			IDs[providerschema.AppEndpointName],
+		); handled {
 			return
 		} else if forbiddenErr != nil {
 			resp.Diagnostics.AddError("Error Reading Import Filter", forbiddenErr.Error())
@@ -183,9 +205,18 @@ func (f *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	state.ImportFilter = types.StringValue(response)
+	refreshedState := providerschema.NewImportFilter(
+		IDs[providerschema.OrganizationId],
+		IDs[providerschema.ProjectId],
+		IDs[providerschema.ClusterId],
+		IDs[providerschema.AppServiceId],
+		IDs[providerschema.AppEndpointName],
+		IDs[providerschema.ScopeName],
+		IDs[providerschema.CollectionName],
+		response,
+	)
 
-	diags = resp.State.Set(ctx, state)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

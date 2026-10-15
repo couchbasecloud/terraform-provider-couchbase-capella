@@ -189,6 +189,9 @@ func createAppEndpointTestCluster(ctx context.Context, client *api.Client) (stri
 			Plan:     "enterprise",
 			Timezone: "PT",
 		},
+		CouchbaseServer: &clusterapi.CouchbaseServer{
+			Version: ptr.To(globalServerVersion),
+		},
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)

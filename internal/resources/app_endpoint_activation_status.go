@@ -215,9 +215,11 @@ func (r *AppEndpointActivationStatus) Read(ctx context.Context, req resource.Rea
 		)
 		return
 	}
-	state.State = types.StringValue(appEndpointResp.State)
+	refreshedState := providerschema.NewAppEndpointActivationStatus(
+		organizationId, projectId, clusterId, appServiceId, appEndpointName, appEndpointResp.State,
+	)
 
-	diags = resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

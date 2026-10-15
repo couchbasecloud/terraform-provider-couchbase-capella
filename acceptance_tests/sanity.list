@@ -42,6 +42,24 @@ TestAccClusterResourceGCP
 # Tests Azure disk auto-expansion feature
 TestAccClusterResourceAzureDiskAutoExpansion
 
+# The two disk tests below guard how the provider shapes a disk attribute the practitioner
+# left out of config (AV-143042). Both are rejected during request validation, so no cluster
+# is provisioned and they cost under two seconds - cheap enough to belong on the PR gate even
+# though the rest of this section is not.
+#
+# Note the runner anchors the pattern as ^(...)$, so naming a test here does not pull in
+# others that share its prefix; each one has to be listed on its own.
+#
+# The AWS equivalents are deliberately absent: they are skipped pending AV-145015, and a
+# skipped test on the gate guards nothing. Add them here when that ticket is fixed.
+
+# Tests that an omitted iops on an Azure Ultra disk is omitted from the request rather
+# than sent as 0
+TestAccClusterResourceAzureUltraDiskIopsOmitted_AV_143042
+
+# Control for the test above: proves a configured iops really reaches Capella
+TestAccClusterResourceAzureUltraDiskIopsInvalid_AV_143042
+
 # Tests reading a single cluster via data source
 TestAccReadClusterDatasource
 

@@ -116,7 +116,8 @@ func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (stri
 				NumOfNodes: ptr.To(3),
 			},
 		},
-		Support: clusterapi.Support{Plan: "enterprise", Timezone: "PT"},
+		Support:         clusterapi.Support{Plan: "enterprise", Timezone: "PT"},
+		CouchbaseServer: &clusterapi.CouchbaseServer{Version: ptr.To(globalServerVersion)},
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)
