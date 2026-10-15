@@ -335,6 +335,8 @@ func stringSetAttribute(fields ...string) *schema.SetAttribute {
 			attribute.Sensitive = true
 		case requiresReplace:
 			attribute.PlanModifiers = append(attribute.PlanModifiers, setplanmodifier.RequiresReplace())
+		case requiresReplaceIfConfigured:
+			attribute.PlanModifiers = append(attribute.PlanModifiers, setplanmodifier.RequiresReplaceIfConfigured())
 		case useStateForUnknown:
 			attribute.PlanModifiers = append(attribute.PlanModifiers, setplanmodifier.UseStateForUnknown())
 		}

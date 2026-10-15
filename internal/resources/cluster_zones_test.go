@@ -10,9 +10,12 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 func zonesSet(zones ...string) types.Set {
@@ -84,9 +87,10 @@ func TestValidateCreateClusterZones(t *testing.T) {
 	}
 }
 
-// TestClusterSchemaZones guards against a plan that replaces every cluster whose zones were
-// chosen by Capella: zones must be computed, and UseStateForUnknown must run before
-// RequiresReplace so an unconfigured zones keeps its state value instead of becoming unknown.
+// TestClusterSchemaZones runs the zones plan modifiers the way the framework does on an
+// update, and checks a cluster is only replaced when the user configured different zones.
+// An update marks the computed zones unknown, so this guards against replacing clusters whose
+// zones were chosen by Capella, or are not reported by the API at all (state is null).
 func TestClusterSchemaZones(t *testing.T) {
 	ctx := context.Background()
 	zones, ok := ClusterSchema().Attributes["zones"].(*schema.SetAttribute)
@@ -97,16 +101,49 @@ func TestClusterSchemaZones(t *testing.T) {
 		t.Fatalf("zones must be optional and computed, got optional=%v computed=%v", zones.Optional, zones.Computed)
 	}
 
-	want := []string{
-		setplanmodifier.UseStateForUnknown().Description(ctx),
-		setplanmodifier.RequiresReplace().Description(ctx),
+	existingResource := tftypes.NewValue(tftypes.Object{}, map[string]tftypes.Value{})
+	tests := []struct {
+		name        string
+		config      types.Set
+		state       types.Set
+		wantReplace bool
+	}{
+		{name: "not configured, API returns no zones", config: types.SetNull(types.StringType), state: types.SetNull(types.StringType)},
+		{name: "not configured, Capella chose zones", config: types.SetNull(types.StringType), state: zonesSet("use1-az4", "use1-az5", "use1-az6")},
+		{name: "configured, same zones in another order", config: zonesSet("use1-az2", "use1-az1", "use1-az4"), state: zonesSet("use1-az1", "use1-az2", "use1-az4")},
+		{name: "configured, matches zones the old API did not return", config: zonesSet("use1-az1"), state: zonesSet("use1-az1")},
+		{name: "configured, different zone", config: zonesSet("use1-az1", "use1-az2", "use1-az5"), state: zonesSet("use1-az1", "use1-az2", "use1-az4"), wantReplace: true},
 	}
-	if len(zones.PlanModifiers) != len(want) {
-		t.Fatalf("expected %d plan modifiers, got %d", len(want), len(zones.PlanModifiers))
-	}
-	for i, modifier := range zones.PlanModifiers {
-		if got := modifier.Description(ctx); got != want[i] {
-			t.Fatalf("plan modifier %d: expected %q, got %q", i, want[i], got)
-		}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plan := tt.config
+			if plan.IsNull() {
+				plan = types.SetUnknown(types.StringType)
+			}
+
+			var replace bool
+			for _, modifier := range zones.PlanModifiers {
+				req := planmodifier.SetRequest{
+					Path:        path.Root("zones"),
+					ConfigValue: tt.config,
+					StateValue:  tt.state,
+					PlanValue:   plan,
+					State:       tfsdk.State{Raw: existingResource},
+					Plan:        tfsdk.Plan{Raw: existingResource},
+				}
+				resp := &planmodifier.SetResponse{PlanValue: plan}
+				modifier.PlanModifySet(ctx, req, resp)
+				if resp.Diagnostics.HasError() {
+					t.Fatalf("plan modifier returned errors: %v", resp.Diagnostics)
+				}
+				plan = resp.PlanValue
+				replace = replace || resp.RequiresReplace
+			}
+
+			if replace != tt.wantReplace {
+				t.Fatalf("expected replace=%v, got %v", tt.wantReplace, replace)
+			}
+		})
 	}
 }

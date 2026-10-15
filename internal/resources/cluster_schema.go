@@ -22,7 +22,7 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}), "CreateClusterRequest")
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
-	zones := stringSetAttribute(optional, computed, useStateForUnknown, requiresReplace)
+	zones := stringSetAttribute(optional, computed, useStateForUnknown, requiresReplaceIfConfigured)
 	capellaschema.AddAttr(attrs, "zones", clusterBuilder, zones)
 	// Set after AddAttr: the published OpenAPI description still says only single AZ is supported.
 	zones.MarkdownDescription = "The AWS availability zone IDs (for example `use1-az1`) to deploy the cluster in. " +

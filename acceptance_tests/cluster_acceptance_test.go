@@ -55,8 +55,6 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
-					// zones are not configured, so Capella picks them and they are read back.
-					resource.TestCheckResourceAttr(resourceReference, "zones.#", "3"),
 				),
 			},
 			// ImportState testing
