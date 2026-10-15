@@ -298,6 +298,11 @@ func NewReplication(
 		reverseReplicationId = types.StringNull()
 	}
 
+	mobileSyncMode := resp.MobileSyncMode
+	if mobileSyncMode == "" {
+		mobileSyncMode = ReplicationMobileSyncModeOff
+	}
+
 	replicationError := types.StringNull()
 	if resp.Error != "" {
 		replicationError = types.StringValue(resp.Error)
@@ -315,7 +320,7 @@ func NewReplication(
 		NetworkUsageLimit:    types.Int64Value(resp.NetworkUsageLimit),
 		Mappings:             mappings,
 		Filter:               newReplicationFilter(resp.Filter, prior.Filter),
-		MobileSyncMode:       types.StringValue(resp.MobileSyncMode),
+		MobileSyncMode:       types.StringValue(mobileSyncMode),
 		ConflictLogging:      conflictLogging,
 		ReverseReplicationId: reverseReplicationId,
 		Status:               types.StringValue(string(resp.Status)),
