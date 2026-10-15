@@ -55,6 +55,8 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
+					// zones are not configured, so Capella picks them and they are read back.
+					resource.TestCheckResourceAttr(resourceReference, "zones.#", "3"),
 				),
 			},
 			// ImportState testing
@@ -411,7 +413,8 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "single"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
-					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az1"),
 				),
 			},
 			// ImportState testing
@@ -1354,4 +1357,119 @@ func testAccExistsClusterResource(t *testing.T, resourceReference string) resour
 		}
 		return nil
 	}
+}
+
+// TestAccClusterResourceMultiAZWithZonesAWS creates a multi AZ AWS cluster in three chosen
+// availability zones and verifies the zones are read back, including on import.
+//
+// use1-az3 is avoided because some compute types are not offered there.
+func TestAccClusterResourceMultiAZWithZonesAWS(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceReference := "couchbase-capella_cluster." + resourceName
+	cidr := generateRandomCIDR()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterResourceConfigMultiAZWithZones(resourceName, cidr, "aws", "us-east-1", `["use1-az1", "use1-az2", "use1-az4"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az1"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az2"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az4"),
+				),
+			},
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccClusterResourceMultiAZTwoZonesInvalid verifies a multi AZ cluster with other than 3
+// zones is rejected at plan time.
+func TestAccClusterResourceMultiAZTwoZonesInvalid(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceConfigMultiAZWithZones(resourceName, generateRandomCIDR(), "aws", "us-east-1", `["use1-az1", "use1-az2"]`),
+				ExpectError: regexp.MustCompile(`(?s)Invalid zones.*got 2 zones for a multi AZ cluster`),
+			},
+		},
+	})
+}
+
+// TestAccClusterResourceGCPWithZonesInvalid verifies zones are rejected for a non-AWS cluster,
+// because the API silently ignores them.
+func TestAccClusterResourceGCPWithZonesInvalid(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceConfigMultiAZWithZones(resourceName, generateRandomCIDR(), "gcp", "us-east1", `["us-east1-b", "us-east1-c", "us-east1-d"]`),
+				ExpectError: regexp.MustCompile(`(?s)Invalid zones.*got zones for a gcp cluster`),
+			},
+		},
+	})
+}
+
+func testAccClusterResourceConfigMultiAZWithZones(resourceName, cidr, cloudProvider, region, zones string) string {
+	// iops is set for AWS because an omitted iops is sent as 0 (AV-145015); GCP rejects iops.
+	disk := `type = "gp3"
+          iops = 3000`
+	if cloudProvider == "gcp" {
+		disk = `type = "pd-ssd"`
+	}
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[4]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  name            = "%[4]s"
+  couchbase_server = {
+    version = var.server_version
+  }
+  cloud_provider = {
+    type   = "%[6]s"
+    region = "%[7]s"
+    cidr   = "%[5]s"
+  }
+  zones = %[8]s
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 4
+          ram = 16
+        }
+        disk = {
+          storage = 50
+          %[9]s
+        }
+      }
+      num_of_nodes = 3
+      services     = ["data", "index", "query"]
+    }
+  ]
+  availability = {
+    "type" : "multi"
+  }
+  support = {
+    plan     = "enterprise"
+    timezone = "PT"
+  }
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr, cloudProvider, region, zones, disk)
 }

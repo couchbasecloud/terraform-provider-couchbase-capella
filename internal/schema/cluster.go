@@ -148,8 +148,8 @@ type Cluster struct {
 	// DeletionProtection prevents accidental cluster deletion when enabled.
 	DeletionProtection types.Bool `tfsdk:"deletion_protection"`
 
-	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
-	Zones []types.String `tfsdk:"zones"`
+	// Zones is the set of AWS availability zone IDs the cluster is deployed in.
+	Zones types.Set `tfsdk:"zones"`
 
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
@@ -218,6 +218,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		CurrentState:     types.StringValue(string(cluster.CurrentState)),
 		Audit:            auditObject,
 		Etag:             types.StringValue(cluster.Etag),
+		Zones:            NewZonesSet(cluster.Zones),
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
@@ -240,6 +241,19 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 	newCluster.ServiceGroups = newServiceGroups
 
 	return &newCluster, nil
+}
+
+// NewZonesSet converts the zone IDs returned by the API to a set. It returns a null set,
+// not an empty one, when the API omits the zones.
+func NewZonesSet(zones []string) types.Set {
+	if len(zones) == 0 {
+		return types.SetNull(types.StringType)
+	}
+	elements := make([]attr.Value, 0, len(zones))
+	for _, zone := range zones {
+		elements = append(elements, types.StringValue(zone))
+	}
+	return types.SetValueMust(types.StringType, elements)
 }
 
 func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]ServiceGroup, error) {
@@ -350,6 +364,7 @@ type ClusterData struct {
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	ConnectionString           types.String     `tfsdk:"connection_string"`
 	CurrentState               types.String     `tfsdk:"current_state"`
+	Zones                      types.Set        `tfsdk:"zones"`
 	ServiceGroups              []ServiceGroup   `tfsdk:"service_groups"`
 }
 
@@ -378,6 +393,7 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		ConnectionString: types.StringValue(cluster.ConnectionString),
 		CurrentState:     types.StringValue(string(cluster.CurrentState)),
 		Audit:            auditObject,
+		Zones:            NewZonesSet(cluster.Zones),
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
