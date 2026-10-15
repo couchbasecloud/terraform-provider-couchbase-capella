@@ -91,9 +91,13 @@ func createReplicationAnchor(ctx context.Context, client *api.Client) error {
 	}
 	log.Printf("replication anchor created - %s", replicationAnchorId)
 
-	// The create builds the network link in both directions. It queues a deploy for each direction,
-	// so a cluster can go Peering, Healthy, then Peering again. Check twice, a short time apart.
-	if err = waitForReplicationClusters(); err != nil {
+	return waitForReplicationClustersStable()
+}
+
+// waitForReplicationClustersStable waits until both clusters are Healthy, twice, 2 minutes apart.
+// After the network link changes, a cluster can be Healthy for a short time before it goes into Peering.
+func waitForReplicationClustersStable() error {
+	if err := waitForReplicationClusters(); err != nil {
 		return err
 	}
 	time.Sleep(2 * time.Minute)
@@ -212,8 +216,8 @@ func destroyReplicationAnchor(ctx context.Context, client *api.Client) error {
 		log.Printf("replication anchor destroyed - %s", replicationAnchorId)
 
 		// Deleting the last replication removes the network link: both clusters go into the
-		// Peering state, and a cluster cannot be deleted while it is busy.
-		if err := waitForReplicationClusters(); err != nil {
+		// Peering state, and the bucket deletes below fail while a cluster is not Healthy.
+		if err := waitForReplicationClustersStable(); err != nil {
 			return err
 		}
 	}
