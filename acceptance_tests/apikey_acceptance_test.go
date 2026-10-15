@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -111,6 +112,60 @@ func TestAccApiKeyResourceWithDefaults(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+var apiKeyOrganizationRoles = []string{
+	"organizationBillingAdmin",
+	"organizationBillingViewer",
+	"organizationMember",
+	"organizationOwner",
+	"organizationReadOnly",
+	"projectCreator",
+}
+
+func TestAccApiKeyResourceOrganizationRoles(t *testing.T) {
+	for _, role := range apiKeyOrganizationRoles {
+		t.Run(role, func(t *testing.T) {
+			resourceName := randomStringWithPrefix("tf_acc_apikey_")
+			resourceReference := "couchbase-capella_apikey." + resourceName
+
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, role)),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+							resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", "1"),
+							resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccApiKeyResourceMultipleOrganizationRoles(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
+	resourceReference := "couchbase-capella_apikey." + resourceName
+
+	checks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(apiKeyOrganizationRoles))),
+	}
+	for _, role := range apiKeyOrganizationRoles {
+		checks = append(checks, resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role))
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, strings.Join(apiKeyOrganizationRoles, `", "`))),
+				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
 			},
 		},
 	})
