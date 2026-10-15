@@ -190,6 +190,14 @@ func TestNewReplication(t *testing.T) {
 		assert.Equal(t, "target bucket not found", got.Error.ValueString())
 	})
 
+	t.Run("no mobile sync mode from the API gives off", func(t *testing.T) {
+		resp := testGetReplicationResponse()
+		resp.MobileSyncMode = ""
+		got, err := NewReplication(ctx, resp, "org-1", "proj-1", "cluster-1", nil)
+		require.NoError(t, err)
+		assert.Equal(t, ReplicationMobileSyncModeOff, got.MobileSyncMode.ValueString())
+	})
+
 	t.Run("import has no reverse replication ID", func(t *testing.T) {
 		got, err := NewReplication(ctx, testGetReplicationResponse(), "org-1", "proj-1", "cluster-1", nil)
 		require.NoError(t, err)
