@@ -352,7 +352,7 @@ new_replication = {
     }
     "project" = {
       "id" = "<project_id>"
-      "name" = "cbclocal"
+      "name" = "my-project"
     }
   }
   "status" = "running"
@@ -373,7 +373,7 @@ new_replication = {
     }
     "project" = {
       "id" = "<project_id>"
-      "name" = "cbclocal"
+      "name" = "my-project"
     }
     "type" = "capella"
   }
@@ -444,7 +444,7 @@ $ terraform output new_replication
     }
     "project" = {
       "id" = "<project_id>"
-      "name" = "cbclocal"
+      "name" = "my-project"
     }
   }
   "status" = "running"
@@ -465,7 +465,7 @@ $ terraform output new_replication
     }
     "project" = {
       "id" = "<project_id>"
-      "name" = "cbclocal"
+      "name" = "my-project"
     }
     "type" = "capella"
   }
@@ -657,7 +657,7 @@ new_replication = {
     }
     "project" = {
       "id" = "<project_id>"
-      "name" = "cbclocal"
+      "name" = "my-project"
     }
   }
   "status" = "running"
@@ -678,7 +678,7 @@ new_replication = {
     }
     "project" = {
       "id" = "<project_id>"
-      "name" = "cbclocal"
+      "name" = "my-project"
     }
     "type" = "capella"
   }
@@ -758,7 +758,7 @@ Terraform will perform the following actions:
             } -> null
           - project = {
               - id   = "<project_id>" -> null
-              - name = "cbclocal" -> null
+              - name = "my-project" -> null
             } -> null
         } -> null
       - status              = "running" -> null
@@ -779,7 +779,7 @@ Terraform will perform the following actions:
             } -> null
           - project = {
               - id   = "<project_id>" -> null
-              - name = "cbclocal" -> null
+              - name = "my-project" -> null
             } -> null
           - type    = "capella" -> null
         } -> null
@@ -844,7 +844,7 @@ Changes to Outputs:
             }
           - project = {
               - id   = "<project_id>"
-              - name = "cbclocal"
+              - name = "my-project"
             }
         }
       - status                 = "running"
@@ -865,7 +865,7 @@ Changes to Outputs:
             }
           - project = {
               - id   = "<project_id>"
-              - name = "cbclocal"
+              - name = "my-project"
             }
           - type    = "capella"
         }
