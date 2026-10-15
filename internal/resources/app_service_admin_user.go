@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -94,8 +95,18 @@ func (a *AppServiceAdminUser) ValidateConfig(ctx context.Context, req resource.V
 		return
 	}
 
+	// Read stores null for an empty set, so an empty set would give an inconsistent result.
+	if !config.Endpoints.IsNull() && len(config.Endpoints.Elements()) == 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("endpoints"),
+			"Invalid App Service Admin User Configuration",
+			"endpoints must not be empty. Remove it or add at least one App Endpoint.",
+		)
+		return
+	}
+
 	allEndpoints := config.AccessAllEndpoints.ValueBool()
-	hasEndpoints := len(config.Endpoints.Elements()) > 0
+	hasEndpoints := !config.Endpoints.IsNull()
 	if allEndpoints == hasEndpoints {
 		resp.Diagnostics.AddError(
 			"Invalid App Service Admin User Configuration",
@@ -324,9 +335,8 @@ func accessRequest(ctx context.Context, plan providerschema.AppServiceAdminUser)
 }
 
 // refreshAdminUser fetches the admin user and maps it to state. The password is
-// kept from prior, since the API does not return it. The API stores
-// access per bucket, so it may return more endpoints than configured. Prior endpoints
-// are kept when all of them are in the response, to avoid a perpetual diff.
+// kept from prior, since the API does not return it. See endpointsState for how
+// endpoints are mapped.
 func (a *AppServiceAdminUser) refreshAdminUser(
 	ctx context.Context, organizationId, projectId, clusterId, appServiceId, userId string, prior providerschema.AppServiceAdminUser,
 ) (*providerschema.AppServiceAdminUser, error) {
@@ -366,7 +376,7 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	if user.AccessAllEndpoints != nil && *user.AccessAllEndpoints {
 		state.AccessAllEndpoints = types.BoolValue(true)
 	} else if user.Endpoints != nil && len(*user.Endpoints) > 0 {
-		state.Endpoints, err = endpointsState(ctx, prior.Endpoints, *user.Endpoints)
+		state.Endpoints, err = a.endpointsState(ctx, organizationId, projectId, clusterId, appServiceId, prior.Endpoints, *user.Endpoints)
 		if err != nil {
 			return nil, err
 		}
@@ -384,16 +394,34 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	return &state, nil
 }
 
-// endpointsState keeps the prior endpoints when all of them are in the API response,
-// since the API returns every endpoint that shares a bucket with a configured one.
-func endpointsState(ctx context.Context, prior types.Set, apiEndpoints []string) (types.Set, error) {
+// endpointsState keeps the prior endpoints when the API response contains all of them and
+// every extra endpoint is on a bucket of a prior endpoint. The API grants access per bucket,
+// so it returns every endpoint that shares a bucket with a configured one. Any other extra
+// endpoint is access granted outside Terraform, so it goes into state as drift.
+func (a *AppServiceAdminUser) endpointsState(
+	ctx context.Context, organizationId, projectId, clusterId, appServiceId string, prior types.Set, apiEndpoints []string,
+) (types.Set, error) {
 	var priorEndpoints []string
 	if diags := prior.ElementsAs(ctx, &priorEndpoints, false); diags.HasError() {
 		return types.SetNull(types.StringType), fmt.Errorf("error reading prior endpoints")
 	}
-	if len(priorEndpoints) > 0 && !slices.ContainsFunc(priorEndpoints, func(e string) bool {
+
+	allPriorPresent := len(priorEndpoints) > 0 && !slices.ContainsFunc(priorEndpoints, func(e string) bool {
 		return !slices.Contains(apiEndpoints, e)
-	}) {
+	})
+	extras := slices.DeleteFunc(slices.Clone(apiEndpoints), func(e string) bool {
+		return slices.Contains(priorEndpoints, e)
+	})
+
+	keepPrior := allPriorPresent && len(extras) == 0
+	if allPriorPresent && len(extras) > 0 {
+		var err error
+		keepPrior, err = a.extrasSharePriorBuckets(ctx, organizationId, projectId, clusterId, appServiceId, priorEndpoints, extras)
+		if err != nil {
+			return types.SetNull(types.StringType), err
+		}
+	}
+	if keepPrior {
 		return prior, nil
 	}
 
@@ -402,4 +430,45 @@ func endpointsState(ctx context.Context, prior types.Set, apiEndpoints []string)
 		return types.SetNull(types.StringType), fmt.Errorf("error converting endpoints to set")
 	}
 	return endpoints, nil
+}
+
+// extrasSharePriorBuckets reports whether every extra endpoint is on a bucket of a prior endpoint.
+// It lists the App Endpoints of the App Service to map names to buckets.
+func (a *AppServiceAdminUser) extrasSharePriorBuckets(
+	ctx context.Context, organizationId, projectId, clusterId, appServiceId string, priorEndpoints, extras []string,
+) (bool, error) {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints",
+		a.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	appEndpoints, err := api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](ctx, a.ClientV1, a.Token, cfg, api.SortByName)
+	if err != nil {
+		return false, fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
+	}
+
+	bucketOf := make(map[string]string, len(appEndpoints))
+	for _, ep := range appEndpoints {
+		bucketOf[ep.Name] = ep.Bucket
+	}
+
+	priorBuckets := make(map[string]struct{}, len(priorEndpoints))
+	for _, e := range priorEndpoints {
+		if bucket, ok := bucketOf[e]; ok {
+			priorBuckets[bucket] = struct{}{}
+		}
+	}
+
+	return !slices.ContainsFunc(extras, func(e string) bool {
+		bucket, ok := bucketOf[e]
+		if !ok {
+			return true
+		}
+		_, shared := priorBuckets[bucket]
+		return !shared
+	}), nil
 }
