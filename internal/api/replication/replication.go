@@ -30,6 +30,13 @@ type CreateReplicationRequest struct {
 	Mappings []ScopeMapping `json:"mappings,omitempty"`
 
 	Filter *Filter `json:"filter,omitempty"`
+
+	// MobileSyncMode "active" turns on cross cluster versioning for both buckets. Cross
+	// cluster versioning cannot be turned off. Enum: "off" "active".
+	MobileSyncMode *string `json:"mobileSyncMode,omitempty"`
+
+	// ConflictLogging needs Couchbase Server 8.0 or later and cross cluster versioning on both buckets.
+	ConflictLogging *ConflictLogging `json:"conflictLogging,omitempty"`
 }
 
 // CreateReplicationTarget identifies the target of a replication in a create request.
@@ -101,6 +108,44 @@ type UpdateReplicationRequest struct {
 	// the existing mappings unchanged. It must not be sent together with Mappings.
 	AllScopes *bool          `json:"allScopes,omitempty"`
 	Mappings  []ScopeMapping `json:"mappings,omitempty"`
+
+	// MobileSyncMode "active" fails with 412 when cross cluster versioning is off on a bucket.
+	MobileSyncMode *string `json:"mobileSyncMode,omitempty"`
+
+	// ConflictLogging replaces the whole configuration. An empty object clears it.
+	ConflictLogging *ConflictLogging `json:"conflictLogging,omitempty"`
+}
+
+// ConflictLogging is the conflict logging configuration in a create or update request.
+// Disabled, Bucket and Collection must be sent together. An empty object means no conflict logging.
+type ConflictLogging struct {
+	// Disabled is true to keep the configuration without logging conflicts.
+	Disabled *bool `json:"disabled,omitempty"`
+
+	// Bucket is the bucket ID of the log bucket, not the name.
+	Bucket *string `json:"bucket,omitempty"`
+
+	// Collection is the default log target, in "scope.collection" format.
+	Collection *string `json:"collection,omitempty"`
+
+	// LoggingRules is keyed by a source scope or a source "scope.collection". A nil rule
+	// is sent as null and excludes the namespace from conflict logging.
+	LoggingRules map[string]*ConflictLoggingRule `json:"loggingRules,omitempty"`
+}
+
+// ConflictLoggingRule is the log target for one source namespace. An empty rule logs to the
+// default bucket and collection. Bucket and Collection must be set together.
+type ConflictLoggingRule struct {
+	Bucket     *string `json:"bucket,omitempty"`
+	Collection *string `json:"collection,omitempty"`
+}
+
+// GetConflictLogging is the conflict logging configuration in a GET response.
+type GetConflictLogging struct {
+	Disabled     bool                            `json:"disabled"`
+	Bucket       string                          `json:"bucket"`
+	Collection   string                          `json:"collection"`
+	LoggingRules map[string]*ConflictLoggingRule `json:"loggingRules"`
 }
 
 // CreateReplicationAsyncResponse is the 202 response of an async create call.
@@ -141,6 +186,10 @@ type GetReplicationResponse struct {
 	NetworkUsageLimit int64          `json:"networkUsageLimit"`
 
 	Filter *Filter `json:"filter"`
+
+	MobileSyncMode string `json:"mobileSyncMode"`
+
+	ConflictLogging *GetConflictLogging `json:"conflictLogging"`
 
 	Audit ReplicationAuditData `json:"audit"`
 }

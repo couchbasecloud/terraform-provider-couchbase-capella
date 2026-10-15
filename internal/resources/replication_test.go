@@ -228,6 +228,7 @@ func testReplicationPlanModel(t *testing.T) providerschema.Replication {
 		Direction:         types.StringValue("twoWay"),
 		Priority:          types.StringValue("medium"),
 		NetworkUsageLimit: types.Int64Value(0),
+		MobileSyncMode:    types.StringValue(providerschema.ReplicationMobileSyncModeOff),
 		Mappings:          testMappingsSet(t),
 		Filter: &providerschema.ReplicationFilter{
 			DocumentExcludeOptions: &providerschema.ReplicationDocumentExcludeOptions{
@@ -760,6 +761,136 @@ func TestReplicationValidateConfig(t *testing.T) {
 	}
 }
 
+func TestReplicationValidateConfigConflictLogging(t *testing.T) {
+	ctx := context.Background()
+	ruleType := types.ObjectType{AttrTypes: providerschema.ReplicationLoggingRule{}.AttributeTypes()}
+
+	conflictLogging := func(disabled bool, bucket, collection string, rules map[string]attr.Value) *providerschema.ReplicationConflictLogging {
+		loggingRules := types.MapNull(ruleType)
+		if rules != nil {
+			loggingRules = types.MapValueMust(ruleType, rules)
+		}
+		return &providerschema.ReplicationConflictLogging{
+			Disabled:     types.BoolValue(disabled),
+			Bucket:       types.StringValue(bucket),
+			Collection:   types.StringValue(collection),
+			LoggingRules: loggingRules,
+		}
+	}
+	rule := func(bucket, collection types.String) attr.Value {
+		return types.ObjectValueMust(ruleType.AttrTypes, map[string]attr.Value{"bucket": bucket, "collection": collection})
+	}
+
+	tests := []struct {
+		name            string
+		conflictLogging *providerschema.ReplicationConflictLogging
+		wantErr         string
+	}{
+		{
+			name:            "all four rule states are valid",
+			conflictLogging: testConflictLogging(),
+		},
+		{
+			name:            "disabled with an empty bucket and collection is valid",
+			conflictLogging: conflictLogging(true, "", "", nil),
+		},
+		{
+			name:            "enabled with an empty bucket is rejected",
+			conflictLogging: conflictLogging(false, "", "logs.default", nil),
+			wantErr:         "conflict_logging.bucket must not be empty",
+		},
+		{
+			name:            "enabled with an empty collection is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "", nil),
+			wantErr:         "conflict_logging.collection must not be empty",
+		},
+		{
+			name:            "a bucket name as the log bucket is rejected",
+			conflictLogging: conflictLogging(false, "conflict_logs", "logs.default", nil),
+			wantErr:         "conflict_logging.bucket must be a bucket ID",
+		},
+		{
+			name: "a rule with only a bucket is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"inventory": rule(types.StringValue("bG9ncw=="), types.StringNull()),
+			}),
+			wantErr: `The logging rule for "inventory" must set both bucket and collection, or neither`,
+		},
+		{
+			name: "a rule with a bucket name is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"inventory": rule(types.StringValue("conflict_logs"), types.StringValue("logs.inv")),
+			}),
+			wantErr: `conflict_logging.logging_rules["inventory"].bucket must be a bucket ID`,
+		},
+		{
+			name: "unknown values are checked later",
+			conflictLogging: &providerschema.ReplicationConflictLogging{
+				Disabled:   types.BoolValue(false),
+				Bucket:     types.StringUnknown(),
+				Collection: types.StringUnknown(),
+				LoggingRules: types.MapValueMust(ruleType, map[string]attr.Value{
+					"inventory": rule(types.StringUnknown(), types.StringValue("logs.inv")),
+				}),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := emptyReplicationModel()
+			model.OrganizationId = types.StringValue(testOrgID)
+			model.ProjectId = types.StringValue(testProjectID)
+			model.ClusterId = types.StringValue(testClusterID)
+			model.SourceBucket = types.StringValue("c291cmNl")
+			model.Target = &providerschema.ReplicationTarget{
+				Cluster: types.StringValue("cluster-2"), Bucket: types.StringValue("dGVzdA=="), Type: types.StringNull(),
+			}
+			model.ConflictLogging = tt.conflictLogging
+
+			raw := replicationStateFrom(t, ctx, model).Raw
+			req := resource.ValidateConfigRequest{Config: tfsdk.Config{Schema: ReplicationSchema(), Raw: raw}}
+			resp := resource.ValidateConfigResponse{}
+
+			(&Replication{}).ValidateConfig(ctx, req, &resp)
+
+			if tt.wantErr == "" {
+				assertNoDiags(t, resp.Diagnostics)
+				return
+			}
+			require.True(t, resp.Diagnostics.HasError())
+			assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), tt.wantErr)
+		})
+	}
+}
+
+// TestReplicationValidateConfigReportsAllErrors checks that an error in another attribute does not
+// hide the conflict logging errors.
+func TestReplicationValidateConfigReportsAllErrors(t *testing.T) {
+	ctx := context.Background()
+
+	model := emptyReplicationModel()
+	model.OrganizationId = types.StringValue(testOrgID)
+	model.ProjectId = types.StringValue(testProjectID)
+	model.ClusterId = types.StringValue(testClusterID)
+	model.SourceBucket = types.StringValue("orders")
+	model.Target = &providerschema.ReplicationTarget{
+		Cluster: types.StringValue("cluster-2"), Bucket: types.StringValue("dGVzdA=="), Type: types.StringNull(),
+	}
+	model.ConflictLogging = testConflictLogging()
+	model.ConflictLogging.Bucket = types.StringValue("conflict_logs")
+
+	raw := replicationStateFrom(t, ctx, model).Raw
+	req := resource.ValidateConfigRequest{Config: tfsdk.Config{Schema: ReplicationSchema(), Raw: raw}}
+	resp := resource.ValidateConfigResponse{}
+
+	(&Replication{}).ValidateConfig(ctx, req, &resp)
+
+	require.Len(t, resp.Diagnostics.Errors(), 2)
+	assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), "source_bucket must be a bucket ID")
+	assert.Contains(t, resp.Diagnostics.Errors()[1].Detail(), "conflict_logging.bucket must be a bucket ID")
+}
+
 // TestReplicationValidateConfigTargetNotKnown checks that a null or unknown target object gives no
 // error of its own. Terraform reports a missing target, and checks an unknown one again later.
 func TestReplicationValidateConfigTargetNotKnown(t *testing.T) {
@@ -820,6 +951,40 @@ func allFalseDocumentExcludeOptions() *providerschema.ReplicationDocumentExclude
 	}
 }
 
+// testConflictLoggingJSON is the API shape of testConflictLogging.
+const testConflictLoggingJSON = `{
+	"disabled": false,
+	"bucket": "bG9ncw==",
+	"collection": "logs.default",
+	"loggingRules": {
+		"inventory": {"bucket": "bG9ncw==", "collection": "logs.inv"},
+		"sales": {},
+		"agents.partners": null
+	}
+}`
+
+// testConflictLogging has a rule of each kind: a custom target, {} (log to the default) and null (do
+// not log). A namespace with no rule, the fourth state, is not in the map.
+func testConflictLogging() *providerschema.ReplicationConflictLogging {
+	ruleType := types.ObjectType{AttrTypes: providerschema.ReplicationLoggingRule{}.AttributeTypes()}
+	return &providerschema.ReplicationConflictLogging{
+		Disabled:   types.BoolValue(false),
+		Bucket:     types.StringValue("bG9ncw=="),
+		Collection: types.StringValue("logs.default"),
+		LoggingRules: types.MapValueMust(ruleType, map[string]attr.Value{
+			"inventory": types.ObjectValueMust(ruleType.AttrTypes, map[string]attr.Value{
+				"bucket":     types.StringValue("bG9ncw=="),
+				"collection": types.StringValue("logs.inv"),
+			}),
+			"sales": types.ObjectValueMust(ruleType.AttrTypes, map[string]attr.Value{
+				"bucket":     types.StringNull(),
+				"collection": types.StringNull(),
+			}),
+			"agents.partners": types.ObjectNull(ruleType.AttrTypes),
+		}),
+	}
+}
+
 // testReplicationRequestModel is a plan with one mapping and a filter, for the request builders.
 func testReplicationRequestModel(t *testing.T) providerschema.Replication {
 	t.Helper()
@@ -833,6 +998,7 @@ func testReplicationRequestModel(t *testing.T) providerschema.Replication {
 		Direction:         types.StringValue("twoWay"),
 		Priority:          types.StringValue("medium"),
 		NetworkUsageLimit: types.Int64Value(0),
+		MobileSyncMode:    types.StringValue(providerschema.ReplicationMobileSyncModeOff),
 		Mappings:          testScopeMappingsSet(t, "sales", "orders"),
 		Filter: &providerschema.ReplicationFilter{
 			DocumentExcludeOptions: allFalseDocumentExcludeOptions(),
@@ -863,6 +1029,57 @@ func TestCreateReplicationRequest(t *testing.T) {
 			"expressions": {"regEx": "^a", "skipRestream": false}
 		}
 	}`, string(body))
+}
+
+func TestCreateReplicationRequestMobileSyncModeAndConflictLogging(t *testing.T) {
+	tests := []struct {
+		name   string
+		change func(plan *providerschema.Replication)
+		want   map[string]string
+	}{
+		{
+			name:   "the default off is not sent, and no block sends no conflict logging",
+			change: func(*providerschema.Replication) {},
+			want:   map[string]string{},
+		},
+		{
+			name: "active is sent",
+			change: func(plan *providerschema.Replication) {
+				plan.MobileSyncMode = types.StringValue(providerschema.ReplicationMobileSyncModeActive)
+			},
+			want: map[string]string{"mobileSyncMode": `"active"`},
+		},
+		{
+			name:   "conflict logging is sent with every rule state",
+			change: func(plan *providerschema.Replication) { plan.ConflictLogging = testConflictLogging() },
+			want:   map[string]string{"conflictLogging": testConflictLoggingJSON},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plan := testReplicationRequestModel(t)
+			tt.change(&plan)
+
+			got, err := createReplicationRequest(context.Background(), plan)
+			require.NoError(t, err)
+
+			body, err := json.Marshal(got)
+			require.NoError(t, err)
+			var fields map[string]json.RawMessage
+			require.NoError(t, json.Unmarshal(body, &fields))
+
+			for _, key := range []string{"mobileSyncMode", "conflictLogging"} {
+				want, ok := tt.want[key]
+				if !ok {
+					assert.NotContains(t, fields, key)
+					continue
+				}
+				require.Contains(t, fields, key)
+				assert.JSONEq(t, want, string(fields[key]))
+			}
+		})
+	}
 }
 
 func TestUpdateReplicationRequest(t *testing.T) {
@@ -936,6 +1153,62 @@ func TestUpdateReplicationRequest(t *testing.T) {
 			want: `{"priority": "medium", "networkUsageLimit": 0, "filter": {
 				"documentExcludeOptions": {"deletion": false, "expiration": false, "ttl": false, "binary": false},
 				"expressions": {"regEx": "^b", "skipRestream": true}}}`,
+		},
+		{
+			name: "changed mobile sync mode is sent",
+			change: func(plan *providerschema.Replication) {
+				plan.MobileSyncMode = types.StringValue(providerschema.ReplicationMobileSyncModeActive)
+			},
+			want: `{"priority": "medium", "networkUsageLimit": 0, "mobileSyncMode": "active"}`,
+		},
+		{
+			name: "mobile sync mode set back to off is sent",
+			changeState: func(state *providerschema.Replication) {
+				state.MobileSyncMode = types.StringValue(providerschema.ReplicationMobileSyncModeActive)
+			},
+			change: func(*providerschema.Replication) {},
+			want:   `{"priority": "medium", "networkUsageLimit": 0, "mobileSyncMode": "off"}`,
+		},
+		{
+			name:   "added conflict logging sends the full configuration",
+			change: func(plan *providerschema.Replication) { plan.ConflictLogging = testConflictLogging() },
+			want:   `{"priority": "medium", "networkUsageLimit": 0, "conflictLogging": ` + testConflictLoggingJSON + `}`,
+		},
+		{
+			name:        "removed conflict logging sends an empty object, which clears it",
+			changeState: func(state *providerschema.Replication) { state.ConflictLogging = testConflictLogging() },
+			change:      func(*providerschema.Replication) {},
+			want:        `{"priority": "medium", "networkUsageLimit": 0, "conflictLogging": {}}`,
+		},
+		{
+			name:        "a changed rule sends the full configuration, because it replaces the old one",
+			changeState: func(state *providerschema.Replication) { state.ConflictLogging = testConflictLogging() },
+			change: func(plan *providerschema.Replication) {
+				plan.ConflictLogging = testConflictLogging()
+				plan.ConflictLogging.Disabled = types.BoolValue(true)
+			},
+			want: `{"priority": "medium", "networkUsageLimit": 0, "conflictLogging": {
+				"disabled": true,
+				"bucket": "bG9ncw==",
+				"collection": "logs.default",
+				"loggingRules": {
+					"inventory": {"bucket": "bG9ncw==", "collection": "logs.inv"},
+					"sales": {},
+					"agents.partners": null
+				}}}`,
+		},
+		{
+			name: "changed priority does not send the unchanged mobile sync mode or conflict logging",
+			changeState: func(state *providerschema.Replication) {
+				state.MobileSyncMode = types.StringValue(providerschema.ReplicationMobileSyncModeActive)
+				state.ConflictLogging = testConflictLogging()
+			},
+			change: func(plan *providerschema.Replication) {
+				plan.Priority = types.StringValue("low")
+				plan.MobileSyncMode = types.StringValue(providerschema.ReplicationMobileSyncModeActive)
+				plan.ConflictLogging = testConflictLogging()
+			},
+			want: `{"priority": "low", "networkUsageLimit": 0}`,
 		},
 	}
 
