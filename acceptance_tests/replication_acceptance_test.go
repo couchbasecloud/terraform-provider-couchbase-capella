@@ -2,9 +2,12 @@ package acceptance_tests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -266,6 +269,143 @@ func TestAccReplicationResourceTwoWay(t *testing.T) {
 	})
 }
 
+// TestAccReplicationResourceMobileSyncMode creates a replication with mobile sync on, checks that it turns
+// on cross cluster versioning for both buckets, imports it, and turns mobile sync off.
+func TestAccReplicationResourceMobileSyncMode(t *testing.T) {
+	requireReplicationAnchor(t)
+	buckets := newReplicationTestBuckets(false)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckReplicationClustersHealthy(),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
+				Config:    testAccReplicationBucketsConfig(buckets),
+				Check:     testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, replicationMobileActive),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// A create can leave both clusters in the Peering state. Wait before the post-apply refresh.
+					testAccCheckReplicationClustersHealthy(),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "mobile_sync_mode", "active"),
+					resource.TestCheckNoResourceAttr(testAccReplicationReference, "conflict_logging.%"),
+					testAccCheckReplicationBucketsECCV(t),
+				),
+			},
+			testAccReplicationImportStep(),
+			{
+				Config: testAccReplicationConfig(buckets, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(testAccReplicationReference, "mobile_sync_mode", "off"),
+			},
+		},
+	})
+}
+
+// TestAccReplicationResourceMobileSyncModeUpdateNeedsECCV checks that an update to mobile sync fails
+// while cross cluster versioning is off, because only a create turns it on.
+func TestAccReplicationResourceMobileSyncModeUpdateNeedsECCV(t *testing.T) {
+	requireReplicationAnchor(t)
+	buckets := newReplicationTestBuckets(false)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckReplicationClustersHealthy(),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
+				Config:    testAccReplicationBucketsConfig(buckets),
+				Check:     testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// A create can leave both clusters in the Peering state. Wait before the post-apply refresh.
+					testAccCheckReplicationClustersHealthy(),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "mobile_sync_mode", "off"),
+				),
+			},
+			{
+				Config:      testAccReplicationConfig(buckets, replicationMobileActive),
+				ExpectError: regexp.MustCompile("Error updating replication"),
+			},
+		},
+	})
+}
+
+// TestAccReplicationResourceConflictLogging creates a replication with conflict logging and every rule
+// state, imports it, disables it, and removes it. It needs Couchbase Server 8.0 or later.
+func TestAccReplicationResourceConflictLogging(t *testing.T) {
+	requireConflictLoggingServerVersion(t)
+	requireReplicationAnchor(t)
+	buckets := newReplicationTestBuckets(true)
+	buckets.log = randomStringWithPrefix("tf_acc_repl_log_")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckReplicationClustersHealthy(),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
+				Config:    testAccReplicationBucketsConfig(buckets),
+				Check:     testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, replicationMobileActive+fmt.Sprintf(replicationConflictLogging, "false")),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// A create can leave both clusters in the Peering state. Wait before the post-apply refresh.
+					testAccCheckReplicationClustersHealthy(),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "mobile_sync_mode", "active"),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "conflict_logging.disabled", "false"),
+					resource.TestCheckResourceAttrPair(testAccReplicationReference, "conflict_logging.bucket", "couchbase-capella_bucket.log", "id"),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "conflict_logging.collection", "logs.default"),
+					resource.TestCheckResourceAttrPair(testAccReplicationReference, "conflict_logging.logging_rules.inventory.bucket", "couchbase-capella_bucket.log", "id"),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "conflict_logging.logging_rules.inventory.collection", "logs.inventory"),
+					resource.TestCheckNoResourceAttr(testAccReplicationReference, "conflict_logging.logging_rules.sales.bucket"),
+				),
+			},
+			testAccReplicationImportStep(),
+			{
+				Config: testAccReplicationConfig(buckets, replicationMobileActive+fmt.Sprintf(replicationConflictLogging, "true")),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(testAccReplicationReference, "conflict_logging.disabled", "true"),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, replicationMobileActive+replicationConflictLoggingDisabledEmpty),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(testAccReplicationReference, "conflict_logging.disabled", "true"),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "conflict_logging.bucket", ""),
+					resource.TestCheckResourceAttr(testAccReplicationReference, "conflict_logging.collection", ""),
+				),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, replicationMobileActive),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckNoResourceAttr(testAccReplicationReference, "conflict_logging.%"),
+			},
+		},
+	})
+}
+
 // TestAccReplicationResourceInvalidConfig checks the plan-time validation. It makes no API call.
 func TestAccReplicationResourceInvalidConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
@@ -280,6 +420,12 @@ func TestAccReplicationResourceInvalidConfig(t *testing.T) {
 				Config:      testAccReplicationPlanOnlyConfig(replicationBucketNameAsId),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile("source_bucket must be a bucket ID"),
+			},
+			{
+				Config:      testAccReplicationPlanOnlyConfig(replicationConflictLoggingHalfRule),
+				PlanOnly:    true,
+				// Terraform wraps long error messages, so the pattern allows any white space between the words.
+				ExpectError: regexp.MustCompile(`must\s+set\s+both\s+bucket\s+and\s+collection,\s+or\s+neither`),
 			},
 		},
 	})
@@ -312,6 +458,51 @@ func testAccPreConfigWaitForReplicationClusters(t *testing.T) func() {
 		if err := waitForReplicationClusters(); err != nil {
 			t.Fatalf("waiting for the replication clusters: %v", err)
 		}
+	}
+}
+
+// requireConflictLoggingServerVersion skips the test when the clusters are older than Couchbase Server 8.0.
+func requireConflictLoggingServerVersion(t *testing.T) {
+	t.Helper()
+	major, _, _ := strings.Cut(globalServerVersion, ".")
+	if version, err := strconv.Atoi(major); err != nil || version < 8 {
+		t.Skipf("conflict logging needs Couchbase Server 8.0 or later, and TF_VAR_server_version is %q", globalServerVersion)
+	}
+}
+
+// testAccCheckReplicationBucketsECCV checks that cross cluster versioning is on for the source and target buckets.
+func testAccCheckReplicationBucketsECCV(t *testing.T) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		data := newTestClient(t)
+		for _, resourceReference := range []string{"couchbase-capella_bucket.source", "couchbase-capella_bucket.target"} {
+			bucket, ok := state.RootModule().Resources[resourceReference]
+			if !ok {
+				return fmt.Errorf("resource %q not found in the state", resourceReference)
+			}
+			attrs := bucket.Primary.Attributes
+
+			cfg := api.EndpointCfg{
+				Url: fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s",
+					globalHost, attrs["organization_id"], attrs["project_id"], attrs["cluster_id"], attrs["id"]),
+				Method:        http.MethodGet,
+				SuccessStatus: http.StatusOK,
+			}
+			response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, globalToken, nil)
+			if err != nil {
+				return fmt.Errorf("getting bucket %s: %w", attrs["name"], err)
+			}
+
+			var got struct {
+				EnableCrossClusterVersioning bool `json:"enableCrossClusterVersioning"`
+			}
+			if err = json.Unmarshal(response.Body, &got); err != nil {
+				return err
+			}
+			if !got.EnableCrossClusterVersioning {
+				return fmt.Errorf("cross cluster versioning is off for bucket %s", attrs["name"])
+			}
+		}
+		return nil
 	}
 }
 
@@ -367,11 +558,13 @@ func generateReplicationImportIdForResource(resourceReference string) resource.I
 	}
 }
 
-// replicationTestBuckets holds the names of a test's two buckets.
+// replicationTestBuckets holds the names of a test's buckets.
 // withScopes indicates whether to include scopes and collections.
+// log, when set, is the name of a conflict log bucket on the source cluster.
 type replicationTestBuckets struct {
 	source     string
 	target     string
+	log        string
 	withScopes bool
 }
 
@@ -415,7 +608,52 @@ resource "couchbase-capella_bucket" "target" {
 	if buckets.withScopes {
 		config += testAccReplicationScopesAndCollectionsConfig()
 	}
+	if buckets.log != "" {
+		config += testAccReplicationLogBucketConfig(buckets.log)
+	}
 	return config
+}
+
+// testAccReplicationLogBucketConfig makes a conflict log bucket on the source cluster, with a "logs"
+// scope and two collections. A oneWay replication logs on the source cluster only.
+func testAccReplicationLogBucketConfig(name string) string {
+	return fmt.Sprintf(`
+resource "couchbase-capella_bucket" "log" {
+  organization_id            = "%[1]s"
+  project_id                 = "%[2]s"
+  cluster_id                 = "%[3]s"
+  name                       = "%[4]s"
+  storage_backend            = "couchstore"
+  memory_allocation_in_mb    = 100
+  bucket_conflict_resolution = "seqno"
+}
+
+resource "couchbase-capella_scope" "log_logs" {
+  organization_id = couchbase-capella_bucket.log.organization_id
+  project_id      = couchbase-capella_bucket.log.project_id
+  cluster_id      = couchbase-capella_bucket.log.cluster_id
+  bucket_id       = couchbase-capella_bucket.log.id
+  scope_name      = "logs"
+}
+
+resource "couchbase-capella_collection" "log_default" {
+  organization_id = couchbase-capella_scope.log_logs.organization_id
+  project_id      = couchbase-capella_scope.log_logs.project_id
+  cluster_id      = couchbase-capella_scope.log_logs.cluster_id
+  bucket_id       = couchbase-capella_scope.log_logs.bucket_id
+  scope_name      = couchbase-capella_scope.log_logs.scope_name
+  collection_name = "default"
+}
+
+resource "couchbase-capella_collection" "log_inventory" {
+  organization_id = couchbase-capella_scope.log_logs.organization_id
+  project_id      = couchbase-capella_scope.log_logs.project_id
+  cluster_id      = couchbase-capella_scope.log_logs.cluster_id
+  bucket_id       = couchbase-capella_scope.log_logs.bucket_id
+  scope_name      = couchbase-capella_scope.log_logs.scope_name
+  collection_name = "inventory"
+}
+`, globalOrgId, globalProjectId, globalClusterId, name)
 }
 
 // testAccReplicationConfig is testAccReplicationBucketsConfig plus the replication.
@@ -556,6 +794,55 @@ const (
   target = {
     cluster = "ffffffff-aaaa-1414-eeee-000000000000"
     bucket  = "dGFyZ2V0"
+  }
+`
+
+	replicationMobileActive = `
+  mobile_sync_mode = "active"
+`
+
+	replicationConflictLogging = `
+  conflict_logging = {
+    disabled   = %s
+    bucket     = couchbase-capella_bucket.log.id
+    collection = "logs.default"
+
+    logging_rules = {
+      "inventory"    = { bucket = couchbase-capella_bucket.log.id, collection = "logs.inventory" }
+      "sales"        = {}
+      "sales.orders" = null
+    }
+  }
+
+  depends_on = [
+    couchbase-capella_collection.source_orders,
+    couchbase-capella_collection.target_orders,
+    couchbase-capella_scope.source_inventory,
+    couchbase-capella_scope.target_inventory,
+    couchbase-capella_collection.log_default,
+    couchbase-capella_collection.log_inventory,
+  ]
+`
+
+	replicationConflictLoggingDisabledEmpty = `
+  conflict_logging = {
+    disabled   = true
+    bucket     = ""
+    collection = ""
+  }
+`
+
+	replicationConflictLoggingHalfRule = `
+  source_bucket = "c291cmNl"
+  target = {
+    cluster = "ffffffff-aaaa-1414-eeee-000000000000"
+    bucket  = "dGFyZ2V0"
+  }
+  conflict_logging = {
+    disabled      = false
+    bucket        = "bG9ncw=="
+    collection    = "logs.default"
+    logging_rules = { "inventory" = { bucket = "bG9ncw==" } }
   }
 `
 )
