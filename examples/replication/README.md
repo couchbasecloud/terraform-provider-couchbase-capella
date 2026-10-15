@@ -4,6 +4,8 @@ This example shows how to create and manage an XDCR replication in Capella.
 
 It replicates the `airline` and `airport` collections of the `inventory` scope from a bucket on a source cluster to a bucket on a target cluster. It uses a filter to replicate only documents whose key starts with `airline_`, and it removes the TTL (expiry time) from the replicated documents.
 
+It also creates a second replication, `new_mobile_replication`, between two other buckets on the same clusters. That replication uses mobile sync mode and conflict logging.
+
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
 # Before you start
@@ -15,11 +17,31 @@ To run, configure your Couchbase Capella provider as described in README in the 
 - A refresh, for example in `terraform plan`, fails with a 422 error while the source cluster is not healthy. Run the command again when the cluster is healthy.
 - For an external target, set `target.type = "external"`, use the cluster reference name as `target.cluster` and the bucket name as `target.bucket`. The cluster reference must already exist. An external target supports only `oneWay`.
 
+# Mobile sync mode and conflict logging
+
+The second replication, `new_mobile_replication`, needs:
+
+- Couchbase Server 8.0 or later on both clusters. Conflict logging needs it.
+- Two more buckets, one on each cluster. **The create turns on cross cluster versioning for both buckets, and cross cluster versioning cannot be turned off.** Use buckets that you can keep that way. The create turns it on even if the create then fails.
+- The `inventory` scope, with the `airline` and `airport` collections, in its source bucket. The logging rules use them.
+- A log bucket on the source cluster, with the `logs` scope and the `default` and `inventory` collections. On a `twoWay` replication, the log bucket, scope and collections must exist on both clusters.
+
+About the settings:
+
+- An update does not turn cross cluster versioning on. To set `mobile_sync_mode = "active"` or add `conflict_logging` on an existing replication, first enable cross cluster versioning on both buckets in the Capella UI or with the Management API. Otherwise the update fails with a 412 error.
+- `bucket` and `collection` can be empty only when `disabled = true`.
+- Each entry in `logging_rules` has one of these forms:
+  - `{ bucket = "<bucket_id>", collection = "<scope>.<collection>" }`: log the conflicts of this scope or collection to this target.
+  - `{}`: log to the default `bucket` and `collection`.
+  - `null`: do not log.
+  - A scope or collection with no entry uses the default `bucket` and `collection`.
+- Removing the `conflict_logging` block clears the configuration.
+
 # Example Walkthrough
 
 In this example, we are going to do the following.
 
-1. CREATE: Create a new replication in Capella as stated in the `create_replication.tf` file.
+1. CREATE: Create two new replications in Capella as stated in the `create_replication.tf` file: one with the basic settings, and one with mobile sync mode and conflict logging.
 2. IMPORT: Import a replication that exists in Capella but not in the terraform state file.
 3. UPDATE: Update the replication settings using Terraform.
 4. DESTROY: Delete the newly created replication from Capella.
@@ -472,6 +494,15 @@ $ terraform output new_replication
 }
 ```
 
+### Note the Replication ID for the replication with mobile sync mode and conflict logging
+
+Command: `terraform output new_mobile_replication`
+
+Sample Output:
+```
+TODO: add the output of the cbclocal run.
+```
+
 ### List the resources that are present in the Terraform State file.
 
 Command: `terraform state list`
@@ -684,6 +715,17 @@ new_replication = {
   }
 }
 replication_id = "<replication_id>"
+```
+
+### Turn off conflict logging by overriding the `conflict_logging_disabled` variable.
+
+Command: `terraform apply -var 'conflict_logging_disabled=true'`
+
+The API replaces the whole conflict logging configuration on update, so Terraform sends the whole `conflict_logging` block again. The configuration is kept, but conflicts are not logged. To clear the configuration, remove the `conflict_logging` block.
+
+Sample Output:
+```
+TODO: add the output of the cbclocal run.
 ```
 
 ## DESTROY

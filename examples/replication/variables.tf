@@ -37,3 +37,18 @@ variable "replication" {
   })
   default = {}
 }
+
+variable "mobile_replication" {
+  description = "Bucket IDs (not names) for the replication with mobile sync mode and conflict logging. The log bucket is on the source cluster."
+  type = object({
+    source_bucket_id = string
+    target_bucket_id = string
+    log_bucket_id    = string
+  })
+}
+
+variable "conflict_logging_disabled" {
+  description = "Set to true to keep the conflict logging configuration without logging conflicts."
+  type        = bool
+  default     = false
+}
