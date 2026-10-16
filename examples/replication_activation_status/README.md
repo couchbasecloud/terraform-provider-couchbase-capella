@@ -33,7 +33,38 @@ Command: `terraform plan`
 
 Sample Output:
 ```
-TODO
+$ terraform plan
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_replication_activation_status.new_replication_activation_status will be created
+  + resource "couchbase-capella_replication_activation_status" "new_replication_activation_status" {
+      + cluster_id      = "<cluster_id>"
+      + organization_id = "<organization_id>"
+      + project_id      = "<project_id>"
+      + replication_id  = "<replication_id>"
+      + state           = "paused"
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + new_replication_activation_status = {
+      + cluster_id      = "<cluster_id>"
+      + organization_id = "<organization_id>"
+      + project_id      = "<project_id>"
+      + replication_id  = "<replication_id>"
+      + state           = "paused"
+    }
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
 ```
 
 ### Apply the Plan, in order to pause the replication
@@ -42,7 +73,56 @@ Command: `terraform apply`
 
 Sample Output:
 ```
-TODO
+$ terraform apply
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_replication_activation_status.new_replication_activation_status will be created
+  + resource "couchbase-capella_replication_activation_status" "new_replication_activation_status" {
+      + cluster_id      = "<cluster_id>"
+      + organization_id = "<organization_id>"
+      + project_id      = "<project_id>"
+      + replication_id  = "<replication_id>"
+      + state           = "paused"
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + new_replication_activation_status = {
+      + cluster_id      = "<cluster_id>"
+      + organization_id = "<organization_id>"
+      + project_id      = "<project_id>"
+      + replication_id  = "<replication_id>"
+      + state           = "paused"
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_replication_activation_status.new_replication_activation_status: Creating...
+couchbase-capella_replication_activation_status.new_replication_activation_status: Still creating... [00m10s elapsed]
+couchbase-capella_replication_activation_status.new_replication_activation_status: Still creating... [00m20s elapsed]
+couchbase-capella_replication_activation_status.new_replication_activation_status: Creation complete after 20s
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+new_replication_activation_status = {
+  "cluster_id" = "<cluster_id>"
+  "organization_id" = "<organization_id>"
+  "project_id" = "<project_id>"
+  "replication_id" = "<replication_id>"
+  "state" = "paused"
+}
 ```
 
 ### List the resources that are present in the Terraform State file.
@@ -51,7 +131,8 @@ Command: `terraform state list`
 
 Sample Output:
 ```
-TODO
+$ terraform state list
+couchbase-capella_replication_activation_status.new_replication_activation_status
 ```
 
 ## IMPORT
@@ -61,7 +142,9 @@ Command: `terraform state rm couchbase-capella_replication_activation_status.new
 
 Sample Output:
 ```
-TODO
+$ terraform state rm couchbase-capella_replication_activation_status.new_replication_activation_status
+Removed couchbase-capella_replication_activation_status.new_replication_activation_status
+Successfully removed 1 resource instance(s).
 ```
 
 Please note, this command only removes the resource from the Terraform State file. The replication is still paused in Capella.
@@ -72,7 +155,16 @@ Command: `terraform import couchbase-capella_replication_activation_status.new_r
 
 Sample Output:
 ```
-TODO
+$ terraform import couchbase-capella_replication_activation_status.new_replication_activation_status replication_id=<replication_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
+couchbase-capella_replication_activation_status.new_replication_activation_status: Importing from ID "replication_id=<replication_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>"...
+couchbase-capella_replication_activation_status.new_replication_activation_status: Import prepared!
+  Prepared couchbase-capella_replication_activation_status for import
+couchbase-capella_replication_activation_status.new_replication_activation_status: Refreshing state...
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
 ```
 
 Here, we pass the IDs as a single comma-separated string.
@@ -87,7 +179,13 @@ Command: `terraform plan`
 
 Sample Output:
 ```
-TODO
+$ terraform plan
+couchbase-capella_replication_activation_status.new_replication_activation_status: Refreshing state...
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
 ```
 
 ## UPDATE
@@ -97,7 +195,50 @@ Command: `terraform apply -var 'state=running'`
 
 Sample Output:
 ```
-TODO
+$ terraform apply -var 'state=running'
+couchbase-capella_replication_activation_status.new_replication_activation_status: Refreshing state...
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_replication_activation_status.new_replication_activation_status will be updated in-place
+  ~ resource "couchbase-capella_replication_activation_status" "new_replication_activation_status" {
+      ~ state           = "paused" -> "running"
+        # (4 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ new_replication_activation_status = {
+      ~ state           = "paused" -> "running"
+        # (4 unchanged attributes hidden)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_replication_activation_status.new_replication_activation_status: Modifying...
+couchbase-capella_replication_activation_status.new_replication_activation_status: Still modifying... [00m10s elapsed]
+couchbase-capella_replication_activation_status.new_replication_activation_status: Modifications complete after 19s
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+new_replication_activation_status = {
+  "cluster_id" = "<cluster_id>"
+  "organization_id" = "<organization_id>"
+  "project_id" = "<project_id>"
+  "replication_id" = "<replication_id>"
+  "state" = "running"
+}
 ```
 
 ## DESTROY
@@ -109,5 +250,43 @@ Command: `terraform destroy -var 'state=running'`
 
 Sample Output:
 ```
-TODO
+$ terraform destroy -var 'state=running'
+couchbase-capella_replication_activation_status.new_replication_activation_status: Refreshing state...
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_replication_activation_status.new_replication_activation_status will be destroyed
+  - resource "couchbase-capella_replication_activation_status" "new_replication_activation_status" {
+      - cluster_id      = "<cluster_id>" -> null
+      - organization_id = "<organization_id>" -> null
+      - project_id      = "<project_id>" -> null
+      - replication_id  = "<replication_id>" -> null
+      - state           = "running" -> null
+    }
+
+Plan: 0 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  - new_replication_activation_status = {
+      - cluster_id      = "<cluster_id>"
+      - organization_id = "<organization_id>"
+      - project_id      = "<project_id>"
+      - replication_id  = "<replication_id>"
+      - state           = "running"
+    } -> null
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+couchbase-capella_replication_activation_status.new_replication_activation_status: Destroying...
+couchbase-capella_replication_activation_status.new_replication_activation_status: Destruction complete after 0s
+
+Destroy complete! Resources: 1 destroyed.
 ```
