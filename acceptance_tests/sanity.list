@@ -328,3 +328,6 @@ TestAccReplicationResource
 
 # Tests pausing and resuming both directions of a twoWay replication, import, and that destroy keeps the status
 TestAccReplicationActivationStatusResource
+
+# Tests reading a replication via data source
+TestAccReplicationDataSource
