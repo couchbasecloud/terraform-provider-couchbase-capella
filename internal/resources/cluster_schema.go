@@ -22,7 +22,13 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}), "CreateClusterRequest")
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
-	capellaschema.AddAttr(attrs, "zones", clusterBuilder, stringSetAttribute(optional, requiresReplace))
+	zones := stringSetAttribute(optional, computed, useStateForUnknown, requiresReplaceIfConfigured)
+	capellaschema.AddAttr(attrs, "zones", clusterBuilder, zones)
+	// Set after AddAttr: the published OpenAPI description still says only single AZ is supported.
+	zones.MarkdownDescription = "The AWS availability zone IDs (for example `use1-az1`) to deploy the cluster in. " +
+		"Only supported for AWS clusters: at most 1 zone for a single AZ cluster, and exactly 3 unique zones in the cluster's region for a multi AZ cluster. " +
+		"If omitted, Capella chooses the zones and they are read back into state. " +
+		"Changing this forces a new cluster to be created."
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "deletion_protection", clusterBuilder, boolAttribute(computed))
 
