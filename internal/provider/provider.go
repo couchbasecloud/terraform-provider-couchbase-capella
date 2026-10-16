@@ -353,5 +353,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewEventingFunction,
 		resources.NewDataApi,
 		resources.NewReplication,
+		resources.NewReplicationActivationStatus,
 	}
 }

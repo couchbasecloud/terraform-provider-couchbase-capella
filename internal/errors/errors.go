@@ -290,6 +290,12 @@ var (
 	// ErrReplicationDeleteTimeout is returned when a replication is still present after the delete polling timeout.
 	ErrReplicationDeleteTimeout = errors.New("replication was not deleted within the polling timeout")
 
+	// ErrReplicationActivationStatusFailed is returned when a replication has the failed status after a pause or resume.
+	ErrReplicationActivationStatusFailed = errors.New("replication status is failed")
+
+	// ErrReplicationActivationStatusTimeout is returned when a replication does not get the requested status within the polling timeout.
+	ErrReplicationActivationStatusTimeout = errors.New("replication did not get the requested status within the polling timeout")
+
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrIndexDeferred = errors.New("index is in Deferred state and will not become Ready without a BUILD INDEX statement")
