@@ -1,11 +1,17 @@
 package acceptance_tests
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
 func TestAccAppServicePrivateEndpointServiceResource(t *testing.T) {
@@ -14,6 +20,7 @@ func TestAccAppServicePrivateEndpointServiceResource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckAppServicePrivateEndpointServiceDestroy(t),
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
@@ -69,5 +76,39 @@ func generateAppServicePrivateEndpointServiceImportIdForResource(resourceReferen
 			rawState["project_id"],
 			rawState["organization_id"],
 		), nil
+	}
+}
+
+// testAccCheckAppServicePrivateEndpointServiceDestroy verifies that the remote state is "disabled" after destroy,
+// because destroy disables the private endpoint service on the App Service and does not delete a resource.
+func testAccCheckAppServicePrivateEndpointServiceDestroy(t *testing.T) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		data := newTestClient(t)
+
+		url := fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/privateEndpointService",
+			data.HostURL, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId,
+		)
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, data.Token, nil)
+		if err != nil {
+			return fmt.Errorf("failed to get App Service private endpoint service state after destroy: %w", err)
+		}
+
+		var stateResp apigen.GetAppServicePrivateEndpointStateResponse
+		if err := json.Unmarshal(response.Body, &stateResp); err != nil {
+			return fmt.Errorf("failed to unmarshal App Service private endpoint service state: %w", err)
+		}
+
+		disabled := apigen.GetAppServicePrivateEndpointStateResponseStateDisabled
+		if stateResp.State == nil || *stateResp.State != disabled {
+			var actual string
+			if stateResp.State != nil {
+				actual = string(*stateResp.State)
+			}
+			return fmt.Errorf("expected state to be %q after destroy, got %q", disabled, actual)
+		}
+
+		return nil
 	}
 }

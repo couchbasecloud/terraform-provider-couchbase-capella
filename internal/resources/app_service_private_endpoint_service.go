@@ -282,8 +282,8 @@ func (a *AppServicePrivateEndpointService) refreshAppServicePrivateEndpointServi
 }
 
 // checkAppServicePrivateEndpointServiceStatus polls the service until it reaches
-// targetState. It fails when the service reports failed or the App Service is not
-// found, and retries on other errors until statusChangeTimeout.
+// targetState or statusChangeTimeout. It fails when the service reports failed or a
+// read fails, because ExecuteWithRetry already retries transient errors.
 func (a *AppServicePrivateEndpointService) checkAppServicePrivateEndpointServiceStatus(
 	ctx context.Context,
 	organizationId, projectId, clusterId, appServiceId string,
@@ -302,11 +302,7 @@ func (a *AppServicePrivateEndpointService) checkAppServicePrivateEndpointService
 		case <-ticker.C:
 			refreshedState, err := a.refreshAppServicePrivateEndpointService(ctx, organizationId, projectId, clusterId, appServiceId)
 			if err != nil {
-				if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
-					return nil, err
-				}
-				tflog.Info(ctx, "retrying after error polling App Service private endpoint service state", map[string]interface{}{"error": err.Error()})
-				continue
+				return nil, err
 			}
 
 			switch apigen.GetAppServicePrivateEndpointStateResponseState(refreshedState.State.ValueString()) {
