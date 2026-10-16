@@ -331,3 +331,6 @@ TestAccReplicationActivationStatusResource
 
 # Tests reading a replication via data source
 TestAccReplicationDataSource
+
+# Tests listing the replications of a project and of each cluster
+TestAccReplicationsDataSource
