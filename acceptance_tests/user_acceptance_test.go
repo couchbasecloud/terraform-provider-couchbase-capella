@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 )
 
 func TestAccUserResource(t *testing.T) {
@@ -77,17 +79,8 @@ func TestAccUserResourceWithProjectRoles(t *testing.T) {
 	})
 }
 
-var userOrganizationRoles = []string{
-	"organizationBillingAdmin",
-	"organizationBillingViewer",
-	"organizationMember",
-	"organizationOwner",
-	"organizationReadOnly",
-	"projectCreator",
-}
-
 func TestAccUserResourceOrganizationRoles(t *testing.T) {
-	for _, role := range userOrganizationRoles {
+	for _, role := range resources.ValidOrganizationRoles {
 		t.Run(role, func(t *testing.T) {
 			resourceName := randomStringWithPrefix("tf_acc_user_")
 			username := resourceName
@@ -123,17 +116,18 @@ func TestAccUserResourceMultipleOrganizationRoles(t *testing.T) {
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	checks := []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(userOrganizationRoles))),
+		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(resources.ValidOrganizationRoles))),
 	}
-	for _, role := range userOrganizationRoles {
-		checks = append(checks, resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role))
+	for i, role := range resources.ValidOrganizationRoles {
+		checks = append(checks, resource.TestCheckResourceAttr(resourceReference, "organization_roles."+strconv.Itoa(i), role))
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	// Not parallel: concurrent user deletes return HTTP 500 from the Capella API.
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserResourceConfigWithOrganizationRoles(resourceName, username, fmt.Sprintf(`["%s"]`, strings.Join(userOrganizationRoles, `", "`))),
+				Config: testAccUserResourceConfigWithOrganizationRoles(resourceName, username, fmt.Sprintf(`["%s"]`, strings.Join(resources.ValidOrganizationRoles, `", "`))),
 				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
 			},
 			{
@@ -154,14 +148,14 @@ func TestAccUserResourceUpdateOrganizationRoles(t *testing.T) {
 	// Each step appends one role. The API appends roles added by update to the
 	// end of the list, so inserting anywhere else fails with an inconsistent result.
 	var steps []resource.TestStep
-	for i := range userOrganizationRoles {
-		assigned := userOrganizationRoles[:i+1]
+	for i := range resources.ValidOrganizationRoles {
+		assigned := resources.ValidOrganizationRoles[:i+1]
 
 		checks := []resource.TestCheckFunc{
 			resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(assigned))),
 		}
-		for _, role := range assigned {
-			checks = append(checks, resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role))
+		for j, role := range assigned {
+			checks = append(checks, resource.TestCheckResourceAttr(resourceReference, "organization_roles."+strconv.Itoa(j), role))
 		}
 
 		step := resource.TestStep{
@@ -178,7 +172,8 @@ func TestAccUserResourceUpdateOrganizationRoles(t *testing.T) {
 		steps = append(steps, step)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	// Not parallel: concurrent user deletes return HTTP 500 from the Capella API.
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps:                    steps,
 	})

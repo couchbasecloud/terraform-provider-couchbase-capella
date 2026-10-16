@@ -18,7 +18,8 @@ const (
 	projectRoleDataReader       = "projectDataReader"
 )
 
-var validOrganizationRoles = []string{
+// ValidOrganizationRoles lists the organization roles accepted by the user and API key resources.
+var ValidOrganizationRoles = []string{
 	organizationRoleMember,
 	organizationRoleOwner,
 	organizationRoleCreator,

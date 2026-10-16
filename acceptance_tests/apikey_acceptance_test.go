@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 )
 
 func TestAccApiKeyResource(t *testing.T) {
@@ -117,17 +118,8 @@ func TestAccApiKeyResourceWithDefaults(t *testing.T) {
 	})
 }
 
-var apiKeyOrganizationRoles = []string{
-	"organizationBillingAdmin",
-	"organizationBillingViewer",
-	"organizationMember",
-	"organizationOwner",
-	"organizationReadOnly",
-	"projectCreator",
-}
-
 func TestAccApiKeyResourceOrganizationRoles(t *testing.T) {
-	for _, role := range apiKeyOrganizationRoles {
+	for _, role := range resources.ValidOrganizationRoles {
 		t.Run(role, func(t *testing.T) {
 			resourceName := randomStringWithPrefix("tf_acc_apikey_")
 			resourceReference := "couchbase-capella_apikey." + resourceName
@@ -154,9 +146,9 @@ func TestAccApiKeyResourceMultipleOrganizationRoles(t *testing.T) {
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	checks := []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(apiKeyOrganizationRoles))),
+		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(resources.ValidOrganizationRoles))),
 	}
-	for _, role := range apiKeyOrganizationRoles {
+	for _, role := range resources.ValidOrganizationRoles {
 		checks = append(checks, resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role))
 	}
 
@@ -164,7 +156,7 @@ func TestAccApiKeyResourceMultipleOrganizationRoles(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, strings.Join(apiKeyOrganizationRoles, `", "`))),
+				Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, strings.Join(resources.ValidOrganizationRoles, `", "`))),
 				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
 			},
 		},
