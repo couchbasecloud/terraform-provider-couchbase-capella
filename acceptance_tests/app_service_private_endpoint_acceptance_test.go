@@ -1,13 +1,19 @@
 package acceptance_tests
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
 // TestAccAppServicePrivateEndpointResource accepts an existing private endpoint
@@ -28,6 +34,7 @@ func TestAccAppServicePrivateEndpointResource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckAppServicePrivateEndpointDestroy(t, endpointId),
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
@@ -75,6 +82,37 @@ func TestAccAppServicePrivateEndpointInvalidEndpointID(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccCheckAppServicePrivateEndpointDestroy fails if the endpoint is still
+// linked after destroy. An absent, rejected or pending endpoint passes.
+func testAccCheckAppServicePrivateEndpointDestroy(t *testing.T, endpointId string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		data := newTestClient(t)
+		cfg := api.EndpointCfg{
+			Url: fmt.Sprintf(
+				"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/privateEndpointService/endpoints",
+				data.HostURL, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId,
+			),
+			Method:        http.MethodGet,
+			SuccessStatus: http.StatusOK,
+		}
+		response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, data.Token, nil)
+		if err != nil {
+			return fmt.Errorf("failed to list App Service private endpoints after destroy: %w", err)
+		}
+
+		var listResp apigen.GetPrivateEndpointsResponse
+		if err := json.Unmarshal(response.Body, &listResp); err != nil {
+			return err
+		}
+		for _, e := range listResp.Endpoints {
+			if e.Id == endpointId && e.Status == apigen.PrivateEndpointStatusLinked {
+				return fmt.Errorf("App Service private endpoint %s is still linked after destroy", endpointId)
+			}
+		}
+		return nil
+	}
 }
 
 func testAccAppServicePrivateEndpointResourceConfig(resourceName, orgId, projectId, clusterId, appServiceId, endpointId string) string {
