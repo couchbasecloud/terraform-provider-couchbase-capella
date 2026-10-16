@@ -482,7 +482,7 @@ func (r *Replication) waitForReplicationDeletion(ctx context.Context, organizati
 		case <-ticker.C:
 		}
 
-		_, err := r.getReplication(ctx, organizationId, projectId, clusterId, replicationId)
+		_, err := getReplication(ctx, r.Data, organizationId, projectId, clusterId, replicationId)
 		switch {
 		case err == nil:
 			tflog.Info(ctx, "waiting for replication to be deleted", map[string]interface{}{"replication_id": replicationId})
@@ -502,7 +502,7 @@ func (r *Replication) retrieveReplication(
 	organizationId, projectId, clusterId, replicationId string,
 	prior *providerschema.Replication,
 ) (*providerschema.Replication, error) {
-	replicationResp, err := r.getReplication(ctx, organizationId, projectId, clusterId, replicationId)
+	replicationResp, err := getReplication(ctx, r.Data, organizationId, projectId, clusterId, replicationId)
 	if err != nil {
 		return nil, err
 	}
@@ -514,16 +514,17 @@ func (r *Replication) retrieveReplication(
 	return refreshedState, nil
 }
 
-func (r *Replication) getReplication(
+func getReplication(
 	ctx context.Context,
+	data *providerschema.Data,
 	organizationId, projectId, clusterId, replicationId string,
 ) (*replicationapi.GetReplicationResponse, error) {
 	cfg := api.EndpointCfg{
-		Url:           replicationapi.ReplicationURL(r.HostURL, organizationId, projectId, clusterId, replicationId),
+		Url:           replicationapi.ReplicationURL(data.HostURL, organizationId, projectId, clusterId, replicationId),
 		Method:        http.MethodGet,
 		SuccessStatus: http.StatusOK,
 	}
-	response, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
+	response, err := data.ClientV1.ExecuteWithRetry(ctx, cfg, nil, data.Token, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
 	}
