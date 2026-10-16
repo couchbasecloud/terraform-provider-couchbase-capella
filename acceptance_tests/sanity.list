@@ -325,3 +325,6 @@ TestAccDatasourceProjectEvent
 # ----------------------------------------
 # Tests replication create, import and update from the global cluster to the DM cluster
 TestAccReplicationResource
+
+# Tests pausing and resuming both directions of a twoWay replication, import, and that destroy keeps the status
+TestAccReplicationActivationStatusResource
