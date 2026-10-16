@@ -80,7 +80,8 @@ func (a *AppServiceAdminUsers) Read(ctx context.Context, req datasource.ReadRequ
 		}
 	}
 
-	state.Data = nil
+	// A nil slice becomes a null list in state; keep it empty instead.
+	state.Data = make([]providerschema.OneAppServiceAdminUser, 0, len(users))
 	for _, user := range users {
 		if len(names) > 0 && (user.Name == nil || !slices.Contains(names, *user.Name)) {
 			continue
