@@ -298,6 +298,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewEventingFunctions,
 		datasources.NewDataApi,
 		datasources.NewReplication,
+		datasources.NewReplications,
 	}
 }
 

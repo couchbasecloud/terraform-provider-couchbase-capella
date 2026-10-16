@@ -280,12 +280,9 @@ func NewReplication(
 		return nil, err
 	}
 
-	audit, diags := types.ObjectValueFrom(ctx, ReplicationAudit{}.AttributeTypes(), ReplicationAudit{
-		CreatedBy: types.StringValue(resp.Audit.CreatedBy),
-		CreatedAt: types.StringValue(resp.Audit.CreatedAt.String()),
-	})
-	if diags.HasError() {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnableToConvertAuditData, diags.Errors())
+	audit, err := newReplicationAudit(ctx, resp.Audit)
+	if err != nil {
+		return nil, err
 	}
 
 	sourceBucket := types.StringValue(resp.Source.Bucket.Id)
@@ -330,6 +327,18 @@ func NewReplication(
 		TargetDetails:        targetDetails,
 		Audit:                audit,
 	}, nil
+}
+
+func newReplicationAudit(ctx context.Context, audit replicationapi.ReplicationAuditData) (types.Object, error) {
+	auditObject, diags := types.ObjectValueFrom(ctx, ReplicationAudit{}.AttributeTypes(), ReplicationAudit{
+		CreatedBy: types.StringValue(audit.CreatedBy),
+		CreatedAt: types.StringValue(audit.CreatedAt.String()),
+	})
+	if diags.HasError() {
+		return types.ObjectNull(ReplicationAudit{}.AttributeTypes()),
+			fmt.Errorf("%w: %s", errors.ErrUnableToConvertAuditData, diags.Errors())
+	}
+	return auditObject, nil
 }
 
 // newReplicationTarget maps the GET target back to the configured shape: IDs for a Capella
