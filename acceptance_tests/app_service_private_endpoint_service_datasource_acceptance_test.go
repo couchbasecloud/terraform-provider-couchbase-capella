@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -27,6 +28,50 @@ func TestAccDatasourceAppServicePrivateEndpointService(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceReference, "state"),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "target_state"),
 					resource.TestCheckNoResourceAttr(dataSourceReference, "command"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccDatasourceAppServicePrivateEndpointServiceWithAWSCommand reads the state and requests the
+// AWS VPC endpoint command. Gated on ACC_AWS_VPC_ID / ACC_AWS_SUBNET_IDS; it skips otherwise.
+// The private endpoint service must be enabled on the global App Service.
+func TestAccDatasourceAppServicePrivateEndpointServiceWithAWSCommand(t *testing.T) {
+	vpcID := os.Getenv("ACC_AWS_VPC_ID")
+	subnetIDs := parseSubnetIDs(os.Getenv("ACC_AWS_SUBNET_IDS"))
+	if vpcID == "" || len(subnetIDs) == 0 {
+		t.Skip("skipping: set ACC_AWS_VPC_ID and ACC_AWS_SUBNET_IDS (comma-separated, at least one subnet id) to run this test")
+	}
+
+	dataSourceName := randomStringWithPrefix("tf_acc_app_service_pe_command_")
+	dataSourceReference := "data.couchbase-capella_app_service_private_endpoint_service." + dataSourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_app_service_private_endpoint_service" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  app_service_id  = "%[6]s"
+
+  aws = {
+    vpc_id     = "%[7]s"
+    subnet_ids = [%[8]s]
+  }
+}
+`, globalProviderBlock, dataSourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, vpcID, subnetsToHCL(subnetIDs)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceReference, "aws.vpc_id", vpcID),
+					resource.TestCheckResourceAttr(dataSourceReference, "aws.subnet_ids.#", fmt.Sprint(len(subnetIDs))),
+					resource.TestCheckResourceAttrSet(dataSourceReference, "state"),
+					resource.TestCheckResourceAttrSet(dataSourceReference, "target_state"),
+					resource.TestCheckResourceAttrSet(dataSourceReference, "command"),
 				),
 			},
 		},
