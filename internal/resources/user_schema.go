@@ -28,7 +28,7 @@ func UserSchema() schema.Schema {
 		ElementType: types.StringType,
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(1),
-			listvalidator.ValueStringsAre(stringvalidator.OneOf(ValidOrganizationRoles...)),
+			listvalidator.ValueStringsAre(stringvalidator.OneOf(validOrganizationRoles...)),
 		},
 	})
 	capellaschema.AddAttr(attrs, "last_login", userBuilder, stringAttribute([]string{computed}))

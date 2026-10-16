@@ -58,7 +58,7 @@ func ApiKeySchema() schema.Schema {
 		},
 		Validators: []validator.Set{
 			setvalidator.SizeAtLeast(1),
-			setvalidator.ValueStringsAre(stringvalidator.OneOf(ValidOrganizationRoles...)),
+			setvalidator.ValueStringsAre(stringvalidator.OneOf(validOrganizationRoles...)),
 		},
 	})
 

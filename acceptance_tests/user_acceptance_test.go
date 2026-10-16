@@ -80,7 +80,7 @@ func TestAccUserResourceWithProjectRoles(t *testing.T) {
 }
 
 func TestAccUserResourceOrganizationRoles(t *testing.T) {
-	for _, role := range resources.ValidOrganizationRoles {
+	for _, role := range resources.ValidOrganizationRoles() {
 		t.Run(role, func(t *testing.T) {
 			resourceName := randomStringWithPrefix("tf_acc_user_")
 			username := resourceName
@@ -114,11 +114,12 @@ func TestAccUserResourceMultipleOrganizationRoles(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_user_")
 	username := resourceName
 	resourceReference := "couchbase-capella_user." + resourceName
+	roles := resources.ValidOrganizationRoles()
 
 	checks := []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(resources.ValidOrganizationRoles))),
+		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(roles))),
 	}
-	for i, role := range resources.ValidOrganizationRoles {
+	for i, role := range roles {
 		checks = append(checks, resource.TestCheckResourceAttr(resourceReference, "organization_roles."+strconv.Itoa(i), role))
 	}
 
@@ -127,7 +128,7 @@ func TestAccUserResourceMultipleOrganizationRoles(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserResourceConfigWithOrganizationRoles(resourceName, username, fmt.Sprintf(`["%s"]`, strings.Join(resources.ValidOrganizationRoles, `", "`))),
+				Config: testAccUserResourceConfigWithOrganizationRoles(resourceName, username, fmt.Sprintf(`["%s"]`, strings.Join(roles, `", "`))),
 				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
 			},
 			{
@@ -144,12 +145,13 @@ func TestAccUserResourceUpdateOrganizationRoles(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_user_")
 	username := resourceName
 	resourceReference := "couchbase-capella_user." + resourceName
+	roles := resources.ValidOrganizationRoles()
 
 	// Each step appends one role. The API appends roles added by update to the
 	// end of the list, so inserting anywhere else fails with an inconsistent result.
 	var steps []resource.TestStep
-	for i := range resources.ValidOrganizationRoles {
-		assigned := resources.ValidOrganizationRoles[:i+1]
+	for i := range roles {
+		assigned := roles[:i+1]
 
 		checks := []resource.TestCheckFunc{
 			resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(assigned))),

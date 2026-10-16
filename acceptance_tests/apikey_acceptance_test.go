@@ -119,7 +119,7 @@ func TestAccApiKeyResourceWithDefaults(t *testing.T) {
 }
 
 func TestAccApiKeyResourceOrganizationRoles(t *testing.T) {
-	for _, role := range resources.ValidOrganizationRoles {
+	for _, role := range resources.ValidOrganizationRoles() {
 		t.Run(role, func(t *testing.T) {
 			resourceName := randomStringWithPrefix("tf_acc_apikey_")
 			resourceReference := "couchbase-capella_apikey." + resourceName
@@ -144,11 +144,12 @@ func TestAccApiKeyResourceOrganizationRoles(t *testing.T) {
 func TestAccApiKeyResourceMultipleOrganizationRoles(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
+	roles := resources.ValidOrganizationRoles()
 
 	checks := []resource.TestCheckFunc{
-		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(resources.ValidOrganizationRoles))),
+		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(roles))),
 	}
-	for _, role := range resources.ValidOrganizationRoles {
+	for _, role := range roles {
 		checks = append(checks, resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role))
 	}
 
@@ -156,7 +157,7 @@ func TestAccApiKeyResourceMultipleOrganizationRoles(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, strings.Join(resources.ValidOrganizationRoles, `", "`))),
+				Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, strings.Join(roles, `", "`))),
 				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
 			},
 		},
