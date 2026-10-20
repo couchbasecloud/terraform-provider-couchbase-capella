@@ -25,7 +25,7 @@ func AppServiceAdminUserSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", appServiceAdminUserBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_service_id", appServiceAdminUserBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", appServiceAdminUserBuilder, requiredNonEmptyStringAttribute())
-	capellaschema.AddAttr(attrs, "password", appServiceAdminUserBuilder, stringAttribute([]string{required, sensitive, requiresReplace}), "CreateAppServiceAdminUserRequest")
+	capellaschema.AddAttr(attrs, "password", appServiceAdminUserBuilder, stringAttribute([]string{required, sensitive}), "CreateAppServiceAdminUserRequest")
 	capellaschema.AddAttr(attrs, "access_all_endpoints", appServiceAdminUserBuilder, boolAttribute(optional))
 	capellaschema.AddAttr(attrs, "endpoints", appServiceAdminUserBuilder, stringSetAttribute(optional))
 	capellaschema.AddAttr(attrs, "audit", appServiceAdminUserBuilder, computedAuditAttribute())

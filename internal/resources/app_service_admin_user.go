@@ -215,6 +215,7 @@ func (a *AppServiceAdminUser) Read(ctx context.Context, req resource.ReadRequest
 }
 
 // Update changes the endpoint access of an App Service admin user.
+// The API cannot change the password, so a password change updates only the state.
 // All other attributes require replacement.
 func (a *AppServiceAdminUser) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state providerschema.AppServiceAdminUser
