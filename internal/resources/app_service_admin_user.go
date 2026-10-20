@@ -326,7 +326,7 @@ func accessRequest(ctx context.Context, plan providerschema.AppServiceAdminUser)
 }
 
 // refreshAdminUser fetches the admin user and maps it to state. The password is
-// kept from prior, since the API does not return it. See endpointsState for how
+// kept from prior, since the API does not return it. See reconcileEndpoints for how
 // endpoints are mapped.
 func (a *AppServiceAdminUser) refreshAdminUser(
 	ctx context.Context, organizationId, projectId, clusterId, appServiceId, userId string, prior providerschema.AppServiceAdminUser,
@@ -367,7 +367,7 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	if user.AccessAllEndpoints != nil && *user.AccessAllEndpoints {
 		state.AccessAllEndpoints = types.BoolValue(true)
 	} else if user.Endpoints != nil && len(*user.Endpoints) > 0 {
-		state.Endpoints, err = a.endpointsState(ctx, organizationId, projectId, clusterId, appServiceId, prior.Endpoints, *user.Endpoints)
+		state.Endpoints, err = a.reconcileEndpoints(ctx, organizationId, projectId, clusterId, appServiceId, prior.Endpoints, *user.Endpoints)
 		if err != nil {
 			return nil, err
 		}
@@ -385,25 +385,45 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	return &state, nil
 }
 
-// endpointsState keeps the prior endpoints when the API response contains all of them and
-// every extra endpoint is on a bucket of a prior endpoint. The API grants access per bucket,
-// so it returns every endpoint that shares a bucket with a configured one. Any other extra
-// endpoint is access granted outside Terraform, so it goes into state as drift.
-func (a *AppServiceAdminUser) endpointsState(
+// reconcileEndpoints decides which endpoints set goes into state after a read.
+//
+// The API grants admin access per bucket, not per App Endpoint. If the user
+// configures endpoint "a" on bucket B, the API returns "a" and every other
+// App Endpoint on bucket B. A plain copy of the API response would show a
+// diff on every plan, so this function filters out that expansion.
+//
+// The function returns the prior set unchanged when both conditions are true:
+//   - The API response contains every prior endpoint.
+//   - Each extra endpoint in the response is on a bucket of a prior endpoint.
+//
+// Otherwise it returns the API response, so Terraform shows the drift. Examples:
+//   - A prior endpoint is missing. Someone removed access outside Terraform.
+//   - An extra endpoint is on a different bucket. Someone added access outside Terraform.
+//   - The prior set is empty, for example after import. The API response is the only source.
+//
+// The bucket check calls the App Endpoints list API. The function makes this
+// call only when extra endpoints exist, so a normal read makes no extra request.
+func (a *AppServiceAdminUser) reconcileEndpoints(
 	ctx context.Context, organizationId, projectId, clusterId, appServiceId string, prior types.Set, apiEndpoints []string,
 ) (types.Set, error) {
+	// prior is null after import or when the user had access_all_endpoints.
+	// ElementsAs gives a nil slice for a null set, without an error.
 	var priorEndpoints []string
 	if diags := prior.ElementsAs(ctx, &priorEndpoints, false); diags.HasError() {
 		return types.SetNull(types.StringType), fmt.Errorf("error reading prior endpoints")
 	}
 
+	// allPriorPresent is false for an empty prior set. That forces the API response into state.
 	allPriorPresent := len(priorEndpoints) > 0 && !slices.ContainsFunc(priorEndpoints, func(e string) bool {
 		return !slices.Contains(apiEndpoints, e)
 	})
+	// extras are the endpoints in the API response that the user did not configure.
+	// Clone first, because DeleteFunc changes the slice in place.
 	extras := slices.DeleteFunc(slices.Clone(apiEndpoints), func(e string) bool {
 		return slices.Contains(priorEndpoints, e)
 	})
 
+	// An exact match needs no bucket lookup.
 	keepPrior := allPriorPresent && len(extras) == 0
 	if allPriorPresent && len(extras) > 0 {
 		var err error
@@ -416,6 +436,7 @@ func (a *AppServiceAdminUser) endpointsState(
 		return prior, nil
 	}
 
+	// Drift or no prior set: the API response is the source of truth.
 	endpoints, diags := types.SetValueFrom(ctx, types.StringType, apiEndpoints)
 	if diags.HasError() {
 		return types.SetNull(types.StringType), fmt.Errorf("error converting endpoints to set")
