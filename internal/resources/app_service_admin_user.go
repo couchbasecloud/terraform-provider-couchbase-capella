@@ -86,15 +86,6 @@ func (a *AppServiceAdminUser) ValidateConfig(ctx context.Context, req resource.V
 		return
 	}
 
-	if !config.AccessAllEndpoints.IsNull() && !config.AccessAllEndpoints.ValueBool() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("access_all_endpoints"),
-			"Invalid App Service Admin User Configuration",
-			"access_all_endpoints can only be set to true. Remove it and set endpoints to restrict access.",
-		)
-		return
-	}
-
 	// Read stores null for an empty set, so an empty set would give an inconsistent result.
 	if !config.Endpoints.IsNull() && len(config.Endpoints.Elements()) == 0 {
 		resp.Diagnostics.AddAttributeError(
