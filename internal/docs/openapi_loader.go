@@ -63,7 +63,6 @@ func loadOpenAPISpec() {
 // stripContentExamples removes the examples of every media type ("content": {"<mime>": {"examples": ...}}).
 // The published spec has example $refs to operations that do not exist, and the loader fails on
 // the first one. Descriptions never use examples, so removing them is safe.
-// ponytail: other broken $refs outside examples still fail the load; fix those in the spec.
 func stripContentExamples(data []byte) ([]byte, error) {
 	var spec any
 	if err := json.Unmarshal(data, &spec); err != nil {
