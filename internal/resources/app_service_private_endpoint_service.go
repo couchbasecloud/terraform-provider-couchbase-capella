@@ -159,10 +159,20 @@ func (a *AppServicePrivateEndpointService) Read(ctx context.Context, req resourc
 		return
 	}
 
-	if refreshedState.State.ValueString() == string(apigen.GetAppServicePrivateEndpointStateResponseStateDisabled) {
+	switch apigen.GetAppServicePrivateEndpointStateResponseState(refreshedState.State.ValueString()) {
+	case apigen.GetAppServicePrivateEndpointStateResponseStateDisabled:
 		tflog.Info(ctx, "App Service private endpoint service is disabled, removing resource from state file")
 		resp.State.RemoveResource(ctx)
 		return
+	case apigen.GetAppServicePrivateEndpointStateResponseStateFailed:
+		// state is Computed, so a remote change to failed produces no plan diff.
+		// Keep the resource so destroy still sends the DELETE, and warn instead.
+		resp.Diagnostics.AddWarning(
+			"App Service private endpoint service is in failed state",
+			fmt.Sprintf("The private endpoint service on App Service %s reports state %s. "+
+				"Run `terraform taint` on this resource or destroy it to disable and re-enable the service.",
+				IDs[providerschema.AppServiceId], refreshedState.State.ValueString()),
+		)
 	}
 
 	diags = resp.State.Set(ctx, refreshedState)
@@ -282,8 +292,11 @@ func (a *AppServicePrivateEndpointService) refreshAppServicePrivateEndpointServi
 }
 
 // checkAppServicePrivateEndpointServiceStatus polls the service until it reaches
-// targetState or statusChangeTimeout. It fails when the service reports failed or a
-// read fails, because ExecuteWithRetry already retries transient errors.
+// targetState or statusChangeTimeout. It fails when a read fails, because
+// ExecuteWithRetry already retries transient errors. It treats failed as terminal
+// only while waiting for enabled: the API has a single failed value, so right after
+// a DELETE it may still be the stale result of the enable that tainted the resource,
+// and failing fast there would make the resource impossible to destroy.
 func (a *AppServicePrivateEndpointService) checkAppServicePrivateEndpointServiceStatus(
 	ctx context.Context,
 	organizationId, projectId, clusterId, appServiceId string,
@@ -305,12 +318,14 @@ func (a *AppServicePrivateEndpointService) checkAppServicePrivateEndpointService
 				return nil, err
 			}
 
-			switch apigen.GetAppServicePrivateEndpointStateResponseState(refreshedState.State.ValueString()) {
-			case targetState:
+			currentState := apigen.GetAppServicePrivateEndpointStateResponseState(refreshedState.State.ValueString())
+			if currentState == targetState {
 				return refreshedState, nil
-			case apigen.GetAppServicePrivateEndpointStateResponseStateFailed:
+			}
+			if currentState == apigen.GetAppServicePrivateEndpointStateResponseStateFailed &&
+				targetState == apigen.GetAppServicePrivateEndpointStateResponseStateEnabled {
 				return nil, fmt.Errorf("app service private endpoint service reached state %s while waiting for state %s",
-					apigen.GetAppServicePrivateEndpointStateResponseStateFailed, targetState)
+					currentState, targetState)
 			}
 
 			tflog.Info(ctx, "waiting for App Service private endpoint service to reach state "+string(targetState))
