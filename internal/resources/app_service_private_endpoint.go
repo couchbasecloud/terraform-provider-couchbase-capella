@@ -6,6 +6,7 @@ import (
 	stderrors "errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -145,7 +146,7 @@ func (a *AppServicePrivateEndpoint) Read(ctx context.Context, req resource.ReadR
 	)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound || stderrors.Is(err, errors.ErrNotFound) {
+		if resourceNotFound || stderrors.Is(err, errors.ErrNotFound) || isPrivateEndpointNotEnabled(err) {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			resp.State.RemoveResource(ctx)
 			return
@@ -216,7 +217,7 @@ func (a *AppServicePrivateEndpoint) Delete(ctx context.Context, req resource.Del
 	_, err = a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
+		if resourceNotFound || isPrivateEndpointNotEnabled(err) {
 			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
 		}
@@ -317,4 +318,16 @@ func (a *AppServicePrivateEndpoint) waitUntilLinked(ctx context.Context, organiz
 			timer.Reset(pollInterval)
 		}
 	}
+}
+
+// isPrivateEndpointNotEnabled reports whether the control plane rejected the
+// call because the private endpoint service is disabled on the App Service.
+// The backend returns HTTP 400 with code 400 for this case, so the message is
+// the only discriminator. A disabled service has no endpoints, so callers
+// treat it like a 404.
+func isPrivateEndpointNotEnabled(err error) bool {
+	var apiErr *api.Error
+	return stderrors.As(err, &apiErr) &&
+		apiErr.HttpStatusCode == http.StatusBadRequest &&
+		strings.Contains(apiErr.Message, "Private endpoints aren't enabled")
 }

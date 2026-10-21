@@ -84,3 +84,13 @@ func TestWaitUntilLinked(t *testing.T) {
 		})
 	}
 }
+
+func TestIsPrivateEndpointNotEnabled(t *testing.T) {
+	handler := func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"code":400,"hint":"client error","httpStatusCode":400,"message":"Private endpoints aren't enabled for this cluster. Please select another cluster."}`))
+	}
+	r := &AppServicePrivateEndpoint{Data: newTestProviderData(t, handler)}
+	_, err := r.refreshAppServicePrivateEndpoint(t.Context(), testOrgID, testProjectID, testClusterID, testAppServiceID, "vpce-1")
+	assert.Assert(t, isPrivateEndpointNotEnabled(err), "got %v", err)
+}
