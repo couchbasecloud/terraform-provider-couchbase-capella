@@ -6,6 +6,7 @@ import (
 	stderrors "errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -103,11 +104,11 @@ func (a *AppServicePrivateEndpoint) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	refreshedState, err := a.refreshAppServicePrivateEndpoint(ctx, organizationId, projectId, clusterId, appServiceId, endpointId)
+	refreshedState, err := a.waitUntilLinked(ctx, organizationId, projectId, clusterId, appServiceId, endpointId)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading App Service private endpoint",
-			"Could not read App Service private endpoint "+endpointId+", unexpected error: "+api.ParseError(err),
+			"Error waiting for App Service private endpoint to be linked",
+			"App Service private endpoint "+endpointId+" was accepted but did not become linked: "+api.ParseError(err),
 		)
 		return
 	}
@@ -162,6 +163,11 @@ func (a *AppServicePrivateEndpoint) Read(ctx context.Context, req resource.ReadR
 	switch s := apigen.PrivateEndpointStatus(refreshedState.Status.ValueString()); s {
 	case apigen.PrivateEndpointStatusRejected, apigen.PrivateEndpointStatusFailed:
 		tflog.Info(ctx, "App Service private endpoint association is "+string(s)+"; removing from state to force re-association")
+		resp.Diagnostics.AddWarning(
+			"App Service private endpoint is "+string(s),
+			"App Service private endpoint "+IDs[providerschema.EndpointId]+" is "+string(s)+", so it was removed from state and the next apply will accept it again. "+
+				"If it stays "+string(s)+", every plan will show a create: fix the connection request on the cloud provider side or remove the resource from the configuration.",
+		)
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -280,4 +286,35 @@ func (a *AppServicePrivateEndpoint) refreshAppServicePrivateEndpoint(ctx context
 	}
 
 	return nil, errors.ErrNotFound
+}
+
+// waitUntilLinked polls the endpoint list until the accepted endpoint is
+// linked. rejected and failed are terminal, so they fail fast instead of
+// waiting for statusChangeTimeout. The caller has already saved the IDs to
+// state, so a timeout leaves the endpoint tracked and Read picks it up later.
+func (a *AppServicePrivateEndpoint) waitUntilLinked(ctx context.Context, organizationId, projectId, clusterId, appServiceId, endpointId string) (*providerschema.AppServicePrivateEndpoint, error) {
+	ctx, cancel := context.WithTimeout(ctx, statusChangeTimeout)
+	defer cancel()
+
+	timer := time.NewTimer(0)
+	defer timer.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timed out after %s waiting for status linked", statusChangeTimeout)
+		case <-timer.C:
+			state, err := a.refreshAppServicePrivateEndpoint(ctx, organizationId, projectId, clusterId, appServiceId, endpointId)
+			if err != nil {
+				return nil, err
+			}
+			switch s := apigen.PrivateEndpointStatus(state.Status.ValueString()); s {
+			case apigen.PrivateEndpointStatusLinked:
+				return state, nil
+			case apigen.PrivateEndpointStatusRejected, apigen.PrivateEndpointStatusFailed:
+				return nil, fmt.Errorf("status is %s", s)
+			}
+			timer.Reset(pollInterval)
+		}
+	}
 }

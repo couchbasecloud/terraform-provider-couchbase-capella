@@ -29,7 +29,7 @@ resource "couchbase-capella_app_service_private_endpoint" "accept_endpoint" {
 
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `endpoint_id` (String)
+- `endpoint_id` (String) The ID of the private endpoint on the cloud service provider, for example an AWS VPC endpoint ID (vpce-...).
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 

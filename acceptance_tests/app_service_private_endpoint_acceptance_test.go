@@ -45,7 +45,7 @@ func TestAccAppServicePrivateEndpointResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "endpoint_id", endpointId),
-					resource.TestCheckResourceAttrSet(resourceReference, "status"),
+					resource.TestCheckResourceAttr(resourceReference, "status", string(apigen.PrivateEndpointStatusLinked)),
 				),
 			},
 			// ImportState

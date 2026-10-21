@@ -18,10 +18,9 @@ func AppServicePrivateEndpointSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", appServicePrivateEndpointBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", appServicePrivateEndpointBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_service_id", appServicePrivateEndpointBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "endpoint_id", appServicePrivateEndpointBuilder, stringAttribute(
-		[]string{required, requiresReplace},
-		validator.String(stringvalidator.LengthAtLeast(1)),
-	))
+	endpointId := stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1)))
+	endpointId.MarkdownDescription = "The ID of the private endpoint on the cloud service provider, for example an AWS VPC endpoint ID (vpce-...)."
+	capellaschema.AddAttr(attrs, "endpoint_id", appServicePrivateEndpointBuilder, endpointId)
 	capellaschema.AddAttr(attrs, "service_name", appServicePrivateEndpointBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "status", appServicePrivateEndpointBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 
