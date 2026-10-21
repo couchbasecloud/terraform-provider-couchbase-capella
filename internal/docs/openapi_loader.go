@@ -40,6 +40,13 @@ func loadOpenAPISpec() {
 		return
 	}
 
+	data, err = stripContentExamples(data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to parse OpenAPI spec: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
+		return
+	}
+
 	loader := openapi3.NewLoader()
 	loader.IsExternalRefsAllowed = true
 
@@ -51,6 +58,41 @@ func loadOpenAPISpec() {
 	}
 
 	openAPIDoc = doc
+}
+
+// stripContentExamples removes the examples of every media type ("content": {"<mime>": {"examples": ...}}).
+// The published spec has example $refs to operations that do not exist, and the loader fails on
+// the first one. Descriptions never use examples, so removing them is safe.
+// ponytail: other broken $refs outside examples still fail the load; fix those in the spec.
+func stripContentExamples(data []byte) ([]byte, error) {
+	var spec any
+	if err := json.Unmarshal(data, &spec); err != nil {
+		return nil, fmt.Errorf("failed to decode spec: %w", err)
+	}
+
+	var walk func(any)
+	walk = func(node any) {
+		switch n := node.(type) {
+		case map[string]any:
+			if content, ok := n["content"].(map[string]any); ok {
+				for _, media := range content {
+					if m, ok := media.(map[string]any); ok {
+						delete(m, "examples")
+					}
+				}
+			}
+			for _, v := range n {
+				walk(v)
+			}
+		case []any:
+			for _, v := range n {
+				walk(v)
+			}
+		}
+	}
+	walk(spec)
+
+	return json.Marshal(spec)
 }
 
 // fetchFromURL fetches the OpenAPI spec from a URL.
