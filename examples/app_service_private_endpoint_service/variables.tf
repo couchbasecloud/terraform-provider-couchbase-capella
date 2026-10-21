@@ -20,10 +20,10 @@ variable "app_service_id" {
 }
 
 variable "vpc_id" {
-  description = "AWS VPC ID"
+  description = "AWS VPC ID used to generate the private endpoint command"
 }
 
 variable "subnet_ids" {
-  description = "AWS subnet IDs"
+  description = "AWS subnet IDs used to generate the private endpoint command"
   type        = list(string)
 }
