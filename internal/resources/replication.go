@@ -99,6 +99,8 @@ func (r *Replication) ValidateConfig(ctx context.Context, req resource.ValidateC
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("target").AtName("type"), &targetType)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("source_bucket"), &sourceBucket)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("target").AtName("bucket"), &targetBucket)...)
+	var mappings types.Set
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("mappings"), &mappings)...)
 	var conflictLogging types.Object
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("conflict_logging"), &conflictLogging)...)
 	if resp.Diagnostics.HasError() {
@@ -130,7 +132,74 @@ func (r *Replication) ValidateConfig(ctx context.Context, req resource.ValidateC
 		)
 	}
 
+	validateMappingsConfig(ctx, mappings, &resp.Diagnostics)
 	validateConflictLoggingConfig(ctx, conflictLogging, &resp.Diagnostics)
+}
+
+// validateMappingsConfig checks that each source scope is mapped only once, and that each source
+// collection is mapped only once inside its scope.
+func validateMappingsConfig(ctx context.Context, mappings types.Set, diags *diag.Diagnostics) {
+	if mappings.IsNull() || mappings.IsUnknown() {
+		return
+	}
+
+	root := path.Root("mappings")
+	scopeCounts := make(map[string]int, len(mappings.Elements()))
+	for _, element := range mappings.Elements() {
+		mappingObject, ok := element.(types.Object)
+		if !ok || mappingObject.IsNull() || mappingObject.IsUnknown() {
+			continue
+		}
+
+		var mapping providerschema.ReplicationScopeMapping
+		if conversionDiags := mappingObject.As(ctx, &mapping, basetypes.ObjectAsOptions{}); conversionDiags.HasError() {
+			diags.Append(conversionDiags...)
+			return
+		}
+
+		mappingPath := root.AtSetValue(element)
+		scope := mapping.SourceScope.ValueString()
+		if isKnown(mapping.SourceScope) {
+			scopeCounts[scope]++
+			if scopeCounts[scope] == 2 {
+				diags.AddAttributeError(
+					mappingPath.AtName("source_scope"),
+					"Invalid Replication Mappings",
+					fmt.Sprintf("source_scope %q is in more than one mapping. Each source scope can have one mapping. "+
+						"To replicate more than one collection of a scope, list them in the collections of one mapping.", scope),
+				)
+			}
+		}
+
+		if mapping.Collections.IsNull() || mapping.Collections.IsUnknown() {
+			continue
+		}
+		collectionCounts := make(map[string]int, len(mapping.Collections.Elements()))
+		for _, collectionElement := range mapping.Collections.Elements() {
+			collectionObject, ok := collectionElement.(types.Object)
+			if !ok || collectionObject.IsNull() || collectionObject.IsUnknown() {
+				continue
+			}
+
+			var collection providerschema.ReplicationCollectionMapping
+			if conversionDiags := collectionObject.As(ctx, &collection, basetypes.ObjectAsOptions{}); conversionDiags.HasError() {
+				diags.Append(conversionDiags...)
+				return
+			}
+			if isKnown(collection.SourceCollection) {
+				name := collection.SourceCollection.ValueString()
+				collectionCounts[name]++
+				if collectionCounts[name] == 2 {
+					diags.AddAttributeError(
+						mappingPath.AtName("collections").AtSetValue(collectionElement).AtName("source_collection"),
+						"Invalid Replication Mappings",
+						fmt.Sprintf("source_collection %q is in more than one collection mapping of source_scope %q. "+
+							"Each source collection can have one mapping.", name, scope),
+					)
+				}
+			}
+		}
+	}
 }
 
 // validateConflictLoggingConfig rejects a conflict logging block that the API rejects. A value that
