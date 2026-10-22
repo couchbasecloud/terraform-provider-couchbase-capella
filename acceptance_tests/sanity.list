@@ -60,6 +60,10 @@ TestAccClusterResourceAzureUltraDiskIopsOmitted_AV_143042
 # Control for the test above: proves a configured iops really reaches Capella
 TestAccClusterResourceAzureUltraDiskIopsInvalid_AV_143042
 
+# Zones are validated at plan time, so no cluster is provisioned (AV-147905)
+TestAccClusterResourceMultiAZTwoZonesInvalid
+TestAccClusterResourceGCPWithZonesInvalid
+
 # Tests reading a single cluster via data source
 TestAccReadClusterDatasource
 

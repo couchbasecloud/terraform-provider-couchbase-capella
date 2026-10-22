@@ -70,6 +70,14 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "enable_private_dns_resolution", clusterBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "deletion_protection", clusterBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "connection_string", clusterBuilder, computedString())
+	zones := &schema.SetAttribute{
+		Computed:    true,
+		ElementType: types.StringType,
+	}
+	capellaschema.AddAttr(dataAttrs, "zones", clusterBuilder, zones)
+	// Set after AddAttr: the published OpenAPI description still says only single AZ is supported.
+	zones.MarkdownDescription = "The AWS availability zone IDs (for example `use1-az1`) the cluster is deployed in. " +
+		"Null when the zone IDs are not known, for example for GCP and Azure clusters."
 	capellaschema.AddAttr(dataAttrs, "cloud_provider", clusterBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: cloudProviderAttrs,
