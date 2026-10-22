@@ -92,6 +92,7 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 				DiskUsedInMiB:   types.Int64Value(bucket.Stats.DiskUsedInMib),
 				MemoryUsedInMiB: types.Int64Value(bucket.Stats.MemoryUsedInMib),
 			},
+			EnableCrossClusterVersioning: types.BoolValue(bucket.EnableCrossClusterVersioning),
 		}
 		state.Data = append(state.Data, bucketState)
 	}

@@ -42,6 +42,7 @@ func BucketSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "flush", bucketBuilder, boolDefaultAttribute(false, optional, computed))
 	capellaschema.AddAttr(attrs, "time_to_live_in_seconds", bucketBuilder, int64Attribute(optional, computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "eviction_policy", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "enable_cross_cluster_versioning", bucketBuilder, boolAttribute(computed, useStateForUnknown))
 
 	statsAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(statsAttrs, "item_count", bucketBuilder, int64Attribute(computed))
