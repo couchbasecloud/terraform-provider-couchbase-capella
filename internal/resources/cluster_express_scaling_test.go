@@ -202,6 +202,22 @@ func TestClusterExpressScalingCreate(t *testing.T) {
 			wantError: "express scaling is not available for this organization",
 		},
 		{
+			name:      "invalid request asks for a provider bug report",
+			enabled:   false,
+			states:    []clusterapi.ExpressScalingState{clusterapi.ExpressScalingEnabled},
+			putError:  &api.Error{HttpStatusCode: http.StatusBadRequest, Code: http.StatusBadRequest, Message: "Ensure expressScaling field is provided."},
+			wantPuts:  1,
+			wantError: "Please report this issue to the provider developers.",
+		},
+		{
+			name:      "rate limit surfaces the API message",
+			enabled:   true,
+			states:    []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled},
+			putError:  &api.Error{HttpStatusCode: http.StatusUnprocessableEntity, Code: http.StatusUnprocessableEntity, Message: "The maximum number of 3 express scales allowed in a 24 hour period has been reached."},
+			wantPuts:  1,
+			wantError: "The maximum number of 3 express scales allowed in a 24 hour period has been reached.",
+		},
+		{
 			name:        "timeout saves the planned value with a warning",
 			enabled:     true,
 			states:      []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled, clusterapi.ExpressScalingEnabling},
