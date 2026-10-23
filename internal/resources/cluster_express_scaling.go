@@ -168,27 +168,44 @@ func (r *ClusterExpressScaling) ImportState(ctx context.Context, req resource.Im
 // the API refuses the PUT because the cluster is rebalancing, and the provider waits instead.
 // A change that failed part-way can still be retried, because the cluster is healthy again.
 //
-// When the timeout is reached the change carries on in Capella, so the planned value is saved
-// with a warning rather than an error. Reads report a change in progress as the setting it is
-// moving to, so this does not cause drift.
+// The timeout covers the whole operation, so polling only gets what the read and the PUT left.
+// If it is reached before the change is accepted, that is an error. Once the change has been
+// accepted it carries on in Capella, so the planned value is saved with a warning rather than
+// an error. Reads report a change in progress as the setting it is moving to, so this does not
+// cause drift.
 func (r *ClusterExpressScaling) apply(ctx context.Context, plan providerschema.ClusterExpressScaling, timeout time.Duration) (*providerschema.ClusterExpressScaling, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	organizationId, projectId, clusterId := plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString()
 	enabled := plan.ExpressScaling.ValueBool()
 
-	current, err := r.getExpressScalingState(ctx, organizationId, projectId, clusterId)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	current, err := untilContextDone(ctx, func() (clusterapi.ExpressScalingState, error) {
+		return r.getExpressScalingState(ctx, organizationId, projectId, clusterId)
+	})
 	if err != nil {
-		diags.AddError(
-			"Error reading cluster express scaling",
-			"Could not read cluster before changing express scaling: "+api.ParseError(err),
-		)
+		detail := "Could not read cluster before changing express scaling: " + api.ParseError(err)
+		if ctx.Err() != nil {
+			detail = fmt.Sprintf("Could not read the cluster within %s, so express scaling was not changed. Apply again, or increase the timeouts.", timeout)
+		}
+		diags.AddError("Error reading cluster express scaling", detail)
 		return nil, diags
 	}
 
 	if !current.IsSettled(enabled) {
-		err := r.putExpressScaling(ctx, organizationId, projectId, clusterId, enabled)
+		_, err := untilContextDone(ctx, func() (struct{}, error) {
+			return struct{}{}, r.putExpressScaling(ctx, organizationId, projectId, clusterId, enabled)
+		})
 		switch {
 		case err == nil:
+		case ctx.Err() != nil:
+			diags.AddError(
+				"Timed out changing cluster express scaling",
+				fmt.Sprintf("The request to change express scaling did not complete within %s, so it is not known whether Capella accepted it. "+
+					"Apply again: if the change was accepted, the provider waits for it to finish.", timeout),
+			)
+			return nil, diags
 		case isExpressScalingInvalidState(err) && current.IsMovingTo(enabled):
 			tflog.Info(ctx, "express scaling change already in progress, waiting for it to finish", map[string]interface{}{
 				"express_scaling_state": current,
@@ -199,7 +216,7 @@ func (r *ClusterExpressScaling) apply(ctx context.Context, plan providerschema.C
 		}
 	}
 
-	final, err := r.waitForExpressScaling(ctx, organizationId, projectId, clusterId, enabled, timeout)
+	final, err := r.waitForExpressScaling(ctx, organizationId, projectId, clusterId, enabled)
 	if err != nil && !errors.Is(err, errExpressScalingTimeout) {
 		diags.AddError(
 			"Error waiting for cluster express scaling",
@@ -227,23 +244,21 @@ func (r *ClusterExpressScaling) apply(ctx context.Context, plan providerschema.C
 }
 
 // waitForExpressScaling polls the cluster until express scaling settles at the requested
-// setting. Read errors are retried, except for not found and lost access. On timeout it returns the last
-// state seen together with errExpressScalingTimeout.
+// setting, or until ctx is done. Read errors are retried, except for not found and lost access.
+// When ctx is done it returns the last state seen together with errExpressScalingTimeout.
 func (r *ClusterExpressScaling) waitForExpressScaling(
 	ctx context.Context,
 	organizationId, projectId, clusterId string,
 	enabled bool,
-	timeout time.Duration,
 ) (clusterapi.ExpressScalingState, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	ticker := time.NewTicker(expressScalingPollInterval)
 	defer ticker.Stop()
 
 	var last clusterapi.ExpressScalingState
 	for {
-		current, err := r.getExpressScalingStateBefore(ctx, organizationId, projectId, clusterId)
+		current, err := untilContextDone(ctx, func() (clusterapi.ExpressScalingState, error) {
+			return r.getExpressScalingState(ctx, organizationId, projectId, clusterId)
+		})
 		switch {
 		case ctx.Err() != nil:
 			return last, fmt.Errorf("%w: %w", errExpressScalingTimeout, ctx.Err())
@@ -269,26 +284,27 @@ func (r *ClusterExpressScaling) waitForExpressScaling(
 	}
 }
 
-// getExpressScalingStateBefore reads the cluster but stops waiting when ctx is done. The API
-// client does not attach ctx to the HTTP request, so a stalled GET would otherwise hold the
-// poll open past its timeout, until the client's own HTTP timeout. The abandoned request
-// finishes in the background and its result is discarded.
-func (r *ClusterExpressScaling) getExpressScalingStateBefore(ctx context.Context, organizationId, projectId, clusterId string) (clusterapi.ExpressScalingState, error) {
+// untilContextDone runs fn but stops waiting when ctx is done. The API client does not attach
+// ctx to the HTTP request, so a stalled request would otherwise hold the operation open past
+// its timeout, until the client's own HTTP timeout. An abandoned request finishes in the
+// background and its result is discarded.
+func untilContextDone[T any](ctx context.Context, fn func() (T, error)) (T, error) {
 	type result struct {
-		state clusterapi.ExpressScalingState
+		value T
 		err   error
 	}
 	done := make(chan result, 1)
 	go func() {
-		state, err := r.getExpressScalingState(ctx, organizationId, projectId, clusterId)
-		done <- result{state, err}
+		value, err := fn()
+		done <- result{value, err}
 	}()
 
 	select {
 	case <-ctx.Done():
-		return "", ctx.Err()
+		var zero T
+		return zero, ctx.Err()
 	case res := <-done:
-		return res.state, res.err
+		return res.value, res.err
 	}
 }
 
