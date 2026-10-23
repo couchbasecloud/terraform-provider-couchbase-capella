@@ -278,6 +278,15 @@ var (
 	// ErrReplicationJobMissingId is returned when a replication create job completes without a replication ID.
 	ErrReplicationJobMissingId = errors.New("replication job completed without a replication ID")
 
+	// ErrConvertingReplicationMappings is returned when terraform fails to convert replication mappings.
+	ErrConvertingReplicationMappings = errors.New("failed to convert replication mappings, please contact Couchbase Capella Support")
+
+	// ErrConvertingReplicationDetails is returned when terraform fails to convert replication source or target details.
+	ErrConvertingReplicationDetails = errors.New("failed to convert replication details, please contact Couchbase Capella Support")
+
+	// ErrReplicationDeleteTimeout is returned when a replication is still present after the delete polling timeout.
+	ErrReplicationDeleteTimeout = errors.New("replication was not deleted within the polling timeout")
+
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrIndexDeferred = errors.New("index is in Deferred state and will not become Ready without a BUILD INDEX statement")
