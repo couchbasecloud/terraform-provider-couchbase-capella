@@ -566,7 +566,7 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 		case <-timer.C:
 			appServiceResp, err = a.getAppService(ctx, organizationId, projectId, clusterId, appServiceId)
 			if err != nil {
-				return err
+				return api.PollError(ctx, err, errors.ErrAppServiceCreationStatusTimeout)
 			}
 
 			if !appservice.IsFinalState(appServiceResp.CurrentState) {

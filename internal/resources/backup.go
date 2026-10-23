@@ -427,7 +427,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 		case <-timer.C:
 			backupResp, err := b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
 			if err != nil {
-				return nil, err
+				return nil, api.PollError(ctx, err, internal_errors.ErrBucketCreationStatusTimeout)
 			}
 			// If no prior backup existed for this bucket, any backup in a
 			// final state is ours. If a prior one existed, wait for a record

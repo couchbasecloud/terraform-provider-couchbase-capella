@@ -307,7 +307,7 @@ func (a *AppServicePrivateEndpoint) waitUntilLinked(ctx context.Context, organiz
 		case <-timer.C:
 			state, err := a.refreshAppServicePrivateEndpoint(ctx, organizationId, projectId, clusterId, appServiceId, endpointId)
 			if err != nil {
-				return nil, err
+				return nil, api.PollError(ctx, err, fmt.Errorf("timed out after %s waiting for status linked", statusChangeTimeout))
 			}
 			switch s := apigen.PrivateEndpointStatus(state.Status.ValueString()); s {
 			case apigen.PrivateEndpointStatusLinked:
