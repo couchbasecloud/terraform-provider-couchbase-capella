@@ -864,6 +864,145 @@ func TestReplicationValidateConfigConflictLogging(t *testing.T) {
 	}
 }
 
+func TestReplicationValidateConfigMappings(t *testing.T) {
+	ctx := context.Background()
+	collectionType := types.ObjectType{AttrTypes: providerschema.ReplicationCollectionMapping{}.AttributeTypes()}
+	scopeType := types.ObjectType{AttrTypes: providerschema.ReplicationScopeMapping{}.AttributeTypes()}
+
+	collection := func(source, target string) attr.Value {
+		return types.ObjectValueMust(collectionType.AttrTypes, map[string]attr.Value{
+			"source_collection": types.StringValue(source),
+			"target_collection": types.StringValue(target),
+		})
+	}
+	mapping := func(source types.String, target string, collections ...attr.Value) attr.Value {
+		collectionSet := types.SetNull(collectionType)
+		if len(collections) > 0 {
+			collectionSet = types.SetValueMust(collectionType, collections)
+		}
+		return types.ObjectValueMust(scopeType.AttrTypes, map[string]attr.Value{
+			"source_scope": source,
+			"target_scope": types.StringValue(target),
+			"collections":  collectionSet,
+		})
+	}
+
+	tests := []struct {
+		name     string
+		mappings []attr.Value
+		wantErr  string
+	}{
+		{
+			name: "each scope mapped once is valid",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "_default"),
+				mapping(types.StringValue("tenant_agent_00"), "tenant_agent_00"),
+			},
+		},
+		{
+			name: "same scope mapped twice without collections is rejected",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "_default"),
+				mapping(types.StringValue("inventory"), "tenant_agent_00"),
+			},
+			wantErr: `source_scope "inventory" is in more than one mapping without collections`,
+		},
+		{
+			name: "whole scope and one of its collections in another mapping is valid",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "backup"),
+				mapping(types.StringValue("inventory"), "archive", collection("airline", "airline")),
+			},
+		},
+		{
+			name: "one scope split across two target scopes is valid",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "inventory", collection("airline", "airline")),
+				mapping(types.StringValue("inventory"), "archive", collection("route", "route")),
+			},
+		},
+		{
+			name: "same source and target scope in two mappings with collections is rejected",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "inventory", collection("airline", "airline")),
+				mapping(types.StringValue("inventory"), "inventory", collection("route", "route")),
+			},
+			wantErr: `source_scope "inventory" with target_scope "inventory" is in more than one mapping with collections`,
+		},
+		{
+			name: "same collection mapped twice in one scope is rejected",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "inventory", collection("airline", "airline"), collection("airline", "route")),
+			},
+			wantErr: `source_collection "airline" of source_scope "inventory" is mapped more than once`,
+		},
+		{
+			name: "same collection mapped to two target scopes is rejected",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "inventory", collection("airline", "airline")),
+				mapping(types.StringValue("inventory"), "archive", collection("airline", "airline")),
+			},
+			wantErr: `source_collection "airline" of source_scope "inventory" is mapped more than once`,
+		},
+		{
+			name: "two collections mapped to one target collection is rejected",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "inventory", collection("airline", "airline"), collection("route", "airline")),
+			},
+			wantErr: `target_collection "airline" of target_scope "inventory" is the target of more than one collection mapping`,
+		},
+		{
+			name: "same target collection from two source scopes is rejected",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "backup", collection("airline", "airline")),
+				mapping(types.StringValue("tenant"), "backup", collection("airline", "airline")),
+			},
+			wantErr: `target_collection "airline" of target_scope "backup" is the target of more than one collection mapping`,
+		},
+		{
+			name: "same collection name in two different scopes is valid",
+			mappings: []attr.Value{
+				mapping(types.StringValue("inventory"), "inventory", collection("airline", "airline")),
+				mapping(types.StringValue("archive"), "archive", collection("airline", "airline")),
+			},
+		},
+		{
+			name: "scope names that are not known yet are not checked",
+			mappings: []attr.Value{
+				mapping(types.StringUnknown(), "_default"),
+				mapping(types.StringUnknown(), "tenant_agent_00"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := emptyReplicationModel()
+			model.OrganizationId = types.StringValue(testOrgID)
+			model.ProjectId = types.StringValue(testProjectID)
+			model.ClusterId = types.StringValue(testClusterID)
+			model.SourceBucket = types.StringValue("c291cmNl")
+			model.Target = &providerschema.ReplicationTarget{
+				Cluster: types.StringValue("cluster-2"), Bucket: types.StringValue("dGVzdA=="), Type: types.StringNull(),
+			}
+			model.Mappings = types.SetValueMust(scopeType, tt.mappings)
+
+			raw := replicationStateFrom(t, ctx, model).Raw
+			req := resource.ValidateConfigRequest{Config: tfsdk.Config{Schema: ReplicationSchema(), Raw: raw}}
+			resp := resource.ValidateConfigResponse{}
+
+			(&Replication{}).ValidateConfig(ctx, req, &resp)
+
+			if tt.wantErr == "" {
+				assertNoDiags(t, resp.Diagnostics)
+				return
+			}
+			require.Len(t, resp.Diagnostics.Errors(), 1)
+			assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), tt.wantErr)
+		})
+	}
+}
+
 // TestReplicationValidateConfigReportsAllErrors checks that an error in another attribute does not
 // hide the conflict logging errors.
 func TestReplicationValidateConfigReportsAllErrors(t *testing.T) {
