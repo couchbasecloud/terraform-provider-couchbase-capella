@@ -113,11 +113,14 @@ func TestAccClusterExpressScalingInvalidClusterId(t *testing.T) {
 }
 
 // TestAccClusterExpressScalingEnableDisable enables and disables express scaling on a dedicated
-// Enterprise cluster. The first apply uses a short timeout, so it ends with a warning while the
-// cluster is still enabling and saves the planned value. The second apply only raises the timeout.
-// The API refuses a new request while the cluster rebalances, so it passes only if the provider
-// accepts that refusal and waits for the change already in progress. The resource is then removed
-// from the configuration, which must leave express scaling enabled, and recreated to disable it.
+// Enterprise cluster. The first apply uses a short timeout, so it usually ends with a warning while
+// the cluster is still enabling and saves the planned value. The second apply only raises the
+// timeout and waits for the cluster to finish. Whether the cluster is still enabling at that point
+// depends on Capella, so the in-progress path is pinned down by the resource's unit tests.
+//
+// The resource is then removed from the configuration, which must leave express scaling enabled.
+// Recreating it with express_scaling = true sends nothing, since the cluster is already enabled,
+// and changing it to false disables express scaling through Update.
 func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 	requireExpressScalingAcceptance(t)
 
@@ -139,7 +142,7 @@ func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(t, clusterReference),
 					resource.TestCheckResourceAttr(resourceReference, "express_scaling", "true"),
-					resource.TestCheckResourceAttr(resourceReference, "express_scaling_state", string(clusterapi.ExpressScalingEnabling)),
+					resource.TestMatchResourceAttr(resourceReference, "express_scaling_state", regexp.MustCompile(`^(enabling|enabled)$`)),
 				),
 			},
 			{
@@ -180,10 +183,22 @@ func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 				Check: testAccCheckClusterExpressScalingState(clusterReference, clusterapi.ExpressScalingEnabled),
 			},
 			{
-				Config: config(false, "4h"),
+				Config: config(true, "4h"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "express_scaling", "true"),
+					resource.TestCheckResourceAttr(resourceReference, "express_scaling_state", string(clusterapi.ExpressScalingEnabled)),
+				),
+			},
+			{
+				Config: config(false, "4h"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -377,6 +392,9 @@ resource "couchbase-capella_cluster" "%[3]s" {
 	organization_id = "%[1]s"
 	project_id      = "%[2]s"
 	name            = "%[3]s"
+	couchbase_server = {
+		version = var.server_version
+	}
 	cloud_provider = {
 		type   = "aws"
 		region = "us-east-1"
