@@ -33,17 +33,35 @@ const (
 
 // expressScalingEndpoint answers the cluster GET with a scripted sequence of states, holding
 // the last one, and the expressScaling PUT with a fixed status and error body. GETs after the
-// PUT can fail with getStatusAfterPut, or stall for getDelayAfterPut.
+// PUT can fail with getStatusAfterPut. GETs before the PUT, the PUT, and GETs after it can stall
+// for getDelayBeforePut, putDelay and getDelayAfterPut.
 type expressScalingEndpoint struct {
 	mu                sync.Mutex
 	states            []clusterapi.ExpressScalingState
 	getStatus         int
 	getStatusAfterPut int
+	getDelayBeforePut time.Duration
 	getDelayAfterPut  time.Duration
+	putDelay          time.Duration
 	release           chan struct{}
 	putStatus         int
 	putError          *api.Error
 	puts              []json.RawMessage
+}
+
+// stall waits for d with the lock released. It ends early when the client cancels the request
+// or the test releases stalled handlers before closing the server.
+func (e *expressScalingEndpoint) stall(r *http.Request, d time.Duration) {
+	if d <= 0 {
+		return
+	}
+	e.mu.Unlock()
+	defer e.mu.Lock()
+	select {
+	case <-r.Context().Done():
+	case <-e.release:
+	case <-time.After(d):
+	}
 }
 
 func (e *expressScalingEndpoint) handler(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +73,7 @@ func (e *expressScalingEndpoint) handler(w http.ResponseWriter, r *http.Request)
 		var fields map[string]json.RawMessage
 		_ = json.Unmarshal(body, &fields)
 		e.puts = append(e.puts, fields["expressScaling"])
+		e.stall(r, e.putDelay)
 
 		if e.putError != nil {
 			w.WriteHeader(e.putError.HttpStatusCode)
@@ -75,14 +94,10 @@ func (e *expressScalingEndpoint) handler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if len(e.puts) > 0 && e.getDelayAfterPut > 0 {
-		e.mu.Unlock()
-		select {
-		case <-r.Context().Done():
-		case <-e.release:
-		case <-time.After(e.getDelayAfterPut):
-		}
-		e.mu.Lock()
+	if len(e.puts) > 0 {
+		e.stall(r, e.getDelayAfterPut)
+	} else {
+		e.stall(r, e.getDelayBeforePut)
 	}
 
 	state := e.states[0]
@@ -108,6 +123,9 @@ func newTestClusterExpressScaling(t *testing.T, e *expressScalingEndpoint) *Clus
 
 	srv := httptest.NewServer(http.HandlerFunc(e.handler))
 	t.Cleanup(srv.Close)
+	// Runs before srv.Close, which waits for stalled handlers to return.
+	e.release = make(chan struct{})
+	t.Cleanup(func() { close(e.release) })
 
 	return &ClusterExpressScaling{
 		Data: &providerschema.Data{
@@ -300,11 +318,8 @@ func TestClusterExpressScalingCreatePollingFailures(t *testing.T) {
 			states:           []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled, clusterapi.ExpressScalingEnabled},
 			putStatus:        http.StatusNoContent,
 			getDelayAfterPut: 30 * time.Second,
-			release:          make(chan struct{}),
 		}
 		r := newTestClusterExpressScaling(t, e)
-		// Runs before the server closes, which waits for the stalled handler.
-		t.Cleanup(func() { close(e.release) })
 
 		start := time.Now()
 		resp, got := createExpressScaling(t, r, expressScalingPlan(t, true, "200ms"))
@@ -313,6 +328,64 @@ func TestClusterExpressScalingCreatePollingFailures(t *testing.T) {
 		require.False(t, resp.Diagnostics.HasError(), "%v", resp.Diagnostics.Errors())
 		assert.Equal(t, 1, resp.Diagnostics.WarningsCount())
 		assert.Equal(t, types.BoolValue(true), got.ExpressScaling)
+	})
+}
+
+// TestClusterExpressScalingCreateSharedTimeout checks that the timeout covers the read and the
+// PUT as well as polling. Running out before the change is accepted is an error; polling only
+// gets the time left.
+func TestClusterExpressScalingCreateSharedTimeout(t *testing.T) {
+	t.Run("stalled read before the PUT is an error", func(t *testing.T) {
+		e := &expressScalingEndpoint{
+			states:            []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled},
+			putStatus:         http.StatusNoContent,
+			getDelayBeforePut: 30 * time.Second,
+		}
+		r := newTestClusterExpressScaling(t, e)
+
+		start := time.Now()
+		resp, _ := createExpressScaling(t, r, expressScalingPlan(t, true, "200ms"))
+
+		assert.Less(t, time.Since(start), 5*time.Second)
+		require.True(t, resp.Diagnostics.HasError())
+		assert.Contains(t, diagDetails(resp.Diagnostics.Errors()), "so express scaling was not changed")
+		assert.Zero(t, e.putCount())
+		assert.True(t, resp.State.Raw.IsNull())
+	})
+
+	t.Run("stalled PUT is an error that says the outcome is unknown", func(t *testing.T) {
+		e := &expressScalingEndpoint{
+			states:    []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled},
+			putStatus: http.StatusNoContent,
+			putDelay:  30 * time.Second,
+		}
+		r := newTestClusterExpressScaling(t, e)
+
+		start := time.Now()
+		resp, _ := createExpressScaling(t, r, expressScalingPlan(t, true, "200ms"))
+
+		assert.Less(t, time.Since(start), 5*time.Second)
+		require.True(t, resp.Diagnostics.HasError())
+		assert.Contains(t, diagDetails(resp.Diagnostics.Errors()), "it is not known whether Capella accepted it")
+		assert.Equal(t, 1, e.putCount())
+		assert.True(t, resp.State.Raw.IsNull())
+	})
+
+	t.Run("polling only gets the time left", func(t *testing.T) {
+		e := &expressScalingEndpoint{
+			states:            []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled, clusterapi.ExpressScalingEnabling},
+			putStatus:         http.StatusNoContent,
+			getDelayBeforePut: 700 * time.Millisecond,
+		}
+		r := newTestClusterExpressScaling(t, e)
+
+		start := time.Now()
+		resp, _ := createExpressScaling(t, r, expressScalingPlan(t, true, "1s"))
+
+		// A fresh timeout for polling would take at least 1.7s.
+		assert.Less(t, time.Since(start), 1500*time.Millisecond)
+		require.False(t, resp.Diagnostics.HasError(), "%v", resp.Diagnostics.Errors())
+		assert.Equal(t, 1, resp.Diagnostics.WarningsCount())
 	})
 }
 
