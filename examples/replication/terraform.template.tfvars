@@ -14,3 +14,9 @@ replication = {
   priority            = "high"
   network_usage_limit = 0
 }
+
+mobile_replication = {
+  source_bucket_id = "<mobile_source_bucket_id>"
+  target_bucket_id = "<mobile_target_bucket_id>"
+  log_bucket_id    = "<log_bucket_id>"
+}
