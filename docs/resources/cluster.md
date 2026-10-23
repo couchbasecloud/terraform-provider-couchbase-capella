@@ -18,6 +18,9 @@ resource "couchbase-capella_cluster" "new_cluster" {
   project_id      = "<project_id>"
   name            = "Terraform Test Cluster"
   description     = "Test cluster created with Terraform"
+  # Enables express scaling at create time. Requires the Enterprise support plan.
+  # To change it later, use the couchbase-capella_cluster_express_scaling resource.
+  # express_scaling = true
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -77,6 +80,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `description` (String) - Description of the cluster (up to 1024 characters).
  - **Constraints**: Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean)
+- `express_scaling` (Boolean) - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 - `zones` (Set of String) - Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
 
@@ -88,6 +92,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `current_state` (String) - **Valid Values**: `draft`, `deploying`, `scaling`, `upgrading`, `rebalancing`, `peering`, `destroying`, `healthy`, `degraded`, `turnedOff`, `turningOff`, `turningOn`, `deploymentFailed`, `scaleFailed`, `upgradeFailed`, `rebalanceFailed`, `peeringFailed`, `destroyFailed`, `offline`, `turningOffFailed`, `turningOnFailed`
 - `deletion_protection` (Boolean) - Indicates whether deletion protection is enabled for the cluster. When enabled, the cluster cannot be deleted.
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `express_scaling_state` (String) - The express scaling status of the cluster: `enabled`, `enabling`, `disabled` or `disabling`.
 - `id` (String) - The ID of the cluster created.
  - **Format**: UUID (GUID4)
 
