@@ -116,7 +116,8 @@ func TestAccClusterExpressScalingInvalidClusterId(t *testing.T) {
 // Enterprise cluster. The first apply uses a short timeout, so it ends with a warning while the
 // cluster is still enabling and saves the planned value. The second apply only raises the timeout.
 // The API refuses a new request while the cluster rebalances, so it passes only if the provider
-// accepts that refusal and waits for the change already in progress.
+// accepts that refusal and waits for the change already in progress. The resource is then removed
+// from the configuration, which must leave express scaling enabled, and recreated to disable it.
 func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 	requireExpressScalingAcceptance(t)
 
@@ -169,10 +170,20 @@ func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{"timeouts"},
 			},
 			{
+				Config: globalProviderBlock + testAccClusterExpressScalingClusterBlock(clusterResourceName, cidr, "enterprise", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionDestroy),
+						plancheck.ExpectResourceAction(clusterReference, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: testAccCheckClusterExpressScalingState(clusterReference, clusterapi.ExpressScalingEnabled),
+			},
+			{
 				Config: config(false, "4h"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionCreate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -217,12 +228,7 @@ func TestAccClusterExpressScalingRejected(t *testing.T) {
 				),
 			},
 		},
-		CheckDestroy: func(state *terraform.State) error {
-			if _, ok := state.RootModule().Resources[clusterReference]; ok {
-				return fmt.Errorf("%s is still in state after destroy", clusterReference)
-			}
-			return nil
-		},
+		CheckDestroy: testAccCheckClusterDestroyed(t, clusterReference),
 	})
 }
 
@@ -267,8 +273,21 @@ func requireExpressScalingAcceptance(t *testing.T) {
 	}
 }
 
-// requireExpressScalingDisabled skips the test when TF_VAR_cluster_id points at a cluster that has
-// express scaling on or changing, since the test would otherwise start disabling it.
+// testAccCheckClusterExpressScalingState checks the express scaling state Capella reports for the
+// cluster in state, independently of any express scaling resource.
+func testAccCheckClusterExpressScalingState(clusterReference string, want clusterapi.ExpressScalingState) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		clusterResource, ok := state.RootModule().Resources[clusterReference]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", clusterReference)
+		}
+		return checkExpressScalingState(clusterResource.Primary.Attributes["id"], want)
+	}
+}
+
+// requireExpressScalingDisabled skips the test unless the cluster reports express scaling as
+// disabled. A cluster with express scaling on or changing would be disabled by the test, and one
+// that reports no value would fail the assertions, which expect the value Capella returns as is.
 func requireExpressScalingDisabled(t *testing.T, clusterID string) {
 	t.Helper()
 	if err := checkExpressScalingState(clusterID, clusterapi.ExpressScalingDisabled); err != nil {
@@ -289,12 +308,8 @@ func checkExpressScalingState(clusterID string, want clusterapi.ExpressScalingSt
 		return fmt.Errorf("could not decode cluster %s: %w", clusterID, err)
 	}
 
-	got := cluster.ExpressScaling
-	if got == "" {
-		got = clusterapi.ExpressScalingDisabled
-	}
-	if got != want {
-		return fmt.Errorf("cluster %s reports express scaling %q, want %q", clusterID, got, want)
+	if cluster.ExpressScaling != want {
+		return fmt.Errorf("cluster %s reports express scaling %q, want %q", clusterID, cluster.ExpressScaling, want)
 	}
 	return nil
 }
@@ -406,7 +421,7 @@ resource "couchbase-capella_cluster_express_scaling" "%[5]s" {
 	cluster_id      = couchbase-capella_cluster.%[6]s.id
 	express_scaling = %[7]t
 
-	timeouts = {
+	timeouts {
 		create = "%[8]s"
 		update = "%[8]s"
 	}
