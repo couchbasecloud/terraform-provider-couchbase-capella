@@ -361,7 +361,10 @@ func testAccWaitForClusterExpressScalingEnabled(clusterReference string, timeout
 				return nil
 			}
 			if time.Now().After(deadline) {
-				return fmt.Errorf("cluster %s did not report express scaling as enabling or enabled within %s (last state %q, error %v)", clusterID, timeout, got, err)
+				if err != nil {
+					return fmt.Errorf("cluster %s did not report express scaling as enabling or enabled within %s: %w", clusterID, timeout, err)
+				}
+				return fmt.Errorf("cluster %s did not report express scaling as enabling or enabled within %s (last state %q)", clusterID, timeout, got)
 			}
 			time.Sleep(30 * time.Second)
 		}
