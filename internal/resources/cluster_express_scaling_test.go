@@ -32,14 +32,18 @@ const (
 )
 
 // expressScalingEndpoint answers the cluster GET with a scripted sequence of states, holding
-// the last one, and the expressScaling PUT with a fixed status and error body.
+// the last one, and the expressScaling PUT with a fixed status and error body. GETs after the
+// PUT can fail with getStatusAfterPut, or stall for getDelayAfterPut.
 type expressScalingEndpoint struct {
-	mu        sync.Mutex
-	states    []clusterapi.ExpressScalingState
-	getStatus int
-	putStatus int
-	putError  *api.Error
-	puts      []json.RawMessage
+	mu                sync.Mutex
+	states            []clusterapi.ExpressScalingState
+	getStatus         int
+	getStatusAfterPut int
+	getDelayAfterPut  time.Duration
+	release           chan struct{}
+	putStatus         int
+	putError          *api.Error
+	puts              []json.RawMessage
 }
 
 func (e *expressScalingEndpoint) handler(w http.ResponseWriter, r *http.Request) {
@@ -61,10 +65,24 @@ func (e *expressScalingEndpoint) handler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if e.getStatus != 0 && e.getStatus != http.StatusOK {
-		w.WriteHeader(e.getStatus)
-		_ = json.NewEncoder(w).Encode(api.Error{HttpStatusCode: e.getStatus, Code: e.getStatus, Message: "not found"})
+	status := e.getStatus
+	if len(e.puts) > 0 && e.getStatusAfterPut != 0 {
+		status = e.getStatusAfterPut
+	}
+	if status != 0 && status != http.StatusOK {
+		w.WriteHeader(status)
+		_ = json.NewEncoder(w).Encode(api.Error{HttpStatusCode: status, Code: status, Message: http.StatusText(status)})
 		return
+	}
+
+	if len(e.puts) > 0 && e.getDelayAfterPut > 0 {
+		e.mu.Unlock()
+		select {
+		case <-r.Context().Done():
+		case <-e.release:
+		case <-time.After(e.getDelayAfterPut):
+		}
+		e.mu.Lock()
 	}
 
 	state := e.states[0]
@@ -253,6 +271,49 @@ func TestClusterExpressScalingCreate(t *testing.T) {
 			assert.Equal(t, types.StringValue(string(tt.wantState)), got.ExpressScalingState)
 		})
 	}
+}
+
+// TestClusterExpressScalingCreatePollingFailures checks that losing access while waiting is
+// reported as an error rather than a timeout warning, and that a GET which stalls past the
+// timeout is cut off at the deadline rather than holding the apply open.
+func TestClusterExpressScalingCreatePollingFailures(t *testing.T) {
+	t.Run("forbidden while polling is an error", func(t *testing.T) {
+		e := &expressScalingEndpoint{
+			states:            []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled},
+			putStatus:         http.StatusNoContent,
+			getStatusAfterPut: http.StatusForbidden,
+		}
+		r := newTestClusterExpressScaling(t, e)
+
+		start := time.Now()
+		resp, _ := createExpressScaling(t, r, expressScalingPlan(t, true, "10s"))
+
+		assert.Less(t, time.Since(start), 5*time.Second, "polling must stop on 403 instead of retrying until the timeout")
+		require.True(t, resp.Diagnostics.HasError())
+		assert.Zero(t, resp.Diagnostics.WarningsCount())
+		assert.Contains(t, diagDetails(resp.Diagnostics.Errors()), "could not be read afterwards")
+		assert.Contains(t, diagDetails(resp.Diagnostics.Errors()), "403")
+	})
+
+	t.Run("stalled GET is cut off at the timeout", func(t *testing.T) {
+		e := &expressScalingEndpoint{
+			states:           []clusterapi.ExpressScalingState{clusterapi.ExpressScalingDisabled, clusterapi.ExpressScalingEnabled},
+			putStatus:        http.StatusNoContent,
+			getDelayAfterPut: 30 * time.Second,
+			release:          make(chan struct{}),
+		}
+		r := newTestClusterExpressScaling(t, e)
+		// Runs before the server closes, which waits for the stalled handler.
+		t.Cleanup(func() { close(e.release) })
+
+		start := time.Now()
+		resp, got := createExpressScaling(t, r, expressScalingPlan(t, true, "200ms"))
+
+		assert.Less(t, time.Since(start), 5*time.Second, "a stalled GET must not outlive the configured timeout")
+		require.False(t, resp.Diagnostics.HasError(), "%v", resp.Diagnostics.Errors())
+		assert.Equal(t, 1, resp.Diagnostics.WarningsCount())
+		assert.Equal(t, types.BoolValue(true), got.ExpressScaling)
+	})
 }
 
 func TestClusterExpressScalingCreateSendsConcreteBool(t *testing.T) {

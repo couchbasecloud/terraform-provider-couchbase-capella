@@ -227,7 +227,7 @@ func (r *ClusterExpressScaling) apply(ctx context.Context, plan providerschema.C
 }
 
 // waitForExpressScaling polls the cluster until express scaling settles at the requested
-// setting. Read errors are retried, except for not found. On timeout it returns the last
+// setting. Read errors are retried, except for not found and lost access. On timeout it returns the last
 // state seen together with errExpressScalingTimeout.
 func (r *ClusterExpressScaling) waitForExpressScaling(
 	ctx context.Context,
@@ -243,10 +243,12 @@ func (r *ClusterExpressScaling) waitForExpressScaling(
 
 	var last clusterapi.ExpressScalingState
 	for {
-		current, err := r.getExpressScalingState(ctx, organizationId, projectId, clusterId)
+		current, err := r.getExpressScalingStateBefore(ctx, organizationId, projectId, clusterId)
 		switch {
+		case ctx.Err() != nil:
+			return last, fmt.Errorf("%w: %w", errExpressScalingTimeout, ctx.Err())
 		case err != nil:
-			if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+			if isExpressScalingPollFatal(err) {
 				return last, err
 			}
 			tflog.Info(ctx, "retrying after error polling cluster express scaling", map[string]interface{}{"error": err.Error()})
@@ -264,6 +266,29 @@ func (r *ClusterExpressScaling) waitForExpressScaling(
 			return last, fmt.Errorf("%w: %w", errExpressScalingTimeout, ctx.Err())
 		case <-ticker.C:
 		}
+	}
+}
+
+// getExpressScalingStateBefore reads the cluster but stops waiting when ctx is done. The API
+// client does not attach ctx to the HTTP request, so a stalled GET would otherwise hold the
+// poll open past its timeout, until the client's own HTTP timeout. The abandoned request
+// finishes in the background and its result is discarded.
+func (r *ClusterExpressScaling) getExpressScalingStateBefore(ctx context.Context, organizationId, projectId, clusterId string) (clusterapi.ExpressScalingState, error) {
+	type result struct {
+		state clusterapi.ExpressScalingState
+		err   error
+	}
+	done := make(chan result, 1)
+	go func() {
+		state, err := r.getExpressScalingState(ctx, organizationId, projectId, clusterId)
+		done <- result{state, err}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case res := <-done:
+		return res.state, res.err
 	}
 }
 
@@ -300,6 +325,20 @@ func (r *ClusterExpressScaling) getExpressScalingState(ctx context.Context, orga
 	}
 
 	return clusterResp.ExpressScaling, nil
+}
+
+// isExpressScalingPollFatal reports whether a polling error will not clear by retrying:
+// the cluster is gone, or the token has expired or lost access during a long rebalance.
+func isExpressScalingPollFatal(err error) bool {
+	var apiError *api.Error
+	if !errors.As(err, &apiError) {
+		return false
+	}
+	switch apiError.HttpStatusCode {
+	case http.StatusNotFound, http.StatusUnauthorized, http.StatusForbidden:
+		return true
+	}
+	return false
 }
 
 func isExpressScalingInvalidState(err error) bool {
