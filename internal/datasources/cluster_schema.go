@@ -20,6 +20,17 @@ func OneClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "description", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", oneClusterBuilder, computedBool())
 	capellaschema.AddAttr(attrs, "deletion_protection", oneClusterBuilder, computedBool())
+
+	expressScaling := computedBool()
+	expressScaling.MarkdownDescription = capellaschema.ExpressScalingDescription
+	capellaschema.AddAttr(attrs, "express_scaling", oneClusterBuilder, expressScaling)
+	// The published expressScaling field is the state enum, which describes express_scaling_state
+	// rather than this bool, so the fallback is reapplied after the spec lookup.
+	expressScaling.MarkdownDescription = capellaschema.ExpressScalingDescription
+
+	expressScalingState := computedString()
+	expressScalingState.MarkdownDescription = capellaschema.ExpressScalingStateDescription
+	capellaschema.AddAttr(attrs, "express_scaling_state", oneClusterBuilder, expressScalingState)
 	capellaschema.AddAttr(attrs, "connection_string", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "configuration_type", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "current_state", oneClusterBuilder, computedString())

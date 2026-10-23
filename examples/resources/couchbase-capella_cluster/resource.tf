@@ -3,6 +3,9 @@ resource "couchbase-capella_cluster" "new_cluster" {
   project_id      = "<project_id>"
   name            = "Terraform Test Cluster"
   description     = "Test cluster created with Terraform"
+  # Enables express scaling at create time. Requires the Enterprise support plan.
+  # To change it later, use the couchbase-capella_cluster_express_scaling resource.
+  # express_scaling = true
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"

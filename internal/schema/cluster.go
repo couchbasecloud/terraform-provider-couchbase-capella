@@ -14,6 +14,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// Fallback descriptions for the express scaling attributes, used only until the published OpenAPI spec
+// carries them. The leading "\n - " matches the bullet format buildEnhancedDescription emits, so the
+// generated docs do not change once the spec takes over.
+const (
+	ExpressScalingDescription      = "\n - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy."
+	ExpressScalingStateDescription = "\n - The express scaling status of the cluster: `enabled`, `enabling`, `disabled` or `disabling`."
+)
+
 // Availability defines the type of Availability Zone configuration for a cluster resource.
 // single type means the nodes in the cluster will all be deployed in a single availability
 // zone in the cloud region. multi type means the nodes in the cluster will all be deployed
@@ -148,6 +156,12 @@ type Cluster struct {
 	// DeletionProtection prevents accidental cluster deletion when enabled.
 	DeletionProtection types.Bool `tfsdk:"deletion_protection"`
 
+	// ExpressScaling is true when express scaling is enabled or being enabled.
+	ExpressScaling types.Bool `tfsdk:"express_scaling"`
+
+	// ExpressScalingState is the express scaling status reported by the API.
+	ExpressScalingState types.String `tfsdk:"express_scaling_state"`
+
 	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
 	Zones []types.String `tfsdk:"zones"`
 
@@ -201,6 +215,8 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		Description:                types.StringValue(cluster.Description),
 		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
 		DeletionProtection:         types.BoolValue(cluster.DeletionProtection),
+		ExpressScaling:             types.BoolValue(cluster.ExpressScaling.IsEnabled()),
+		ExpressScalingState:        types.StringValue(string(cluster.ExpressScaling)),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
@@ -346,6 +362,8 @@ type ClusterData struct {
 	Description                types.String     `tfsdk:"description"`
 	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
 	DeletionProtection         types.Bool       `tfsdk:"deletion_protection"`
+	ExpressScaling             types.Bool       `tfsdk:"express_scaling"`
+	ExpressScalingState        types.String     `tfsdk:"express_scaling_state"`
 	Name                       types.String     `tfsdk:"name"`
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	ConnectionString           types.String     `tfsdk:"connection_string"`
@@ -363,6 +381,8 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		Description:                types.StringValue(cluster.Description),
 		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
 		DeletionProtection:         types.BoolValue(cluster.DeletionProtection),
+		ExpressScaling:             types.BoolValue(cluster.ExpressScaling.IsEnabled()),
+		ExpressScalingState:        types.StringValue(string(cluster.ExpressScaling)),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},

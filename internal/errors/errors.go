@@ -87,6 +87,9 @@ var (
 	// ErrUnableToUpdateCloudProvider is returned when it is not possible to update the cloud provider.
 	ErrUnableToUpdateCloudProvider = errors.New("unable to update cloud provider")
 
+	// ErrUnableToUpdateExpressScaling is returned when express_scaling is changed on an existing cluster.
+	ErrUnableToUpdateExpressScaling = errors.New("unable to update express scaling on the cluster resource, use the couchbase-capella_cluster_express_scaling resource instead")
+
 	// ErrNotAString is returned when a payload is not a string.
 	ErrNotAString = errors.New("payload is not a string")
 

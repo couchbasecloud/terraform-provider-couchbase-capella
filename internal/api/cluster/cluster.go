@@ -96,6 +96,10 @@ type CreateClusterRequest struct {
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution *bool `json:"enablePrivateDNSResolution,omitempty"`
 
+	// ExpressScaling enables express scaling on the cluster at create time.
+	// Omitted when not set so the API keeps it disabled.
+	ExpressScaling *bool `json:"expressScaling,omitempty"`
+
 	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
 	Zones []string `json:"zones"`
 }
@@ -162,6 +166,9 @@ type GetClusterResponse struct {
 
 	// DeletionProtection prevents accidental cluster deletion when enabled.
 	DeletionProtection bool `json:"deletionProtection"`
+
+	// ExpressScaling is the current express scaling status of the cluster.
+	ExpressScaling ExpressScalingState `json:"expressScaling"`
 
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`

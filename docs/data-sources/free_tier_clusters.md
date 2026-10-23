@@ -47,6 +47,8 @@ Read-Only:
 - `description` (String) - Description of the cluster (up to 1024 characters).
  - **Constraints**: Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean)
+- `express_scaling` (Boolean) - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy.
+- `express_scaling_state` (String) - The express scaling status of the cluster: `enabled`, `enabling`, `disabled` or `disabling`.
 - `id` (String) - The ID of the cluster created.
  - **Format**: UUID (GUID4)
 - `name` (String) - Name of the cluster (up to 256 characters).
