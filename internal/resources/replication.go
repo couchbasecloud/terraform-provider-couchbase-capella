@@ -136,15 +136,19 @@ func (r *Replication) ValidateConfig(ctx context.Context, req resource.ValidateC
 	validateConflictLoggingConfig(ctx, conflictLogging, &resp.Diagnostics)
 }
 
-// validateMappingsConfig checks that each source scope is mapped only once, and that each source
-// collection is mapped only once inside its scope.
+// validateMappingsConfig rejects mappings that map the same scope or collection more than once.
 func validateMappingsConfig(ctx context.Context, mappings types.Set, diags *diag.Diagnostics) {
 	if mappings.IsNull() || mappings.IsUnknown() {
 		return
 	}
 
 	root := path.Root("mappings")
-	scopeCounts := make(map[string]int, len(mappings.Elements()))
+	var (
+		scopeCounts            = make(map[string]int)
+		scopePairCounts        = make(map[[2]string]int)
+		sourceCollectionCounts = make(map[[2]string]int)
+		targetCollectionCounts = make(map[[2]string]int)
+	)
 	for _, element := range mappings.Elements() {
 		mappingObject, ok := element.(types.Object)
 		if !ok || mappingObject.IsNull() || mappingObject.IsUnknown() {
@@ -158,23 +162,34 @@ func validateMappingsConfig(ctx context.Context, mappings types.Set, diags *diag
 		}
 
 		mappingPath := root.AtSetValue(element)
-		scope := mapping.SourceScope.ValueString()
-		if isKnown(mapping.SourceScope) {
-			scopeCounts[scope]++
-			if scopeCounts[scope] == 2 {
+		sourceScope := mapping.SourceScope.ValueString()
+		targetScope := mapping.TargetScope.ValueString()
+
+		if mapping.Collections.IsUnknown() {
+			continue
+		}
+		if mapping.Collections.IsNull() || len(mapping.Collections.Elements()) == 0 {
+			if isKnown(mapping.SourceScope) && countedTwice(scopeCounts, sourceScope) {
 				diags.AddAttributeError(
 					mappingPath.AtName("source_scope"),
 					"Invalid Replication Mappings",
-					fmt.Sprintf("source_scope %q is in more than one mapping. Each source scope can have one mapping. "+
-						"To replicate more than one collection of a scope, list them in the collections of one mapping.", scope),
+					fmt.Sprintf("source_scope %q is in more than one mapping without collections. "+
+						"A source scope can have one mapping without collections.", sourceScope),
 				)
 			}
-		}
-
-		if mapping.Collections.IsNull() || mapping.Collections.IsUnknown() {
 			continue
 		}
-		collectionCounts := make(map[string]int, len(mapping.Collections.Elements()))
+
+		if isKnown(mapping.SourceScope) && isKnown(mapping.TargetScope) &&
+			countedTwice(scopePairCounts, [2]string{sourceScope, targetScope}) {
+			diags.AddAttributeError(
+				mappingPath.AtName("collections"),
+				"Invalid Replication Mappings",
+				fmt.Sprintf("source_scope %q with target_scope %q is in more than one mapping with collections. "+
+					"List these collections in one mapping.", sourceScope, targetScope),
+			)
+		}
+
 		for _, collectionElement := range mapping.Collections.Elements() {
 			collectionObject, ok := collectionElement.(types.Object)
 			if !ok || collectionObject.IsNull() || collectionObject.IsUnknown() {
@@ -186,20 +201,37 @@ func validateMappingsConfig(ctx context.Context, mappings types.Set, diags *diag
 				diags.Append(conversionDiags...)
 				return
 			}
-			if isKnown(collection.SourceCollection) {
-				name := collection.SourceCollection.ValueString()
-				collectionCounts[name]++
-				if collectionCounts[name] == 2 {
-					diags.AddAttributeError(
-						mappingPath.AtName("collections").AtSetValue(collectionElement).AtName("source_collection"),
-						"Invalid Replication Mappings",
-						fmt.Sprintf("source_collection %q is in more than one collection mapping of source_scope %q. "+
-							"Each source collection can have one mapping.", name, scope),
-					)
-				}
+
+			collectionPath := mappingPath.AtName("collections").AtSetValue(collectionElement)
+			sourceCollection := collection.SourceCollection.ValueString()
+			if isKnown(mapping.SourceScope) && isKnown(collection.SourceCollection) &&
+				countedTwice(sourceCollectionCounts, [2]string{sourceScope, sourceCollection}) {
+				diags.AddAttributeError(
+					collectionPath.AtName("source_collection"),
+					"Invalid Replication Mappings",
+					fmt.Sprintf("source_collection %q of source_scope %q is mapped more than once. "+
+						"Each source collection can have one mapping.", sourceCollection, sourceScope),
+				)
+			}
+
+			targetCollection := collection.TargetCollection.ValueString()
+			if isKnown(mapping.TargetScope) && isKnown(collection.TargetCollection) &&
+				countedTwice(targetCollectionCounts, [2]string{targetScope, targetCollection}) {
+				diags.AddAttributeError(
+					collectionPath.AtName("target_collection"),
+					"Invalid Replication Mappings",
+					fmt.Sprintf("target_collection %q of target_scope %q is the target of more than one collection mapping. "+
+						"Each target collection can have one source collection.", targetCollection, targetScope),
+				)
 			}
 		}
 	}
+}
+
+// countedTwice counts key and reports whether it was seen exactly twice, so each duplicate gives one error.
+func countedTwice[K comparable](counts map[K]int, key K) bool {
+	counts[key]++
+	return counts[key] == 2
 }
 
 // validateConflictLoggingConfig rejects a conflict logging block that the API rejects. A value that
