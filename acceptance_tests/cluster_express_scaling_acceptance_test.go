@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -207,6 +208,7 @@ func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 				),
 			},
 		},
+		CheckDestroy: testAccCheckClusterDestroyed(t, clusterReference),
 	})
 }
 
@@ -248,8 +250,9 @@ func TestAccClusterExpressScalingRejected(t *testing.T) {
 }
 
 // TestAccClusterResourceExpressScaling creates a cluster with express scaling on through the
-// cluster resource attribute and checks that the next plan is empty. The rebalance that enables
-// express scaling carries on after the cluster is healthy, so the state may still be enabling.
+// cluster resource attribute and checks that the next plan is empty. Enabling starts after the
+// cluster is healthy, so create can save a state that still reads disabled. The test waits for
+// Capella to report enabling or enabled before the follow-up plan refreshes the state.
 func TestAccClusterResourceExpressScaling(t *testing.T) {
 	requireExpressScalingAcceptance(t)
 
@@ -265,7 +268,7 @@ func TestAccClusterResourceExpressScaling(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(t, clusterReference),
 					resource.TestCheckResourceAttr(clusterReference, "express_scaling", "true"),
-					resource.TestMatchResourceAttr(clusterReference, "express_scaling_state", regexp.MustCompile(`^(enabling|enabled)$`)),
+					testAccWaitForClusterExpressScalingEnabled(clusterReference, 15*time.Minute),
 				),
 			},
 			{
@@ -273,8 +276,13 @@ func TestAccClusterResourceExpressScaling(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterReference, "express_scaling", "true"),
+					resource.TestMatchResourceAttr(clusterReference, "express_scaling_state", regexp.MustCompile(`^(enabling|enabled)$`)),
+				),
 			},
 		},
+		CheckDestroy: testAccCheckClusterDestroyed(t, clusterReference),
 	})
 }
 
@@ -311,22 +319,53 @@ func requireExpressScalingDisabled(t *testing.T, clusterID string) {
 }
 
 func checkExpressScalingState(clusterID string, want clusterapi.ExpressScalingState) error {
+	got, err := getClusterExpressScalingState(clusterID)
+	if err != nil {
+		return err
+	}
+	if got != want {
+		return fmt.Errorf("cluster %s reports express scaling %q, want %q", clusterID, got, want)
+	}
+	return nil
+}
+
+func getClusterExpressScalingState(clusterID string) (clusterapi.ExpressScalingState, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, clusterID)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := globalClient.ExecuteWithRetry(context.Background(), cfg, nil, globalToken, nil)
 	if err != nil {
-		return fmt.Errorf("could not read cluster %s: %w", clusterID, err)
+		return "", fmt.Errorf("could not read cluster %s: %w", clusterID, err)
 	}
 
 	var cluster clusterapi.GetClusterResponse
 	if err := json.Unmarshal(response.Body, &cluster); err != nil {
-		return fmt.Errorf("could not decode cluster %s: %w", clusterID, err)
+		return "", fmt.Errorf("could not decode cluster %s: %w", clusterID, err)
 	}
+	return cluster.ExpressScaling, nil
+}
 
-	if cluster.ExpressScaling != want {
-		return fmt.Errorf("cluster %s reports express scaling %q, want %q", clusterID, cluster.ExpressScaling, want)
+// testAccWaitForClusterExpressScalingEnabled waits until Capella reports express scaling as enabling
+// or enabled for the cluster in state, failing after timeout.
+func testAccWaitForClusterExpressScalingEnabled(clusterReference string, timeout time.Duration) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		clusterResource, ok := state.RootModule().Resources[clusterReference]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", clusterReference)
+		}
+		clusterID := clusterResource.Primary.Attributes["id"]
+
+		deadline := time.Now().Add(timeout)
+		for {
+			got, err := getClusterExpressScalingState(clusterID)
+			if err == nil && got.IsEnabled() {
+				return nil
+			}
+			if time.Now().After(deadline) {
+				return fmt.Errorf("cluster %s did not report express scaling as enabling or enabled within %s (last state %q, error %v)", clusterID, timeout, got, err)
+			}
+			time.Sleep(30 * time.Second)
+		}
 	}
-	return nil
 }
 
 // createProjectViewerApiKey creates an API key that can view the global project but not manage
