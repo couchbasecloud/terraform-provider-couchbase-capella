@@ -565,7 +565,7 @@ func (p *PrivateEndpointService) waitUntilCleanedUp(ctx context.Context, organiz
 				if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
 					return nil
 				}
-				return err
+				return api.PollError(ctx, err, errors.ErrPrivateEndpointServiceTimeout)
 			}
 
 			if response.Status != nil {

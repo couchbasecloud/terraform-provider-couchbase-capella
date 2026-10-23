@@ -315,7 +315,7 @@ func (a *AppServicePrivateEndpointService) checkAppServicePrivateEndpointService
 		case <-ticker.C:
 			refreshedState, err := a.refreshAppServicePrivateEndpointService(ctx, organizationId, projectId, clusterId, appServiceId)
 			if err != nil {
-				return nil, err
+				return nil, api.PollError(ctx, err, fmt.Errorf("app service private endpoint service did not reach state %s: %w", targetState, ctx.Err()))
 			}
 
 			currentState := apigen.GetAppServicePrivateEndpointStateResponseState(refreshedState.State.ValueString())

@@ -301,7 +301,7 @@ func (f *FreeTierClusterOnOff) checkClusterForDesiredStatus(ctx context.Context,
 		case <-ticker.C:
 			response, err := f.ClientV1.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
 			if err != nil {
-				return nil, fmt.Errorf("API request failed: %w", err)
+				return nil, api.PollError(ctx, fmt.Errorf("API request failed: %w", err), fmt.Errorf("cluster state check timed out: %w", ctx.Err()))
 			}
 
 			if err := json.Unmarshal(response.Body, &clusterResp); err != nil {
