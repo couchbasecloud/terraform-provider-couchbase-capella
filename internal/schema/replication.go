@@ -32,6 +32,12 @@ const (
 	ReplicationPriorityHigh   = "high"
 )
 
+// ReplicationMobileSyncModeOff and ReplicationMobileSyncModeActive are the values of mobile_sync_mode.
+const (
+	ReplicationMobileSyncModeOff    = "off"
+	ReplicationMobileSyncModeActive = "active"
+)
+
 // Fallback descriptions for attributes that the published OpenAPI spec does not describe, or
 // describes for a different object.
 const (
@@ -46,6 +52,19 @@ const (
 
 	ReplicationSourceDetailsDescription = "\n - Details of the source of the replication, as returned by the API."
 	ReplicationTargetDetailsDescription = "\n - Details of the target of the replication, as returned by the API."
+
+	ReplicationMobileSyncModeDescription = "\n - Set to `active` so that App Services can run on both the source and the target. " +
+		"`active` needs cross cluster versioning on both buckets. A create with `active` turns on cross cluster versioning, " +
+		"which cannot be turned off. An update does not."
+	ReplicationConflictLoggingDescription = "\n - Conflict logging. It needs Couchbase Server 8.0 or later and cross cluster versioning " +
+		"on both buckets. Removing it clears the configuration."
+	ReplicationConflictLoggingDisabledDescription   = "\n - Set to true to keep the configuration without logging conflicts."
+	ReplicationConflictLoggingBucketDescription     = "\n - The ID of the log bucket. It can be empty only when `disabled` is true."
+	ReplicationConflictLoggingCollectionDescription = "\n - The default log collection, as `scope.collection`. It can be empty only when `disabled` is true."
+	ReplicationLoggingRulesDescription              = "\n - Log targets for a source scope or `scope.collection`. A rule with `bucket` and `collection` " +
+		"logs there, `{}` logs to the default, and `null` does not log."
+	ReplicationLoggingRuleBucketDescription     = "\n - The ID of the log bucket for this rule. Set it with `collection`."
+	ReplicationLoggingRuleCollectionDescription = "\n - The log collection for this rule, as `scope.collection`. Set it with `bucket`."
 
 	ReplicationDetailsIdDescription                     = "\n - The ID."
 	ReplicationDetailsNameDescription                   = "\n - The name."
@@ -70,6 +89,9 @@ type Replication struct {
 	// Mappings is a set of ReplicationScopeMapping. GET returns mappings in a random order.
 	Mappings types.Set          `tfsdk:"mappings"`
 	Filter   *ReplicationFilter `tfsdk:"filter"`
+
+	MobileSyncMode  types.String                `tfsdk:"mobile_sync_mode"`
+	ConflictLogging *ReplicationConflictLogging `tfsdk:"conflict_logging"`
 
 	// ReverseReplicationId is only returned by the create job, so it is kept from prior state.
 	ReverseReplicationId types.String `tfsdk:"reverse_replication_id"`
@@ -137,6 +159,30 @@ type ReplicationDocumentExcludeOptions struct {
 type ReplicationFilterExpressions struct {
 	RegEx        types.String `tfsdk:"reg_ex"`
 	SkipRestream types.Bool   `tfsdk:"skip_restream"`
+}
+
+// ReplicationConflictLogging is the configured conflict logging of a replication.
+type ReplicationConflictLogging struct {
+	Disabled   types.Bool   `tfsdk:"disabled"`
+	Bucket     types.String `tfsdk:"bucket"`
+	Collection types.String `tfsdk:"collection"`
+
+	// LoggingRules is a map of ReplicationLoggingRule. A null element means "do not log", and an
+	// element with both fields null means "log to the default".
+	LoggingRules types.Map `tfsdk:"logging_rules"`
+}
+
+// ReplicationLoggingRule is one element of ReplicationConflictLogging.LoggingRules.
+type ReplicationLoggingRule struct {
+	Bucket     types.String `tfsdk:"bucket"`
+	Collection types.String `tfsdk:"collection"`
+}
+
+func (r ReplicationLoggingRule) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"bucket":     types.StringType,
+		"collection": types.StringType,
+	}
 }
 
 // ReplicationAudit is the audit data of a replication. The API returns only these two fields.
@@ -229,6 +275,11 @@ func NewReplication(
 		return nil, err
 	}
 
+	conflictLogging, err := newReplicationConflictLogging(resp.ConflictLogging)
+	if err != nil {
+		return nil, err
+	}
+
 	audit, diags := types.ObjectValueFrom(ctx, ReplicationAudit{}.AttributeTypes(), ReplicationAudit{
 		CreatedBy: types.StringValue(resp.Audit.CreatedBy),
 		CreatedAt: types.StringValue(resp.Audit.CreatedAt.String()),
@@ -245,6 +296,11 @@ func NewReplication(
 	reverseReplicationId := prior.ReverseReplicationId
 	if reverseReplicationId.IsUnknown() {
 		reverseReplicationId = types.StringNull()
+	}
+
+	mobileSyncMode := resp.MobileSyncMode
+	if mobileSyncMode == "" {
+		mobileSyncMode = ReplicationMobileSyncModeOff
 	}
 
 	replicationError := types.StringNull()
@@ -264,6 +320,8 @@ func NewReplication(
 		NetworkUsageLimit:    types.Int64Value(resp.NetworkUsageLimit),
 		Mappings:             mappings,
 		Filter:               newReplicationFilter(resp.Filter, prior.Filter),
+		MobileSyncMode:       types.StringValue(mobileSyncMode),
+		ConflictLogging:      conflictLogging,
 		ReverseReplicationId: reverseReplicationId,
 		Status:               types.StringValue(string(resp.Status)),
 		ChangesLeft:          types.Int64Value(resp.ChangesLeft),
@@ -368,6 +426,58 @@ func newFilterExpressions(
 
 func (o *ReplicationDocumentExcludeOptions) allFalse() bool {
 	return !o.Deletion.ValueBool() && !o.Expiration.ValueBool() && !o.TTL.ValueBool() && !o.Binary.ValueBool()
+}
+
+// newReplicationConflictLogging builds the conflict logging state. GET omits conflictLogging when
+// it was never set or was cleared, and drops an empty loggingRules map.
+func newReplicationConflictLogging(conflictLogging *replicationapi.GetConflictLogging) (*ReplicationConflictLogging, error) {
+	if conflictLogging == nil {
+		return nil, nil
+	}
+
+	rules, err := newReplicationLoggingRules(conflictLogging.LoggingRules)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReplicationConflictLogging{
+		Disabled:     types.BoolValue(conflictLogging.Disabled),
+		Bucket:       types.StringValue(conflictLogging.Bucket),
+		Collection:   types.StringValue(conflictLogging.Collection),
+		LoggingRules: rules,
+	}, nil
+}
+
+// newReplicationLoggingRules converts the API logging rules to a map. A nil rule becomes a null
+// element. No rules is a null map.
+func newReplicationLoggingRules(rules map[string]*replicationapi.ConflictLoggingRule) (types.Map, error) {
+	ruleType := types.ObjectType{AttrTypes: ReplicationLoggingRule{}.AttributeTypes()}
+	if len(rules) == 0 {
+		return types.MapNull(ruleType), nil
+	}
+
+	elements := make(map[string]attr.Value, len(rules))
+	for namespace, rule := range rules {
+		if rule == nil {
+			elements[namespace] = types.ObjectNull(ruleType.AttrTypes)
+			continue
+		}
+
+		element, diags := types.ObjectValue(ruleType.AttrTypes, map[string]attr.Value{
+			"bucket":     types.StringPointerValue(rule.Bucket),
+			"collection": types.StringPointerValue(rule.Collection),
+		})
+		if diags.HasError() {
+			return types.MapNull(ruleType), fmt.Errorf("%w: %s", errors.ErrConvertingReplicationConflictLogging, diags.Errors())
+		}
+		elements[namespace] = element
+	}
+
+	rulesMap, diags := types.MapValue(ruleType, elements)
+	if diags.HasError() {
+		return types.MapNull(ruleType), fmt.Errorf("%w: %s", errors.ErrConvertingReplicationConflictLogging, diags.Errors())
+	}
+	return rulesMap, nil
 }
 
 // newMappingsSet converts the GET mappings to a set. No mappings means all scopes, which is null.

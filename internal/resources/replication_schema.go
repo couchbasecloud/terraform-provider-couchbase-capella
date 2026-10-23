@@ -2,6 +2,7 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -124,6 +125,14 @@ func ReplicationSchema() schema.Schema {
 		Attributes: filterAttrs,
 	})
 
+	mobileSyncMode := stringDefaultAttribute(capellaschema.ReplicationMobileSyncModeOff, optional, computed)
+	mobileSyncMode.Validators = append(mobileSyncMode.Validators,
+		stringvalidator.OneOf(capellaschema.ReplicationMobileSyncModeOff, capellaschema.ReplicationMobileSyncModeActive))
+	mobileSyncMode.MarkdownDescription = capellaschema.ReplicationMobileSyncModeDescription
+	capellaschema.AddAttr(attrs, "mobile_sync_mode", replicationBuilder, mobileSyncMode)
+
+	capellaschema.AddAttr(attrs, "conflict_logging", replicationBuilder, conflictLoggingAttribute())
+
 	capellaschema.AddAttr(attrs, "reverse_replication_id", replicationBuilder,
 		stringAttribute([]string{computed, useStateForUnknown}), "CreateReplicationJSONResponse")
 
@@ -138,6 +147,50 @@ func ReplicationSchema() schema.Schema {
 		MarkdownDescription: "This resource allows you to manage an XDCR replication from a bucket in an operational cluster to a bucket in another cluster.",
 		Attributes:          attrs,
 	}
+}
+
+// conflictLoggingAttribute returns the conflict_logging block.
+func conflictLoggingAttribute() *schema.SingleNestedAttribute {
+	ruleBucket := stringAttribute([]string{optional}, stringvalidator.LengthAtLeast(1))
+	ruleBucket.MarkdownDescription = capellaschema.ReplicationLoggingRuleBucketDescription
+	ruleCollection := stringAttribute([]string{optional}, stringvalidator.LengthAtLeast(1))
+	ruleCollection.MarkdownDescription = capellaschema.ReplicationLoggingRuleCollectionDescription
+	ruleAttrs := map[string]schema.Attribute{
+		"bucket":     ruleBucket,
+		"collection": ruleCollection,
+	}
+
+	bucket := stringAttribute([]string{required})
+	bucket.MarkdownDescription = capellaschema.ReplicationConflictLoggingBucketDescription
+	collection := stringAttribute([]string{required})
+	collection.MarkdownDescription = capellaschema.ReplicationConflictLoggingCollectionDescription
+	conflictLoggingAttrs := map[string]schema.Attribute{
+		"bucket":     bucket,
+		"collection": collection,
+	}
+	disabled := boolAttribute(required)
+	disabled.MarkdownDescription = capellaschema.ReplicationConflictLoggingDisabledDescription
+	capellaschema.AddAttr(conflictLoggingAttrs, "disabled", replicationBuilder, disabled)
+
+	// GET drops an empty loggingRules map, so an empty map in the config would show a diff on every plan.
+	loggingRules := &schema.MapNestedAttribute{
+		Optional: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: ruleAttrs,
+		},
+		Validators: []validator.Map{
+			mapvalidator.SizeAtLeast(1),
+		},
+	}
+	loggingRules.MarkdownDescription = capellaschema.ReplicationLoggingRulesDescription
+	capellaschema.AddAttr(conflictLoggingAttrs, "logging_rules", replicationBuilder, loggingRules)
+
+	conflictLogging := &schema.SingleNestedAttribute{
+		Optional:   true,
+		Attributes: conflictLoggingAttrs,
+	}
+	conflictLogging.MarkdownDescription = capellaschema.ReplicationConflictLoggingDescription
+	return conflictLogging
 }
 
 // computedReplicationDetailsAttribute returns the computed source details, or the target details

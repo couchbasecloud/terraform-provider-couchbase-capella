@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,6 +32,7 @@ func testGetReplicationResponse() *replicationapi.GetReplicationResponse {
 		Direction:         "oneWay",
 		Priority:          "high",
 		NetworkUsageLimit: 0,
+		MobileSyncMode:    ReplicationMobileSyncModeOff,
 		Audit:             replicationapi.ReplicationAuditData{CreatedBy: "user-1", CreatedAt: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)},
 	}
 }
@@ -172,6 +174,8 @@ func TestNewReplication(t *testing.T) {
 		assert.False(t, got.SourceDetails.IsNull())
 		assert.False(t, got.TargetDetails.IsNull())
 		assert.Equal(t, `"user-1"`, got.Audit.Attributes()["created_by"].String())
+		assert.Equal(t, ReplicationMobileSyncModeOff, got.MobileSyncMode.ValueString())
+		assert.Nil(t, got.ConflictLogging, "GET omits conflictLogging when it was never set")
 	})
 
 	t.Run("error is null when the API reports none, and set when it reports one", func(t *testing.T) {
@@ -184,6 +188,14 @@ func TestNewReplication(t *testing.T) {
 		got, err = NewReplication(ctx, resp, "org-1", "proj-1", "cluster-1", nil)
 		require.NoError(t, err)
 		assert.Equal(t, "target bucket not found", got.Error.ValueString())
+	})
+
+	t.Run("no mobile sync mode from the API gives off", func(t *testing.T) {
+		resp := testGetReplicationResponse()
+		resp.MobileSyncMode = ""
+		got, err := NewReplication(ctx, resp, "org-1", "proj-1", "cluster-1", nil)
+		require.NoError(t, err)
+		assert.Equal(t, ReplicationMobileSyncModeOff, got.MobileSyncMode.ValueString())
 	})
 
 	t.Run("import has no reverse replication ID", func(t *testing.T) {
@@ -235,4 +247,83 @@ func TestNewReplication(t *testing.T) {
 		assert.True(t, a.Mappings.Equal(b.Mappings))
 		assert.Len(t, a.Mappings.Elements(), 2)
 	})
+}
+
+func TestNewReplicationConflictLogging(t *testing.T) {
+	bucket, collection := "bG9ncw==", "logs.inv"
+	ruleType := types.ObjectType{AttrTypes: ReplicationLoggingRule{}.AttributeTypes()}
+
+	tests := []struct {
+		name string
+		api  *replicationapi.GetConflictLogging
+		want *ReplicationConflictLogging
+	}{
+		{
+			name: "no conflict logging in the API gives no block",
+		},
+		{
+			name: "no rules give a null map",
+			api:  &replicationapi.GetConflictLogging{Bucket: bucket, Collection: "logs.default"},
+			want: &ReplicationConflictLogging{
+				Disabled:     types.BoolValue(false),
+				Bucket:       types.StringValue(bucket),
+				Collection:   types.StringValue("logs.default"),
+				LoggingRules: types.MapNull(ruleType),
+			},
+		},
+		{
+			name: "disabled with an empty bucket and collection is kept as it is",
+			api:  &replicationapi.GetConflictLogging{Disabled: true},
+			want: &ReplicationConflictLogging{
+				Disabled:     types.BoolValue(true),
+				Bucket:       types.StringValue(""),
+				Collection:   types.StringValue(""),
+				LoggingRules: types.MapNull(ruleType),
+			},
+		},
+		{
+			name: "a nil rule is a null element, an empty rule has null fields, and a full rule has both fields",
+			api: &replicationapi.GetConflictLogging{
+				Bucket:     bucket,
+				Collection: "logs.default",
+				LoggingRules: map[string]*replicationapi.ConflictLoggingRule{
+					"agents.partners": nil,
+					"sales":           {},
+					"inventory":       {Bucket: &bucket, Collection: &collection},
+				},
+			},
+			want: &ReplicationConflictLogging{
+				Disabled:   types.BoolValue(false),
+				Bucket:     types.StringValue(bucket),
+				Collection: types.StringValue("logs.default"),
+				LoggingRules: types.MapValueMust(ruleType, map[string]attr.Value{
+					"agents.partners": types.ObjectNull(ruleType.AttrTypes),
+					"sales": types.ObjectValueMust(ruleType.AttrTypes, map[string]attr.Value{
+						"bucket":     types.StringNull(),
+						"collection": types.StringNull(),
+					}),
+					"inventory": types.ObjectValueMust(ruleType.AttrTypes, map[string]attr.Value{
+						"bucket":     types.StringValue(bucket),
+						"collection": types.StringValue(collection),
+					}),
+				}),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := newReplicationConflictLogging(tt.api)
+			require.NoError(t, err)
+			if tt.want == nil {
+				assert.Nil(t, got)
+				return
+			}
+			require.NotNil(t, got)
+			assert.Equal(t, tt.want.Disabled, got.Disabled)
+			assert.Equal(t, tt.want.Bucket, got.Bucket)
+			assert.Equal(t, tt.want.Collection, got.Collection)
+			assert.True(t, tt.want.LoggingRules.Equal(got.LoggingRules), "got %s", got.LoggingRules)
+		})
+	}
 }
