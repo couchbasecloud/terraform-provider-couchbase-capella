@@ -12,9 +12,9 @@ var databaseRolesBuilder = capellaschema.NewSchemaBuilder("databaseRoles")
 func DatabaseRolesSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", databaseRolesBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "project_id", databaseRolesBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "cluster_id", databaseRolesBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "organization_id", databaseRolesBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "project_id", databaseRolesBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "cluster_id", databaseRolesBuilder, requiredUUIDString())
 
 	// Build data item attributes
 	dataAttrs := make(map[string]schema.Attribute)

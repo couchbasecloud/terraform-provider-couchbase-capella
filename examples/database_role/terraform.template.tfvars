@@ -27,8 +27,7 @@ access = [
       buckets = [{
         name = "travel-sample"
         scopes = [{
-          name        = "inventory"
-          collections = ["hotel", "route"]
+          name = "inventory"
         }]
       }]
     }

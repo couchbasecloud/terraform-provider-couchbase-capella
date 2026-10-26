@@ -1,5 +1,7 @@
 package resources
 
+import "slices"
+
 const (
 	resourceTypeProject = "project"
 
@@ -25,6 +27,11 @@ var validOrganizationRoles = []string{
 	organizationRoleBillingAdmin,
 	organizationRoleBillingViewer,
 	organizationRoleReadOnly,
+}
+
+// ValidOrganizationRoles returns a copy of the organization roles accepted by the user and API key resources.
+func ValidOrganizationRoles() []string {
+	return slices.Clone(validOrganizationRoles)
 }
 
 var validProjectRoles = []string{

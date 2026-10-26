@@ -18,6 +18,8 @@ In this example, we are going to do the following.
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
+Each privilege can only be granted down to a certain level. For example, `dataRead` can be narrowed to collections, but `queryManage` is a scope-level privilege and is rejected if `collections` are set. Use the `couchbase-capella_database_privileges` data source (see `examples/database_privileges`) to check the levels each privilege accepts.
+
 ## CREATE & LIST
 ### View the plan for the resources that Terraform will create
 
@@ -27,9 +29,10 @@ Sample Output:
 ```
 $ terraform plan
 data.couchbase-capella_database_roles.existing_roles: Reading...
-data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
+data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
 
-Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
@@ -68,10 +71,7 @@ Terraform will perform the following actions:
                           + name   = "travel-sample"
                           + scopes = [
                               + {
-                                  + collections = [
-                                      + "sales",
-                                    ]
-                                  + name        = "inventory"
+                                  + name = "inventory"
                                 },
                             ]
                         },
@@ -91,17 +91,68 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
+  + database_role_id    = (known after apply)
   + database_roles_list = {
       + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
       + data            = null
       + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
       + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
     }
-  + new_database_role   = (known after apply)
+  + new_database_role   = {
+      + access          = [
+          + {
+              + privileges = [
+                  + "dataRead",
+                ]
+              + resources  = {
+                  + buckets = [
+                      + {
+                          + name   = "travel-sample"
+                          + scopes = [
+                              + {
+                                  + collections = [
+                                      + "airline",
+                                      + "airport",
+                                    ]
+                                  + name        = "inventory"
+                                },
+                            ]
+                        },
+                    ]
+                }
+            },
+          + {
+              + privileges = [
+                  + "queryManage",
+                ]
+              + resources  = {
+                  + buckets = [
+                      + {
+                          + name   = "travel-sample"
+                          + scopes = [
+                              + {
+                                  + collections = null
+                                  + name        = "inventory"
+                                },
+                            ]
+                        },
+                    ]
+                }
+            },
+        ]
+      + audit           = (known after apply)
+      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + description     = "A test role with read and write access"
+      + id              = (known after apply)
+      + name            = "test-role-001"
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+    }
 
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────
 
-Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
 ```
 
 ### Apply the Plan, in order to create a new Database Role
@@ -112,7 +163,7 @@ Sample Output:
 ```
 $ terraform apply
 data.couchbase-capella_database_roles.existing_roles: Reading...
-data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
+data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
 
 Do you want to perform these actions?
   Terraform will perform the actions described above.
@@ -127,6 +178,7 @@ Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
+database_role_id = "95591a3b-7031-4257-8d9e-7c4620d14618"
 database_roles_list = {
   "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
   "data" = tolist(null) /* of object */
@@ -134,18 +186,18 @@ database_roles_list = {
   "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
 }
 new_database_role = {
-  "access" = toset([
+  "access" = tolist([
     {
       "privileges" = toset([
         "dataRead",
       ])
       "resources" = {
-        "buckets" = toset([
+        "buckets" = tolist([
           {
             "name" = "travel-sample"
-            "scopes" = toset([
+            "scopes" = tolist([
               {
-                "collections" = toset([
+                "collections" = tolist([
                   "airline",
                   "airport",
                 ])
@@ -161,14 +213,12 @@ new_database_role = {
         "queryManage",
       ])
       "resources" = {
-        "buckets" = toset([
+        "buckets" = tolist([
           {
             "name" = "travel-sample"
-            "scopes" = toset([
+            "scopes" = tolist([
               {
-                "collections" = toset([
-                  "sales",
-                ])
+                "collections" = tolist(null) /* of string */
                 "name" = "inventory"
               },
             ])
@@ -178,9 +228,9 @@ new_database_role = {
     },
   ])
   "audit" = {
-    "created_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
+    "created_at" = "2026-10-14 05:04:35.472885632 +0000 UTC"
     "created_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
-    "modified_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
+    "modified_at" = "2026-10-14 05:04:35.472885632 +0000 UTC"
     "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
     "version" = 1
   }
@@ -234,11 +284,11 @@ Sample Output:
 ```
 $ terraform import couchbase-capella_database_role.new_database_role id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
 couchbase-capella_database_role.new_database_role: Importing from ID "id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
-data.couchbase-capella_database_roles.existing_roles: Reading...
 couchbase-capella_database_role.new_database_role: Import prepared!
   Prepared couchbase-capella_database_role for import
-couchbase-capella_database_role.new_database_role: Refreshing state...
-data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
+data.couchbase-capella_database_roles.existing_roles: Reading...
+couchbase-capella_database_role.new_database_role: Refreshing state... [id=id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d]
+data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
 
 Import successful!
 
@@ -306,9 +356,7 @@ database_roles_list = {
                 "name" = "travel-sample"
                 "scopes" = tolist([
                   {
-                    "collections" = tolist([
-                      "sales",
-                    ])
+                    "collections" = tolist(null) /* of string */
                     "name" = "inventory"
                   },
                 ])
@@ -347,10 +395,16 @@ Sample Output:
 $ terraform apply -var 'access=[{privileges=["dataRead"]}]'
 data.couchbase-capella_database_roles.existing_roles: Reading...
 couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
-data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
+data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
 
 couchbase-capella_database_role.new_database_role: Modifying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
-couchbase-capella_database_role.new_database_role: Modifications complete after 5s [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+couchbase-capella_database_role.new_database_role: Modifications complete after 1s [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
@@ -365,7 +419,7 @@ Sample Output:
 $ terraform destroy
 data.couchbase-capella_database_roles.existing_roles: Reading...
 couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
-data.couchbase-capella_database_roles.existing_roles: Read complete after 3s
+data.couchbase-capella_database_roles.existing_roles: Read complete after 0s
 
 Do you really want to destroy all resources?
   Terraform will destroy all your managed infrastructure, as shown above.
@@ -374,7 +428,7 @@ Do you really want to destroy all resources?
   Enter a value: yes
 
 couchbase-capella_database_role.new_database_role: Destroying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
-couchbase-capella_database_role.new_database_role: Destruction complete after 2s
+couchbase-capella_database_role.new_database_role: Destruction complete after 1s
 
 Destroy complete! Resources: 1 destroyed.
 ```

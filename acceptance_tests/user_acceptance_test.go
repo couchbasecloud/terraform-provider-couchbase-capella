@@ -3,10 +3,15 @@ package acceptance_tests
 import (
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 )
 
 func TestAccUserResource(t *testing.T) {
@@ -71,6 +76,108 @@ func TestAccUserResourceWithProjectRoles(t *testing.T) {
 				),
 			},
 		},
+	})
+}
+
+func TestAccUserResourceOrganizationRoles(t *testing.T) {
+	for _, role := range resources.ValidOrganizationRoles() {
+		t.Run(role, func(t *testing.T) {
+			resourceName := randomStringWithPrefix("tf_acc_user_")
+			username := resourceName
+			resourceReference := "couchbase-capella_user." + resourceName
+
+			// Not parallel: concurrent user deletes return HTTP 500 from the Capella API.
+			resource.Test(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccUserResourceConfigWithOrganizationRoles(resourceName, username, fmt.Sprintf(`["%s"]`, role)),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceReference, "email", username+"@couchbase.com"),
+							resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", "1"),
+							resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", role),
+						),
+					},
+					{
+						ResourceName:      resourceReference,
+						ImportStateIdFunc: generateUserImportIdForResource(resourceReference),
+						ImportState:       true,
+						ImportStateVerify: true,
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccUserResourceMultipleOrganizationRoles(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_user_")
+	username := resourceName
+	resourceReference := "couchbase-capella_user." + resourceName
+	roles := resources.ValidOrganizationRoles()
+
+	checks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(roles))),
+	}
+	for i, role := range roles {
+		checks = append(checks, resource.TestCheckResourceAttr(resourceReference, "organization_roles."+strconv.Itoa(i), role))
+	}
+
+	// Not parallel: concurrent user deletes return HTTP 500 from the Capella API.
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserResourceConfigWithOrganizationRoles(resourceName, username, fmt.Sprintf(`["%s"]`, strings.Join(roles, `", "`))),
+				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
+			},
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateUserImportIdForResource(resourceReference),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccUserResourceUpdateOrganizationRoles(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_user_")
+	username := resourceName
+	resourceReference := "couchbase-capella_user." + resourceName
+	roles := resources.ValidOrganizationRoles()
+
+	// Each step appends one role. The API appends roles added by update to the
+	// end of the list, so inserting anywhere else fails with an inconsistent result.
+	var steps []resource.TestStep
+	for i := range roles {
+		assigned := roles[:i+1]
+
+		checks := []resource.TestCheckFunc{
+			resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(assigned))),
+		}
+		for j, role := range assigned {
+			checks = append(checks, resource.TestCheckResourceAttr(resourceReference, "organization_roles."+strconv.Itoa(j), role))
+		}
+
+		step := resource.TestStep{
+			Config: testAccUserResourceConfigWithOrganizationRoles(resourceName, username, fmt.Sprintf(`["%s"]`, strings.Join(assigned, `", "`))),
+			Check:  resource.ComposeAggregateTestCheckFunc(checks...),
+		}
+		if i > 0 {
+			step.ConfigPlanChecks = resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+				},
+			}
+		}
+		steps = append(steps, step)
+	}
+
+	// Not parallel: concurrent user deletes return HTTP 500 from the Capella API.
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps:                    steps,
 	})
 }
 
