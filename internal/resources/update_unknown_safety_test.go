@@ -49,6 +49,13 @@ func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
 			attributes: AuditLogSettingsSchema().Attributes,
 			attrNames:  []string{"audit_enabled", "enabled_event_ids", "disabled_users"},
 		},
+		{
+			// UpdateReplicationRequest. Both have a Default, so an unconfigured value is sent
+			// as the default rather than as an unwrapped unknown.
+			name:       "replication",
+			attributes: ReplicationSchema().Attributes,
+			attrNames:  []string{"priority", "network_usage_limit"},
+		},
 	}
 
 	for _, tc := range cases {
