@@ -64,6 +64,18 @@ var (
 	dmBucketCreated  bool
 	dmBucketName     = "default"
 
+	// replicationAnchorId is a twoWay replication between two extra buckets on the global and DM clusters.
+	// It keeps the network link between the clusters for the whole run.
+	replicationAnchorId             string
+	replicationAnchorCreated        bool
+	replicationAnchorSourceBucketId string
+	replicationAnchorTargetBucketId string
+
+	// The anchor bucket names are these prefixes plus a random suffix. The suffix stops a clash with
+	// buckets that a stopped run left behind. The prefix makes such buckets easy to find and delete.
+	replicationAnchorSourceBucketPrefix = "tf_acc_repl_anchor_src_"
+	replicationAnchorTargetBucketPrefix = "tf_acc_repl_anchor_tgt_"
+
 	appEndpointClusterId          string
 	appEndpointClusterName        string
 	appEndpointBucketId           string
