@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 )
 
 func TestAccApiKeyResource(t *testing.T) {
@@ -111,6 +113,52 @@ func TestAccApiKeyResourceWithDefaults(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccApiKeyResourceOrganizationRoles(t *testing.T) {
+	for _, role := range resources.ValidOrganizationRoles() {
+		t.Run(role, func(t *testing.T) {
+			resourceName := randomStringWithPrefix("tf_acc_apikey_")
+			resourceReference := "couchbase-capella_apikey." + resourceName
+
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, role)),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+							resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", "1"),
+							resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccApiKeyResourceMultipleOrganizationRoles(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
+	resourceReference := "couchbase-capella_apikey." + resourceName
+	roles := resources.ValidOrganizationRoles()
+
+	checks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr(resourceReference, "organization_roles.#", strconv.Itoa(len(roles))),
+	}
+	for _, role := range roles {
+		checks = append(checks, resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", role))
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApiKeyResourceConfigWithOrganizationRoles(resourceName, fmt.Sprintf(`["%s"]`, strings.Join(roles, `", "`))),
+				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
 			},
 		},
 	})
