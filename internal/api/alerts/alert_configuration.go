@@ -26,7 +26,6 @@ type GetAlertConfigurationResponse struct {
 	Configs             map[string]AlertConfigurationEntry `json:"configs"`
 	ResolvedConfigs     map[string]AlertConfigurationEntry `json:"resolvedConfigs"`
 	Recipients          []string                           `json:"recipients"`
-	ResolvedRecipients  []string                           `json:"resolvedRecipients"`
 	MutedAlerts         map[string]AlertMuteState          `json:"mutedAlerts"`
 	ResolvedMutedAlerts map[string]AlertMuteState          `json:"resolvedMutedAlerts"`
 }

@@ -53,10 +53,9 @@ func alertConfigurationValuesAttrs() map[string]schema.Attribute {
 	})
 	capellaschema.AddAttr(attrs, "resolved_configs", alertConfigurationBuilder, &schema.MapNestedAttribute{
 		Computed:     true,
-		NestedObject: schema.NestedAttributeObject{Attributes: alertConfigurationEntryAttrs()},
+		NestedObject: schema.NestedAttributeObject{Attributes: resolvedAlertConfigurationEntryAttrs()},
 	})
 	capellaschema.AddAttr(attrs, "recipients", alertConfigurationBuilder, computedStringSet())
-	capellaschema.AddAttr(attrs, "resolved_recipients", alertConfigurationBuilder, computedStringSet())
 	capellaschema.AddAttr(attrs, "muted_alerts", alertConfigurationBuilder, &schema.MapNestedAttribute{
 		Computed:     true,
 		NestedObject: schema.NestedAttributeObject{Attributes: alertMuteStateAttrs()},
@@ -65,5 +64,17 @@ func alertConfigurationValuesAttrs() map[string]schema.Attribute {
 		Computed:     true,
 		NestedObject: schema.NestedAttributeObject{Attributes: alertMuteStateAttrs()},
 	})
+	return attrs
+}
+
+// resolvedAlertConfigurationEntryAttrs returns the attributes of a resolved config entry. Unlike
+// alertConfigurationEntryAttrs it has no updated_at or updated_by, which the API never returns
+// for resolved entries.
+func resolvedAlertConfigurationEntryAttrs() map[string]schema.Attribute {
+	attrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(attrs, "frequency_hours", alertConfigurationEntryBuilder, computedInt64())
+	capellaschema.AddAttr(attrs, "threshold", alertConfigurationEntryBuilder, &schema.Float64Attribute{Computed: true})
+	capellaschema.AddAttr(attrs, "warning_threshold", alertConfigurationEntryBuilder, &schema.Float64Attribute{Computed: true})
+	capellaschema.AddAttr(attrs, "critical_threshold", alertConfigurationEntryBuilder, &schema.Float64Attribute{Computed: true})
 	return attrs
 }

@@ -24,8 +24,7 @@ func TestNewAlertConfigurationValues(t *testing.T) {
 			ResolvedConfigs: map[string]alertsapi.AlertConfigurationEntry{
 				"cpu_usage_high": {FrequencyHours: hours(3), WarningThreshold: num(80), CriticalThreshold: num(90)},
 			},
-			Recipients:         []string{"cluster-oncall@example.com"},
-			ResolvedRecipients: []string{"org-oncall@example.com", "cluster-oncall@example.com"},
+			Recipients: []string{"cluster-oncall@example.com"},
 			MutedAlerts: map[string]alertsapi.AlertMuteState{
 				"disk_usage_high": {Action: "mute", MutedUntil: str("2026-11-01T00:00:00Z"), UpdatedBy: str("Jane Doe")},
 			},
@@ -47,7 +46,6 @@ func TestNewAlertConfigurationValues(t *testing.T) {
 		assert.Equal(t, 90.0, resolved.CriticalThreshold.ValueFloat64())
 
 		assert.Len(t, got.Recipients.Elements(), 1)
-		assert.Len(t, got.ResolvedRecipients.Elements(), 2)
 
 		require.Contains(t, got.MutedAlerts, "disk_usage_high")
 		mute := got.MutedAlerts["disk_usage_high"]
@@ -63,7 +61,6 @@ func TestNewAlertConfigurationValues(t *testing.T) {
 			Configs:             map[string]alertsapi.AlertConfigurationEntry{},
 			ResolvedConfigs:     map[string]alertsapi.AlertConfigurationEntry{},
 			Recipients:          []string{},
-			ResolvedRecipients:  []string{},
 			MutedAlerts:         map[string]alertsapi.AlertMuteState{},
 			ResolvedMutedAlerts: map[string]alertsapi.AlertMuteState{},
 		})
