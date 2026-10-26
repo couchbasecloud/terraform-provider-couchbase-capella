@@ -824,6 +824,44 @@ func TestReplicationValidateConfigConflictLogging(t *testing.T) {
 			wantErr: `conflict_logging.logging_rules["inventory"].bucket must be a bucket ID`,
 		},
 		{
+			name:            "a log collection without a collection name is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.", nil),
+			wantErr:         `conflict_logging.collection "logs." must be in the format "scope.collection"`,
+		},
+		{
+			name:            "a log collection with three names is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "a.b.c", nil),
+			wantErr:         `conflict_logging.collection "a.b.c" must be in the format "scope.collection"`,
+		},
+		{
+			name: "a rule collection without a scope is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"inventory": rule(types.StringValue("bG9ncw=="), types.StringValue("nodot")),
+			}),
+			wantErr: `conflict_logging.logging_rules["inventory"].collection "nodot" must be in the format "scope.collection"`,
+		},
+		{
+			name: "an empty rule key is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"": rule(types.StringNull(), types.StringNull()),
+			}),
+			wantErr: `The logging rule key "" must be in the format "scope" or "scope.collection"`,
+		},
+		{
+			name: "a rule key with three names is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"a.b.c": rule(types.StringNull(), types.StringNull()),
+			}),
+			wantErr: `The logging rule key "a.b.c" must be in the format "scope" or "scope.collection"`,
+		},
+		{
+			name: "a rule key without a collection name is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"inventory.": types.ObjectNull(ruleType.AttrTypes),
+			}),
+			wantErr: `The logging rule key "inventory." must be in the format "scope" or "scope.collection"`,
+		},
+		{
 			name: "unknown values are checked later",
 			conflictLogging: &providerschema.ReplicationConflictLogging{
 				Disabled:   types.BoolValue(false),
