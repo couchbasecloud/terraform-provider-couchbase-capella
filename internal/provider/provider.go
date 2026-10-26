@@ -295,6 +295,9 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewDataApi,
 		datasources.NewAlertConfigurationOverrides,
 		datasources.NewAlerts,
+		datasources.NewOrganizationAlertConfiguration,
+		datasources.NewProjectAlertConfiguration,
+		datasources.NewClusterAlertConfiguration,
 	}
 }
 

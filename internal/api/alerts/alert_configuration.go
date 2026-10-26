@@ -19,3 +19,14 @@ type AlertMuteState struct {
 	UpdatedAt  *string `json:"updatedAt,omitempty"`
 	UpdatedBy  *string `json:"updatedBy,omitempty"`
 }
+
+// GetAlertConfigurationResponse is the alert configuration of one level, as returned by the get
+// alert configuration endpoints. The resolved fields are what is in effect after inheritance.
+type GetAlertConfigurationResponse struct {
+	Configs             map[string]AlertConfigurationEntry `json:"configs"`
+	ResolvedConfigs     map[string]AlertConfigurationEntry `json:"resolvedConfigs"`
+	Recipients          []string                           `json:"recipients"`
+	ResolvedRecipients  []string                           `json:"resolvedRecipients"`
+	MutedAlerts         map[string]AlertMuteState          `json:"mutedAlerts"`
+	ResolvedMutedAlerts map[string]AlertMuteState          `json:"resolvedMutedAlerts"`
+}
