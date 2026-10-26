@@ -43,14 +43,14 @@ func awsClusterPlan(storage, iops types.Int64) providerschema.Cluster {
 	}
 }
 
-// TestMorphToApiServiceGroupsAWSDisk pins the part of the AWS disk mapping that is correct
-// and will stay correct however AV-145015 is fixed: a configured storage and iops reach the
-// request body unchanged.
+// TestMorphToApiServiceGroupsAWSDisk pins the part of the AWS disk mapping that AV-145015
+// did not change: a configured storage and iops reach the request body unchanged.
 //
-// It deliberately does not assert what happens to an unknown attribute. Today that produces
-// a 0 on the wire, which is the AV-145015 defect - asserting it here would encode the bug as
-// the expected contract and turn the eventual fix into a test failure. The intended
-// behaviour is stated instead by TestValidateCreateClusterAwsDiskRequired_AV_145015 below.
+// It deliberately does not assert what happens to an unknown attribute. The mapping still
+// turns one into a 0, because DiskAWS has plain int fields with no omitempty and skipping
+// the assignment would leave the zero value in place anyway. That config never reaches the
+// mapping now - validateCreateCluster rejects it first, which is what
+// TestValidateCreateClusterAwsDiskRequired_AV_145015 below asserts.
 func TestMorphToApiServiceGroupsAWSDisk(t *testing.T) {
 	c := &Cluster{}
 	serviceGroups, err := c.morphToApiServiceGroups(awsClusterPlan(types.Int64Value(50), types.Int64Value(3000)))
@@ -74,10 +74,9 @@ func TestMorphToApiServiceGroupsAWSDisk(t *testing.T) {
 	}
 }
 
-// TestValidateCreateClusterAwsDiskRequired_AV_145015 states the behaviour the provider
-// should have and does not yet: an AWS cluster config that omits `storage` or `iops` must be
-// rejected by the provider, naming the attribute, rather than being sent to Capella with a
-// silent 0.
+// TestValidateCreateClusterAwsDiskRequired_AV_145015 guards the AV-145015 fix: an AWS
+// cluster config that omits `storage` or `iops` is rejected by the provider, naming the
+// attribute, rather than being sent to Capella with a silent 0.
 //
 // Why rejection is the right contract rather than omitting the field: `storage` and `iops`
 // are plain ints with no `omitempty` in the API contract on both sides - the provider's
@@ -88,15 +87,9 @@ func TestMorphToApiServiceGroupsAWSDisk(t *testing.T) {
 // (internal/resources/cluster_schema.go:63-64), and the only place the practitioner can be
 // told that clearly is the provider.
 //
-// The expected shape follows the sibling checks already in validateCreateCluster
-// (internal/resources/cluster.go:833-849), which reject `autoexpansion` on AWS/GCP and
-// `iops` on GCP.
+// The check follows the shape of the sibling rules already in validateCreateCluster, which
+// reject `autoexpansion` on AWS/GCP and `iops` on GCP.
 func TestValidateCreateClusterAwsDiskRequired_AV_145015(t *testing.T) {
-	t.Skip("AV-145015: AWS storage/iops are Optional+Computed, so an omitted attribute is " +
-		"unknown and gets serialised as 0; Capella then rejects the create with a range error " +
-		"naming a value the practitioner never wrote. Unskip once validateCreateCluster " +
-		"rejects an AWS config that omits either attribute.")
-
 	cases := []struct {
 		name    string
 		storage types.Int64

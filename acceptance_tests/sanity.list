@@ -49,9 +49,6 @@ TestAccClusterResourceAzureDiskAutoExpansion
 #
 # Note the runner anchors the pattern as ^(...)$, so naming a test here does not pull in
 # others that share its prefix; each one has to be listed on its own.
-#
-# The AWS equivalents are deliberately absent: they are skipped pending AV-145015, and a
-# skipped test on the gate guards nothing. Add them here when that ticket is fixed.
 
 # Tests that an omitted iops on an Azure Ultra disk is omitted from the request rather
 # than sent as 0
@@ -59,6 +56,12 @@ TestAccClusterResourceAzureUltraDiskIopsOmitted_AV_143042
 
 # Control for the test above: proves a configured iops really reaches Capella
 TestAccClusterResourceAzureUltraDiskIopsInvalid_AV_143042
+
+# Tests that an AWS disk config omitting iops or storage is rejected by the provider,
+# naming the attribute, instead of being sent to Capella as 0. Both are rejected before
+# anything is provisioned, so they cost under two seconds each.
+TestAccClusterResourceAwsDiskIopsOmitted_AV_145015
+TestAccClusterResourceAwsDiskStorageOmitted_AV_145015
 
 # Tests reading a single cluster via data source
 TestAccReadClusterDatasource
