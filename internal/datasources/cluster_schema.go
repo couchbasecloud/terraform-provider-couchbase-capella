@@ -27,7 +27,7 @@ func OneClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "etag", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "if_match", oneClusterBuilder, computedString())
 
-	zones := &schema.SetAttribute{
+	zones := &schema.ListAttribute{
 		Computed:    true,
 		ElementType: types.StringType,
 	}

@@ -89,17 +89,29 @@ func TestNewClusterZones(t *testing.T) {
 			newCluster, err := NewCluster(context.Background(), cluster, "org", "proj", types.ObjectNull(nil))
 			assert.NoError(t, err)
 
+			if test.wantNull {
+				assert.True(t, newCluster.Zones.IsNull())
+			} else {
+				var got []string
+				assert.False(t, newCluster.Zones.ElementsAs(context.Background(), &got, false).HasError())
+				assert.ElementsMatch(t, test.want, got)
+			}
+
+			oneCluster, err := NewOneCluster(context.Background(), cluster, "org", "proj", types.ObjectNull(nil))
+			assert.NoError(t, err)
+
 			clusterData, err := NewClusterData(cluster, "org", "proj", types.ObjectNull(nil))
 			assert.NoError(t, err)
 
-			for _, zones := range []types.Set{newCluster.Zones, clusterData.Zones} {
+			// The data sources expose zones as a list, sorted so the order is stable between reads.
+			for _, zones := range []types.List{oneCluster.Zones, clusterData.Zones} {
 				if test.wantNull {
 					assert.True(t, zones.IsNull())
 					continue
 				}
 				var got []string
 				assert.False(t, zones.ElementsAs(context.Background(), &got, false).HasError())
-				assert.ElementsMatch(t, test.want, got)
+				assert.Equal(t, test.want, got)
 			}
 		})
 	}

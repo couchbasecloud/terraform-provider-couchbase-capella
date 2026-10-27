@@ -70,7 +70,7 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "enable_private_dns_resolution", clusterBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "deletion_protection", clusterBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "connection_string", clusterBuilder, computedString())
-	zones := &schema.SetAttribute{
+	zones := &schema.ListAttribute{
 		Computed:    true,
 		ElementType: types.StringType,
 	}
