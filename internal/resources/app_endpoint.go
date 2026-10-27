@@ -114,6 +114,10 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	// The create API doesn't accept import partitions, so they're set with an update once the endpoint exists.
+	importPartitions := appEndpointRequest.ImportPartitions
+	appEndpointRequest.ImportPartitions = nil
+
 	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints",
 		a.HostURL,
@@ -142,9 +146,19 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	if importPartitions != nil {
+		appEndpointRequest.ImportPartitions = importPartitions
+		if err := a.updateAppEndpoint(ctx, organizationId, projectId, clusterId, appServiceId, endpointName, appEndpointRequest); err != nil {
+			resp.Diagnostics.AddError(
+				"Error setting App Endpoint import partitions",
+				fmt.Sprintf("App Endpoint %s was created but its import partitions could not be set: %s", endpointName, err.Error()),
+			)
+		}
+	}
+
 	diags = setAppEndpointComputedAttributesToNull(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	if diags.HasError() {
 		return
 	}
 
@@ -194,6 +208,10 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 
 	if plan.DeltaSyncEnabled.IsNull() || plan.DeltaSyncEnabled.IsUnknown() {
 		plan.DeltaSyncEnabled = types.BoolNull()
+	}
+
+	if plan.ImportPartitions.IsNull() || plan.ImportPartitions.IsUnknown() {
+		plan.ImportPartitions = types.Int64Null()
 	}
 
 	plan.RequireResync = types.MapNull(types.ObjectType{
@@ -390,24 +408,7 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	endpointURL := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
-		a.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		url.PathEscape(endpointName),
-	)
-	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		appEndpointRequest,
-		a.Token,
-		nil,
-	)
-	if err != nil {
+	if err := a.updateAppEndpoint(ctx, organizationId, projectId, clusterId, appServiceId, endpointName, appEndpointRequest); err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating App Endpoint",
 			fmt.Sprintf("Could not update App Endpoint %s: %s", endpointName, err.Error()),
@@ -440,6 +441,25 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
+}
+
+// updateAppEndpoint sends the full App Endpoint configuration to the update API.
+func (a *AppEndpoint) updateAppEndpoint(
+	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string, request *app_endpoints.AppEndpointRequest,
+) error {
+	endpointURL := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		a.HostURL,
+		orgId,
+		projId,
+		clusterId,
+		appServiceId,
+		url.PathEscape(endpointName),
+	)
+	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+
+	_, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, request, a.Token, nil)
+	return err
 }
 
 // preserveDisabledCorsOrigin keeps omitted origin absent from state when CORS is disabled.
@@ -684,6 +704,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	state.Bucket = types.StringValue(appEndpoint.Bucket)
 	state.Name = types.StringValue(appEndpoint.Name)
 	state.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
+	state.ImportPartitions = types.Int64Value(appEndpoint.ImportPartitions)
 	state.UserXattrKey = types.StringValue(appEndpoint.UserXattrKey)
 
 	if len(appEndpoint.Scopes) > 0 {
@@ -845,6 +866,10 @@ func morphToAppEndpointRequest(
 
 	if !plan.UserXattrKey.IsNull() {
 		appEndpointRequest.UserXattrKey = plan.UserXattrKey.ValueString()
+	}
+
+	if !plan.ImportPartitions.IsNull() && !plan.ImportPartitions.IsUnknown() {
+		appEndpointRequest.ImportPartitions = plan.ImportPartitions.ValueInt64Pointer()
 	}
 
 	if plan.Cors != nil {

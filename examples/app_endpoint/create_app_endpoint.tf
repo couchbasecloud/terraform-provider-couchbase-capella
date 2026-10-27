@@ -5,7 +5,9 @@ resource "couchbase-capella_app_endpoint" "endpoint2" {
   app_service_id  = var.app_service_id
   name            = var.app_endpoint_name
   bucket          = var.bucket_name
-  
+
+  import_partitions = 32
+
   scopes = {
     "s1" = {
       collections = {
@@ -24,7 +26,7 @@ resource "couchbase-capella_app_endpoint" "endpoint2" {
       register  = true
     }
   ]
-  
+
   cors = {
     disabled = false
     origin   = ["*"]

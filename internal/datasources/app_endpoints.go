@@ -261,6 +261,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 			Name:             types.StringValue(appEndpoint.Name),
 			UserXattrKey:     types.StringValue(appEndpoint.UserXattrKey),
 			DeltaSyncEnabled: types.BoolValue(appEndpoint.DeltaSyncEnabled),
+			ImportPartitions: types.Int64Value(appEndpoint.ImportPartitions),
 			AdminURL:         types.StringValue(appEndpoint.AdminURL),
 			MetricsURL:       types.StringValue(appEndpoint.MetricsURL),
 			PublicURL:        types.StringValue(appEndpoint.PublicURL),
