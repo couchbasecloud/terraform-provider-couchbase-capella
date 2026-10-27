@@ -29,6 +29,7 @@ func TestAccAppEndpointDataSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceReference, "bucket"),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "state"),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "delta_sync_enabled"),
+					resource.TestCheckResourceAttrSet(dataSourceReference, "import_partitions"),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "scopes.%"),
 				),
 			},

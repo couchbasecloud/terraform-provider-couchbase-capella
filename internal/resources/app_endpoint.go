@@ -198,6 +198,10 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 		plan.DeltaSyncEnabled = types.BoolNull()
 	}
 
+	if plan.ImportPartitions.IsNull() || plan.ImportPartitions.IsUnknown() {
+		plan.ImportPartitions = types.Int64Null()
+	}
+
 	plan.RequireResync = types.MapNull(types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"items": types.SetType{ElemType: types.StringType},
@@ -728,6 +732,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	state.Bucket = types.StringValue(appEndpoint.Bucket)
 	state.Name = types.StringValue(appEndpoint.Name)
 	state.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
+	state.ImportPartitions = types.Int64Value(appEndpoint.ImportPartitions)
 	state.UserXattrKey = types.StringValue(appEndpoint.UserXattrKey)
 
 	if len(appEndpoint.Scopes) > 0 {
@@ -889,6 +894,10 @@ func morphToAppEndpointRequest(
 
 	if !plan.UserXattrKey.IsNull() {
 		appEndpointRequest.UserXattrKey = plan.UserXattrKey.ValueString()
+	}
+
+	if !plan.ImportPartitions.IsNull() && !plan.ImportPartitions.IsUnknown() {
+		appEndpointRequest.ImportPartitions = plan.ImportPartitions.ValueInt64Pointer()
 	}
 
 	if plan.Cors != nil {
