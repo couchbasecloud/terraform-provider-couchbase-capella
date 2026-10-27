@@ -6,7 +6,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var alertConfigurationBuilder = capellaschema.NewSchemaBuilder("alertConfiguration")
+var alertConfigurationBuilder = capellaschema.NewSchemaBuilder("alertConfiguration", "GetAlertConfigurationResponse")
 
 // OrganizationAlertConfigurationSchema returns the schema for the organization alert configuration data source.
 func OrganizationAlertConfigurationSchema() schema.Schema {
@@ -44,26 +44,50 @@ func ClusterAlertConfigurationSchema() schema.Schema {
 	}
 }
 
+// The OpenAPI loader does not read a description written next to a $ref inside allOf, which is how
+// the spec documents these four maps, so they carry a fallback in the loader's bullet format.
+// AddAttr prefers the spec as soon as it can read one.
+const (
+	configsDescription             = "\n - The alert configs set at this level only. Empty when this level has never been configured."
+	resolvedConfigsDescription     = "\n - The alert configs actually in effect at this level, after inheritance. Each field is taken from the closest level that sets it, so an alert configured at the organization and overridden at the cluster resolves to the cluster's fields on top of the organization's."
+	mutedAlertsDescription         = "\n - The mute overrides set at this level only. Empty when this level sets none."
+	resolvedMutedAlertsDescription = "\n - The mute overrides in effect at this level, after inheritance and after expiry has been applied. An alert listed here with `action` `mute` is not notifying now. Empty when no level sets any."
+)
+
 // alertConfigurationValuesAttrs returns the computed attributes shared by the three levels.
 func alertConfigurationValuesAttrs() map[string]schema.Attribute {
 	attrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(attrs, "configs", alertConfigurationBuilder, &schema.MapNestedAttribute{
+
+	configs := &schema.MapNestedAttribute{
 		Computed:     true,
 		NestedObject: schema.NestedAttributeObject{Attributes: alertConfigurationEntryAttrs()},
-	})
-	capellaschema.AddAttr(attrs, "resolved_configs", alertConfigurationBuilder, &schema.MapNestedAttribute{
+	}
+	configs.MarkdownDescription = configsDescription
+	capellaschema.AddAttr(attrs, "configs", alertConfigurationBuilder, configs)
+
+	resolvedConfigs := &schema.MapNestedAttribute{
 		Computed:     true,
 		NestedObject: schema.NestedAttributeObject{Attributes: resolvedAlertConfigurationEntryAttrs()},
-	})
+	}
+	resolvedConfigs.MarkdownDescription = resolvedConfigsDescription
+	capellaschema.AddAttr(attrs, "resolved_configs", alertConfigurationBuilder, resolvedConfigs)
+
 	capellaschema.AddAttr(attrs, "recipients", alertConfigurationBuilder, computedStringSet())
-	capellaschema.AddAttr(attrs, "muted_alerts", alertConfigurationBuilder, &schema.MapNestedAttribute{
+
+	mutedAlerts := &schema.MapNestedAttribute{
 		Computed:     true,
 		NestedObject: schema.NestedAttributeObject{Attributes: alertMuteStateAttrs()},
-	})
-	capellaschema.AddAttr(attrs, "resolved_muted_alerts", alertConfigurationBuilder, &schema.MapNestedAttribute{
+	}
+	mutedAlerts.MarkdownDescription = mutedAlertsDescription
+	capellaschema.AddAttr(attrs, "muted_alerts", alertConfigurationBuilder, mutedAlerts)
+
+	resolvedMutedAlerts := &schema.MapNestedAttribute{
 		Computed:     true,
 		NestedObject: schema.NestedAttributeObject{Attributes: alertMuteStateAttrs()},
-	})
+	}
+	resolvedMutedAlerts.MarkdownDescription = resolvedMutedAlertsDescription
+	capellaschema.AddAttr(attrs, "resolved_muted_alerts", alertConfigurationBuilder, resolvedMutedAlerts)
+
 	return attrs
 }
 
