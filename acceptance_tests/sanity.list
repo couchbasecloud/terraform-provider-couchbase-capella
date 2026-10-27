@@ -64,6 +64,21 @@ TestAccClusterResourceAzureUltraDiskIopsInvalid_AV_143042
 TestAccClusterResourceMultiAZTwoZonesInvalid
 TestAccClusterResourceGCPWithZonesInvalid
 
+# The remaining zones rejections, also plan time only: the single AZ count branch, the
+# empty list, the Azure arm, and a duplicate that the Set collapses before counting
+TestAccClusterZonesSingleAZTooMany
+TestAccClusterZonesEmptyList
+TestAccClusterZonesAzureRejected
+TestAccClusterZonesDuplicatesCollapse
+
+# Capella rejects an AWS zone name where a zone ID is required, so the create never starts
+# and no cluster is provisioned (AV-149540)
+TestAccClusterZonesNameRejected
+
+# Reads the shared cluster to prove zones are mapped out of the API response rather than
+# echoed from config; provisions nothing of its own (AV-147905)
+TestAccClusterZonesReadBackFromDatasource
+
 # Tests reading a single cluster via data source
 TestAccReadClusterDatasource
 
