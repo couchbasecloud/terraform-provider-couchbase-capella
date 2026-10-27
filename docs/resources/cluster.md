@@ -80,7 +80,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
  - **Constraints**: Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean)
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `zones` (Set of String) The AWS availability zone IDs (for example `use1-az1`) to deploy the cluster in. Only supported for AWS clusters: at most 1 zone for a single AZ cluster, and exactly 3 unique zones in the cluster's region for a multi AZ cluster. If omitted, Capella chooses the zones and they are read back into state. Changing this forces a new cluster to be created.
+- `zones` (Set of String) The AWS availability zone IDs (for example `use1-az1`) to deploy the cluster in. Only supported for AWS clusters: at most 1 zone for a single AZ cluster, and exactly 3 unique zones in the cluster's region for a multi AZ cluster. If omitted, Capella chooses the zones and they are read back into state; an empty list also lets Capella choose, but keeps zones empty in state. Changing this forces a new cluster to be created.
 
 ### Read-Only
 

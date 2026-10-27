@@ -211,9 +211,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	if refreshedState.Zones.IsNull() && !plan.Zones.IsUnknown() {
-		refreshedState.Zones = plan.Zones
-	}
+	refreshedState.Zones = zonesForState(refreshedState.Zones, plan.Zones)
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -289,11 +287,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
-	// Keep the known zones when the API omits them (an API version that predates returning
-	// zones, or zones not yet known), otherwise a configured zones would plan a replace.
-	if refreshedState.Zones.IsNull() {
-		refreshedState.Zones = state.Zones
-	}
+	refreshedState.Zones = zonesForState(refreshedState.Zones, state.Zones)
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
 		for i, serviceGroup := range refreshedState.ServiceGroups {
@@ -447,9 +441,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		currentState.IfMatch = plan.IfMatch
 	}
 
-	if currentState.Zones.IsNull() && !plan.Zones.IsUnknown() {
-		currentState.Zones = plan.Zones
-	}
+	currentState.Zones = zonesForState(currentState.Zones, plan.Zones)
 
 	for i, serviceGroup := range currentState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -875,10 +867,30 @@ func (c *Cluster) ValidateConfig(ctx context.Context, req resource.ValidateConfi
 	}
 }
 
+// zonesForState returns the zones to store: the zones the API returned, or the planned or
+// prior zones when the API returned none (an API version that predates returning zones, or
+// zones not yet known), otherwise configured zones would plan a replace. An empty set is
+// always kept: zones = [] lets Capella choose, as before zones were read back, and storing
+// the chosen zones would plan a replace against the configured [].
+func zonesForState(apiZones, knownZones types.Set) types.Set {
+	if knownZones.IsUnknown() {
+		return apiZones
+	}
+	if apiZones.IsNull() || isEmptyZones(knownZones) {
+		return knownZones
+	}
+	return apiZones
+}
+
+func isEmptyZones(zones types.Set) bool {
+	return !zones.IsNull() && !zones.IsUnknown() && len(zones.Elements()) == 0
+}
+
 // validateZones skips any check whose inputs are not yet known, so it is safe to call at
-// plan time. Region and compute availability per zone are left to the API.
+// plan time. Region and compute availability per zone are left to the API. An empty set is
+// accepted and treated as omitted, which earlier releases allowed for single AZ clusters.
 func validateZones(cloudProviderType, availabilityType types.String, zones types.Set) error {
-	if zones.IsNull() || zones.IsUnknown() {
+	if zones.IsNull() || zones.IsUnknown() || isEmptyZones(zones) {
 		return nil
 	}
 
@@ -894,10 +906,6 @@ func validateZones(cloudProviderType, availabilityType types.String, zones types
 	}
 
 	count := len(elements)
-	if count == 0 {
-		return fmt.Errorf("%w: zones must not be empty", errors.ErrInvalidZones)
-	}
-
 	if availabilityType.IsUnknown() || availabilityType.IsNull() {
 		return nil
 	}
