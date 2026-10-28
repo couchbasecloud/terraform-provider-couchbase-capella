@@ -177,9 +177,14 @@ func TestAccClusterZonesSingleAZImportRoundTrip(t *testing.T) {
 				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
 				ImportState:       true,
 				ImportStateVerify: true,
+				// Without this the imported state is discarded at the end of this step and
+				// the plan check below would run against the state left by the create,
+				// proving nothing about import. ImportStateVerify only compares attributes;
+				// it does not persist them.
+				ImportStatePersist: true,
 			},
 			{
-				// The plan after import must be clean rather than a replacement.
+				// The plan against the IMPORTED state must be clean rather than a replacement.
 				Config: testAccClusterZonesConfig(resourceName, cidr, "aws", "us-east-1", "single", `["use1-az1"]`),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -610,10 +615,20 @@ func TestAccClusterZonesEmptyStringRejected(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterZonesConfig(resourceName, generateRandomCIDR(), "aws", "us-east-1", "single", `[""]`),
-				// Capella's wording for a blank zone is not assumed here; any rejection of
-				// the create is the assertion, since the point is that the provider let it
-				// through. Whitespace is \s+ because Terraform hard-wraps diagnostics.
-				ExpectError: regexp.MustCompile(`(?s)Error\s+initiating\s+cluster\s+create\s+request`),
+				// Tied to the zone rejection specifically, by both the phrasing and the 4042
+				// code Capella returns for an invalid availability zone. Matching only the
+				// generic "Error initiating cluster create request" prefix would let this
+				// test pass on any create failure - a quota, auth or transient API error -
+				// without the blank zone having been rejected at all.
+				//
+				// Whitespace is \s+ throughout because Terraform hard-wraps diagnostics and
+				// the wrap position depends on the message length.
+				//
+				// Capella's exact rendering of a blank zone is not yet confirmed by a live
+				// run; if this fails, tighten it to whatever the message actually says
+				// rather than loosening it back to the generic prefix.
+				ExpectError: regexp.MustCompile(
+					`(?s)Error\s+initiating\s+cluster\s+create\s+request.*availability\s+zone.*4042`),
 			},
 		},
 	})
@@ -678,8 +693,12 @@ func testAccCheckClusterZonesMatchPlatform(reference string) resource.TestCheckF
 			return fmt.Errorf("%s not found in state", reference)
 		}
 
+		// Presence matters as well as the count: a null collection has no zones.# entry at
+		// all, while an empty one has "0". Terraform treats those as different values, so
+		// counting alone would accept either.
+		raw, present := attrs["zones.#"]
 		count := 0
-		if raw, ok := attrs["zones.#"]; ok {
+		if present {
 			parsed, err := strconv.Atoi(raw)
 			if err != nil {
 				return fmt.Errorf("%s: zones.# is %q, not a number", reference, raw)
@@ -703,10 +722,21 @@ func testAccCheckClusterZonesMatchPlatform(reference string) resource.TestCheckF
 		}
 
 		if provider != "aws" {
-			if count != 0 {
-				return fmt.Errorf("%s: a %s cluster reported %d zones, expected none", reference, provider, count)
+			if present {
+				return fmt.Errorf(
+					"%s: a %s cluster reported a zones collection of %d, expected the attribute "+
+						"to be null - Capella does not report zone IDs for %s, and null is not "+
+						"the same value as an empty collection",
+					reference, provider, count, provider)
 			}
 			return nil
+		}
+
+		if !present {
+			return fmt.Errorf(
+				"%s: an aws cluster reported no zones attribute at all, expected the zone IDs "+
+					"Capella assigned - the provider is not reading zones back from the API",
+				reference)
 		}
 
 		want := 3
