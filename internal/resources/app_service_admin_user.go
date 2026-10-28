@@ -368,6 +368,10 @@ func (a *AppServiceAdminUser) refreshAdminUser(
 	if user.AccessAllEndpoints != nil && *user.AccessAllEndpoints {
 		state.AccessAllEndpoints = types.BoolValue(true)
 	} else if user.Endpoints != nil && len(*user.Endpoints) > 0 {
+		// The API returns false also when the attribute is omitted, so store false only when prior has a value.
+		if !prior.AccessAllEndpoints.IsNull() {
+			state.AccessAllEndpoints = types.BoolValue(false)
+		}
 		state.Endpoints, err = a.reconcileEndpoints(ctx, organizationId, projectId, clusterId, appServiceId, prior.Endpoints, *user.Endpoints)
 		if err != nil {
 			return nil, err
