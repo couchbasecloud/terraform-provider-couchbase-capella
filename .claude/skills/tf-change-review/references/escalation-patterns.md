@@ -5,10 +5,11 @@ or its request building - and read it before Phase 4, because it tells you which
 cases the acceptance suite is most likely to be missing.
 
 Every class below is drawn from a CBSE escalation or a release-blocking bug on
-the Terraform provider, with the ticket numbers kept so you can read the
-original. They repeat. A reviewer who checks these seven things will catch more
-than one who reads the diff line by line, because each one is invisible in a
-diff and obvious in a customer's plan output.
+the Terraform provider. The ticket numbers are provenance only - each bullet
+states its defect in full, so do not look them up. They repeat. A reviewer who
+checks these seven things will catch more than one who reads the diff line by
+line, because each one is invisible in a diff and obvious in a customer's plan
+output.
 
 ## 1. A zero value sent for a field the practitioner never configured
 
@@ -206,7 +207,6 @@ frequently breaks last month's.
 * AV-139978 - the fine-grained RBAC branch conflicted with AV-139841, and
   rebasing onto main broke every `database_credential` plan with a Value
   Conversion Error.
-* CBSE-22207 was reverted from a release and had to be re-landed later.
 
 **How to find it.** Before approving a change, ask what else has been fixed in
 these files, and check the change does not undo it:

@@ -31,6 +31,14 @@ and ask. Things worth asking about, rather than guessing:
 Do not ask about things you can determine yourself from the repository. Read the
 code first; ask about intent and scope.
 
+## Ground rule: do not look up the cited tickets
+
+The AV- and CBSE- numbers in this skill are provenance for patterns already
+described in full wherever they are cited. Fetching them costs time and fills
+the context with a different change than the one under review, so do not look
+them up. Phase 5, where you file new tickets, and any ticket the user names
+themselves are the only reasons to reach for the Atlassian MCP.
+
 ## Phase 1 - Establish exactly what you are reviewing
 
 Getting this wrong invalidates everything downstream, so spend real effort here.
