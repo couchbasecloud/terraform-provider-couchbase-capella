@@ -336,7 +336,7 @@ func (c *OneCluster) Validate() (map[Attr]string, error) {
 
 	IDs, err := validateSchemaState(state)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+		return nil, fmt.Errorf("failed to validate resource state: %w", err)
 	}
 
 	return IDs, nil
