@@ -237,3 +237,91 @@ func generateDefaultOidcProviderImportId(resourceReference string) resource.Impo
 		), nil
 	}
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Regression probes
+// ─────────────────────────────────────────────────────────────────────────────
+
+// TestAccAppEndpointOidcProviderIdPopulated_AV_149878 covers AV-149878: the empty-provider_id
+// branch of AppEndpointOidcProvider.Create (internal/resources/app_endpoint_oidc.go:120).
+//
+// PR #813 (AV-145497) hardened the case where the create 201 body cannot be unmarshalled:
+// the apply now fails loudly and tells the operator the provider was orphaned. The sibling
+// case is untouched. A body that IS valid JSON but carries no `providerId` unmarshals
+// cleanly into "", because api.AppEndpointOIDCProviderResponse.ProviderID is a plain string
+// tagged `omitempty`. Nothing checks it before it is written to state, so:
+//
+//  1. the apply SUCCEEDS, emitting only a warning;
+//  2. state is written with provider_id = "";
+//  3. the next refresh hard-fails in Validate() with
+//     "could not validate resource state, please contact Couchbase Capella Support:
+//     terraform resource was empty: ... providerId";
+//  4. destroy reads the 404 on .../oidcProviders/ as "already gone", drops the resource
+//     from state and leaves the real provider orphaned in Capella - silently.
+//
+// Steps 1-4 were reproduced offline against a stub API. What is NOT established is whether
+// Capella ever returns such a body; that cannot be forced from a Terraform configuration,
+// which is why this is a probe rather than a regression guard. Run it against a live org:
+// a pass says the create response always carries providerId and the branch is unreachable
+// in practice, and the test then stands as a guard against the API regressing. A failure
+// says it is reachable, and the step that fails tells you which of 1-4 you are in.
+//
+// Two things here that TestAccAppEndpointOidcProvider above does not already cover:
+//
+//   - The explicit non-empty check names the defect. TestCheckResourceAttrSet also rejects
+//     "" (helper/resource/testing.go:1159), so the existing test would catch step 2 - but it
+//     reports "Attribute 'provider_id' expected to be set", which reads as a missing
+//     attribute rather than an orphaned provider, and would send the reader looking in the
+//     wrong place.
+//   - The RefreshState step reaches step 3. The existing test aborts at its Check before any
+//     refresh runs, so the Validate() hard-error is currently unreachable by any test.
+//
+// No ExpectEmptyPlan here on purpose: a perpetual diff from some unrelated attribute would
+// fail this test for a reason that has nothing to do with provider_id, and muddy the live
+// repro this exists to serve.
+//
+// Uses a client_id distinct from the test above so both can share globalOIDCEndpointName
+// without colliding on an issuer/client_id duplicate.
+func TestAccAppEndpointOidcProviderIdPopulated_AV_149878(t *testing.T) {
+	ensureOIDCEndpoint(t)
+
+	resourceName := randomStringWithPrefix("tf_acc_oidc_id_")
+	resourceReference := "couchbase-capella_app_endpoint_oidc_provider." + resourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOidcProviderConfig(
+					resourceName, globalOIDCEndpointName,
+					"https://accounts.google.com", "oidc-provider-id-probe-client-id",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith(resourceReference, "provider_id", requireNonEmptyProviderId),
+				),
+			},
+			{
+				// Proves the refresh does not hard-fail in Validate(). Reached only because
+				// the step above wrote a usable provider_id.
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith(resourceReference, "provider_id", requireNonEmptyProviderId),
+				),
+			},
+		},
+	})
+}
+
+// requireNonEmptyProviderId fails with the consequence rather than the symptom, so a live
+// failure points at the orphan instead of at a missing attribute.
+func requireNonEmptyProviderId(value string) error {
+	if value == "" {
+		return fmt.Errorf(
+			"provider_id is empty: the create response carried no providerId, so the OIDC " +
+				"provider exists in Capella but is untracked. The next refresh will fail in " +
+				"Validate() and destroy will silently drop it from state, orphaning it. " +
+				"See internal/resources/app_endpoint_oidc.go:120",
+		)
+	}
+	return nil
+}
