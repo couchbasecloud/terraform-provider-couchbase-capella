@@ -4,11 +4,20 @@ page_title: "couchbase-capella_replication Resource - terraform-provider-couchba
 subcategory: ""
 description: |-
   This resource allows you to manage an XDCR replication from a bucket in an operational cluster to a bucket in another cluster.
+  Some changes replace the replication. A change to source_bucket, target (including target.type) or direction cannot be applied in place, so Terraform deletes the replication and creates a new one.
+  Turning off a cluster removes its replications. When the source or target cluster is turned off, Capella deletes the replication on both clusters. The next terraform plan then shows the replication as a new resource to create.
+  Two-way replications and App Services. To create an App Service on either cluster of a twoWay replication, mobile_sync_mode must be active. Otherwise, Capella does not allow the App Service to be created.
 ---
 
 # couchbase-capella_replication (Resource)
 
 This resource allows you to manage an XDCR replication from a bucket in an operational cluster to a bucket in another cluster.
+
+**Some changes replace the replication.** A change to `source_bucket`, `target` (including `target.type`) or `direction` cannot be applied in place, so Terraform deletes the replication and creates a new one.
+
+**Turning off a cluster removes its replications.** When the source or target cluster is turned off, Capella deletes the replication on both clusters. The next `terraform plan` then shows the replication as a new resource to create.
+
+**Two-way replications and App Services.** To create an App Service on either cluster of a `twoWay` replication, `mobile_sync_mode` must be `active`. Otherwise, Capella does not allow the App Service to be created.
 
 ## Example Usage
 
