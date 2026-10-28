@@ -152,7 +152,7 @@ func ReplicationSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "audit", replicationBuilder, computedReplicationAuditAttribute())
 
 	return schema.Schema{
-		MarkdownDescription: "This resource allows you to manage an XDCR replication from a bucket in an operational cluster to a bucket in another cluster.",
+		MarkdownDescription: capellaschema.ReplicationResourceDescription,
 		Attributes:          attrs,
 	}
 }
