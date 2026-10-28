@@ -2,6 +2,8 @@ package acceptance_tests
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -65,13 +68,16 @@ func TestAccAppServiceAdminUserResource(t *testing.T) {
 			// ImportState. ImportStateVerify is what actually proves the round-trip;
 			// password is ignored because the API never returns it.
 			//
-			// Note this step only round-trips exactly while the granted bucket holds a
-			// single App Endpoint. Capella grants admin access per bucket, so a GET
-			// returns every App Endpoint on the bucket; on import there is no prior set
-			// to filter that expansion against, so state takes the expanded list. If the
-			// shared fixture ever gains a second App Endpoint on the same bucket, this
-			// step starts failing on endpoints - see
-			// TestAccAppServiceAdminUserImportExpandsBucketEndpoints.
+			// This step only round-trips exactly while the granted bucket holds a single
+			// App Endpoint. Capella grants admin access per bucket, so a GET returns
+			// every App Endpoint on the bucket; on import there is no prior set to
+			// filter that expansion against, so state takes the expanded list - which is
+			// what TestAccAppServiceAdminUserBucketLevelEndpointExpansion asserts.
+			//
+			// That test adds a second endpoint to this same bucket, so it is deliberately
+			// serial and finishes its destroy before this parallel test resumes. If the
+			// shared fixture ever gains a permanent second App Endpoint on the bucket,
+			// this step starts failing on endpoints.
 			{
 				ResourceName:            resourceReference,
 				ImportStateIdFunc:       generateAppServiceAdminUserImportIdForResource(resourceReference),
@@ -716,6 +722,17 @@ func TestAccAppServiceAdminUserInvalidEndpoint(t *testing.T) {
 					resourceName, userName, testAdminUserPassword,
 					`endpoints = ["tf_acc_no_such_app_endpoint"]`,
 				),
+				// This matches any create failure, not specifically the rejected
+				// endpoint, so in principle an environment problem - a token without
+				// create permission, say - would also satisfy it. Narrowing it needs the
+				// API's actual message for this case, which has not been captured yet;
+				// pinning a status code would be guesswork, because the App Endpoint
+				// APIs return 403 rather than 404 for things that do not exist.
+				//
+				// It is still worth having: the assertion that matters is that a
+				// nonexistent endpoint does not silently produce a working admin user,
+				// and a token that could not create would fail every other test here
+				// rather than passing quietly.
 				ExpectError: regexp.MustCompile(`(?s)Error Creating App Service Admin User`),
 			},
 		},
@@ -755,6 +772,13 @@ func TestAccAppServiceAdminUserDeletedExternally(t *testing.T) {
 				PreConfig: func() {
 					if err := deleteAppServiceAdminUserOutOfBand(t, userId); err != nil {
 						t.Fatalf("failed to delete admin user %s out of band: %v", userId, err)
+					}
+					// The delete is accepted with 202, so it may not have taken effect
+					// yet. Re-applying before it has lets Read still find the user, which
+					// would skip the remove-from-state branch this test exists to cover
+					// and fail the id assertion below intermittently.
+					if err := waitForAppServiceAdminUserGone(t, userId); err != nil {
+						t.Fatalf("admin user %s was not deleted: %v", userId, err)
 					}
 				},
 				Config: cfg,
@@ -808,9 +832,16 @@ func TestAccAppServiceAdminUserBucketLevelEndpointExpansion(t *testing.T) {
 
 	cfg := testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectionName, secondEndpoint)
 
-	// App Endpoint CRUD is capped at appEndpointCRUDConcurrency to avoid the transient
-	// 500s seen on concurrent destroy, so take a slot like the app_endpoint tests do.
-	t.Parallel()
+	// Deliberately NOT parallel. This test adds a second App Endpoint to the shared
+	// bucket, and TestAccAppServiceAdminUserResource's import step asserts a single
+	// endpoint round-trips. A test that does not call t.Parallel() runs to completion -
+	// including its destroy - before any paused parallel test resumes, so the extra
+	// endpoint never exists while the lifecycle test is observing the bucket. Adding
+	// t.Parallel() here reintroduces that race; isolate this onto its own bucket first
+	// if it ever needs to run concurrently.
+	//
+	// The CRUD slot is belt-and-braces: App Endpoint CRUD is capped at
+	// appEndpointCRUDConcurrency to avoid the transient 500s seen on concurrent destroy.
 	defer acquireAppEndpointCRUDSlot()()
 
 	resource.Test(t, resource.TestCase{
@@ -922,9 +953,28 @@ func testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectio
 		secondEndpoint, userName, testAdminUserPassword, globalAppEndpointName)
 }
 
-// TestAccDatasourceAppServiceAdminUserNotFound checks that reading a non-existent admin
-// user reports an error rather than returning an empty object.
+// TestAccDatasourceAppServiceAdminUserNotFound checks that reading an admin user that
+// does not exist reports an error rather than returning an empty object.
+//
+// The id is one that genuinely existed and was then deleted, rather than an invented
+// string. A made-up id is rejected on its *format*, so the data source would error for
+// the wrong reason and the test would pass even if genuine not-found handling regressed.
+// Creating and deleting a real user is the only way to get an id that is unambiguously
+// well-formed and unambiguously absent.
 func TestAccDatasourceAppServiceAdminUserNotFound(t *testing.T) {
+	userName := randomStringWithPrefix("tf_acc_user_gone_")
+
+	deletedId, err := createAppServiceAdminUserOutOfBand(t, userName)
+	if err != nil {
+		t.Fatalf("failed to create the admin user to delete: %v", err)
+	}
+	if err := deleteAppServiceAdminUserOutOfBand(t, deletedId); err != nil {
+		t.Fatalf("failed to delete admin user %s: %v", deletedId, err)
+	}
+	if err := waitForAppServiceAdminUserGone(t, deletedId); err != nil {
+		t.Fatalf("admin user %s was not deleted: %v", deletedId, err)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
@@ -937,9 +987,13 @@ func TestAccDatasourceAppServiceAdminUserNotFound(t *testing.T) {
 	  project_id      = "%[3]s"
 	  cluster_id      = "%[4]s"
 	  app_service_id  = "%[5]s"
-	  id              = "tf_acc_no_such_admin_user_id"
+	  id              = "%[6]s"
 	}
-	`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId),
+	`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, deletedId),
+				// The status code is left broad on purpose: the App Endpoint APIs return
+				// 403 rather than 404 for things that do not exist, so pinning one code
+				// would be guesswork. The id above is what makes this assertion mean
+				// something - it can only be a not-found.
 				ExpectError: regexp.MustCompile(`(?s)Error Reading App Service Admin User.*"httpStatusCode":(400|403|404)`),
 			},
 		},
@@ -1009,4 +1063,80 @@ func skipKnownBug(t *testing.T, reason string) {
 	}
 	t.Logf("ACC_RUN_KNOWN_BUGS is set, so this test will run: %s", reason)
 	t.Log("A FAILURE here is the expected result. A PASS means the bug is fixed and the guard should be removed.")
+}
+
+// createAppServiceAdminUserOutOfBand creates an admin user through the API and returns
+// its id, bypassing Terraform. Used to obtain a real id for a user that is then deleted.
+func createAppServiceAdminUserOutOfBand(t *testing.T, userName string) (string, error) {
+	t.Helper()
+	data := newTestClient(t)
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/adminUsers",
+		data.HostURL, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+
+	body := map[string]any{
+		"name":     userName,
+		"password": testAdminUserPassword,
+		"access":   map[string]any{"accessAllEndpoints": true},
+	}
+	response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, body, data.Token, nil)
+	if err != nil {
+		return "", fmt.Errorf("creating admin user %q: %w", userName, err)
+	}
+
+	var created apigen.CreateAppServiceAdminUserResponse
+	if err := json.Unmarshal(response.Body, &created); err != nil {
+		return "", fmt.Errorf("unmarshalling create response for %q: %w", userName, err)
+	}
+	if created.Id == nil || *created.Id == "" {
+		return "", fmt.Errorf("create response for %q carried no id", userName)
+	}
+	return *created.Id, nil
+}
+
+// waitForAppServiceAdminUserGone polls until the admin user is no longer readable.
+//
+// Deletion is accepted with 202, so it is not necessarily complete when the call
+// returns. Anything that depends on the user being gone - a Terraform refresh expected
+// to drop it from state, a data source expected to report not-found - has to wait, or it
+// races the backend and fails intermittently.
+//
+// The App Endpoint APIs return 403 rather than 404 for resources that do not exist, so
+// both are treated as gone.
+func waitForAppServiceAdminUserGone(t *testing.T, userId string) error {
+	t.Helper()
+	data := newTestClient(t)
+
+	const (
+		maxWait       = 2 * time.Minute
+		retryInterval = 5 * time.Second
+	)
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/adminUsers/%s",
+		data.HostURL, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, userId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	deadline := time.Now().Add(maxWait)
+	for {
+		_, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, data.Token, nil)
+		if err != nil {
+			if notFound, _ := api.CheckResourceNotFoundError(err); notFound {
+				return nil
+			}
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusForbidden {
+				return nil
+			}
+			return fmt.Errorf("unexpected error polling admin user %s: %w", userId, err)
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("admin user %s still readable after %s", userId, maxWait)
+		}
+		time.Sleep(retryInterval)
+	}
 }
