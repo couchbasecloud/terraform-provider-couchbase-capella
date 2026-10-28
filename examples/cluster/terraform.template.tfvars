@@ -14,6 +14,9 @@ cluster = {
   node_count         = 3
   couchbase_services = ["data", "index", "query"]
   availability_zone  = "multi"
+  # Optional for AWS: exactly 3 availability zone IDs in the region for a multi AZ cluster.
+  # Omit to let Capella choose the zones. Changing zones recreates the cluster.
+  # zones = ["use1-az1", "use1-az2", "use1-az4"]
 }
 
 compute = {

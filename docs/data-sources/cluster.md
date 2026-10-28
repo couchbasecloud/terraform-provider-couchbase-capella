@@ -51,7 +51,7 @@ output "existing_cluster" {
 - `name` (String)
 - `service_groups` (Attributes List) (see [below for nested schema](#nestedatt--service_groups))
 - `support` (Attributes) (see [below for nested schema](#nestedatt--support))
-- `zones` (List of String)
+- `zones` (List of String) The AWS availability zone IDs (for example `use1-az1`) the cluster is deployed in. Null when the zone IDs are not known, for example for GCP and Azure clusters.
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`

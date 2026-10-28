@@ -23,9 +23,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &Cluster{}
-	_ resource.ResourceWithConfigure   = &Cluster{}
-	_ resource.ResourceWithImportState = &Cluster{}
+	_ resource.Resource                   = &Cluster{}
+	_ resource.ResourceWithConfigure      = &Cluster{}
+	_ resource.ResourceWithImportState    = &Cluster{}
+	_ resource.ResourceWithValidateConfig = &Cluster{}
 )
 
 // Cluster is the Cluster resource implementation.
@@ -101,14 +102,11 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
 	}
 
-	if plan.Zones != nil && (plan.CloudProvider.Type.ValueString() != string(clusterapi.Aws) || plan.Availability.Type.ValueString() != "single") {
-		resp.Diagnostics.AddError(
-			"Error creating cluster",
-			"Could not create cluster, unexpected error: Invalid zones provided. Zones can only be provided for single AZ AWS clusters.",
-		)
-		return
-	} else {
-		clusterRequest.Zones = providerschema.BaseStringsToStrings(plan.Zones)
+	if !plan.Zones.IsNull() && !plan.Zones.IsUnknown() {
+		resp.Diagnostics.Append(plan.Zones.ElementsAs(ctx, &clusterRequest.Zones, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	var couchbaseServer providerschema.CouchbaseServer
@@ -213,9 +211,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	if plan.Zones != nil {
-		refreshedState.Zones = plan.Zones
-	}
+	refreshedState.Zones = zonesForState(refreshedState.Zones, plan.Zones)
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -291,9 +287,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
-	if state.Zones != nil {
-		refreshedState.Zones = state.Zones
-	}
+	refreshedState.Zones = zonesForState(refreshedState.Zones, state.Zones)
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
 		for i, serviceGroup := range refreshedState.ServiceGroups {
@@ -447,9 +441,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		currentState.IfMatch = plan.IfMatch
 	}
 
-	if plan.Zones != nil {
-		currentState.Zones = plan.Zones
-	}
+	currentState.Zones = zonesForState(currentState.Zones, plan.Zones)
 
 	for i, serviceGroup := range currentState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -848,7 +840,87 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 		}
 	}
 
+	if err := validateZones(plan.CloudProvider.Type, plan.Availability.Type, plan.Zones); err != nil {
+		return err
+	}
+
 	return c.validateClusterAttributesTrimmed(plan)
+}
+
+// ValidateConfig rejects invalid zones at plan time. The API silently ignores zones for
+// GCP and Azure clusters, so that case must be caught by the provider.
+func (c *Cluster) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var (
+		cloudProviderType types.String
+		availabilityType  types.String
+		zones             types.Set
+	)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("cloud_provider").AtName("type"), &cloudProviderType)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("availability").AtName("type"), &availabilityType)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("zones"), &zones)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := validateZones(cloudProviderType, availabilityType, zones); err != nil {
+		resp.Diagnostics.AddAttributeError(path.Root("zones"), "Invalid zones", err.Error())
+	}
+}
+
+// zonesForState returns the zones to store: the zones the API returned, or the planned or
+// prior zones when the API returned none (an API version that predates returning zones, or
+// zones not yet known), otherwise configured zones would plan a replace. An empty set is
+// always kept: zones = [] lets Capella choose, as before zones were read back, and storing
+// the chosen zones would plan a replace against the configured [].
+func zonesForState(apiZones, knownZones types.Set) types.Set {
+	if knownZones.IsUnknown() {
+		return apiZones
+	}
+	if apiZones.IsNull() || isEmptyZones(knownZones) {
+		return knownZones
+	}
+	return apiZones
+}
+
+func isEmptyZones(zones types.Set) bool {
+	return !zones.IsNull() && !zones.IsUnknown() && len(zones.Elements()) == 0
+}
+
+// validateZones skips any check whose inputs are not yet known, so it is safe to call at
+// plan time. Region and compute availability per zone are left to the API. An empty set is
+// accepted and treated as omitted, which earlier releases allowed for single AZ clusters.
+func validateZones(cloudProviderType, availabilityType types.String, zones types.Set) error {
+	if zones.IsNull() || zones.IsUnknown() || isEmptyZones(zones) {
+		return nil
+	}
+
+	if !cloudProviderType.IsUnknown() && !cloudProviderType.IsNull() && cloudProviderType.ValueString() != string(clusterapi.Aws) {
+		return fmt.Errorf("%w: got zones for a %s cluster", errors.ErrInvalidZones, cloudProviderType.ValueString())
+	}
+
+	elements := zones.Elements()
+	for _, element := range elements {
+		if element.IsUnknown() {
+			return nil
+		}
+	}
+
+	count := len(elements)
+	if availabilityType.IsUnknown() || availabilityType.IsNull() {
+		return nil
+	}
+
+	switch availabilityType.ValueString() {
+	case string(clusterapi.Single):
+		if count > 1 {
+			return fmt.Errorf("%w: got %d zones for a single AZ cluster", errors.ErrInvalidZones, count)
+		}
+	case string(clusterapi.Multi):
+		if count != 3 {
+			return fmt.Errorf("%w: got %d zones for a multi AZ cluster", errors.ErrInvalidZones, count)
+		}
+	}
+	return nil
 }
 
 func (c *Cluster) validateClusterAttributesTrimmed(plan providerschema.Cluster) error {

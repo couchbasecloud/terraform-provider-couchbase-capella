@@ -42,7 +42,7 @@ func (d *Cluster) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 
 // Read refreshes the Terraform state with the latest data of a single cluster.
 func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state providerschema.Cluster
+	var state providerschema.OneCluster
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -102,7 +102,7 @@ func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	newClusterState, err := providerschema.NewCluster(ctx, &clusterResponse, organizationId, projectId, auditObj)
+	newClusterState, err := providerschema.NewOneCluster(ctx, &clusterResponse, organizationId, projectId, auditObj)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Cluster",
