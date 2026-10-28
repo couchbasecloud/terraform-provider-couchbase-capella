@@ -276,14 +276,21 @@ func generateDefaultOidcProviderImportId(resourceReference string) resource.Impo
 //   - The RefreshState step reaches step 3. The existing test aborts at its Check before any
 //     refresh runs, so the Validate() hard-error is currently unreachable by any test.
 //
-// No ExpectEmptyPlan here on purpose: a perpetual diff from some unrelated attribute would
-// fail this test for a reason that has nothing to do with provider_id, and muddy the live
-// repro this exists to serve.
+// ExpectNonEmptyPlan is set on the refresh step, and it is load-bearing. A RefreshState
+// step always runs a follow-up plan and fails a non-empty one unless that flag is set
+// (testing_new_refresh_state.go:91 in terraform-plugin-testing v1.13.0), so without it a
+// perpetual diff from some unrelated attribute would fail this test for a reason that has
+// nothing to do with provider_id and muddy the live repro it exists to serve. The flag
+// tolerates a non-empty plan rather than requiring one, so the refresh assertion below
+// still runs either way.
 //
-// Uses a client_id distinct from the test above so both can share globalOIDCEndpointName
-// without colliding on an issuer/client_id duplicate.
+// Uses its own endpoint and bucket rather than sharing globalOIDCEndpointName with the test
+// above. ensureFixtureEndpoint registers the fixture teardown on every caller's t.Cleanup,
+// not only the one whose sync.Once created it, so two parallel tests naming the same
+// fixture each register a delete and whichever finishes first tears it down under the
+// other. A distinct client_id does not help with that.
 func TestAccAppEndpointOidcProviderIdPopulated_AV_149878(t *testing.T) {
-	ensureOIDCEndpoint(t)
+	ensureOIDCIdEndpoint(t)
 
 	resourceName := randomStringWithPrefix("tf_acc_oidc_id_")
 	resourceReference := "couchbase-capella_app_endpoint_oidc_provider." + resourceName
@@ -293,7 +300,7 @@ func TestAccAppEndpointOidcProviderIdPopulated_AV_149878(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOidcProviderConfig(
-					resourceName, globalOIDCEndpointName,
+					resourceName, globalOIDCIdEndpointName,
 					"https://accounts.google.com", "oidc-provider-id-probe-client-id",
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -303,7 +310,8 @@ func TestAccAppEndpointOidcProviderIdPopulated_AV_149878(t *testing.T) {
 			{
 				// Proves the refresh does not hard-fail in Validate(). Reached only because
 				// the step above wrote a usable provider_id.
-				RefreshState: true,
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrWith(resourceReference, "provider_id", requireNonEmptyProviderId),
 				),

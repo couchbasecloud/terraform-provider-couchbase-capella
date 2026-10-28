@@ -408,6 +408,16 @@ func ensureDefaultOIDCEndpoint(t *testing.T) {
 	ensureFixtureEndpoint(t, globalDefaultOIDCEndpointName, globalDefaultOIDCBucketName, "default OIDC")
 }
 
+// ensureOIDCIdEndpoint gives TestAccAppEndpointOidcProviderIdPopulated_AV_149878 its own
+// endpoint and bucket. ensureFixtureEndpoint registers the fixture teardown on *every*
+// caller's t.Cleanup, not just the one whose sync.Once did the creating, so two parallel
+// tests sharing a fixture name each register a delete of it and whichever finishes first
+// tears it down under the other.
+func ensureOIDCIdEndpoint(t *testing.T) {
+	t.Helper()
+	ensureFixtureEndpoint(t, globalOIDCIdEndpointName, globalOIDCIdBucketName, "OIDC provider ID")
+}
+
 func ensureActivationEndpoint(t *testing.T) {
 	t.Helper()
 	ensureFixtureEndpoint(t, appEndpointActivationEndpointName, appEndpointActivationBucketName, "activation status")
