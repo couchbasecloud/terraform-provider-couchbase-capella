@@ -7,7 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// TestClusterDatasourceZonesIsSet pins the declared type of the zones attributes.
+// TestClusterDatasourceZonesIsList pins the declared type of the zones attributes on both
+// cluster data sources.
 //
 // This needs a schema test rather than an acceptance assertion: terraform-plugin-testing
 // flattens lists and sets alike by numeric index, so TestCheckResourceAttr on "zones.0" and
@@ -15,33 +16,40 @@ import (
 // only observable to a practitioner through whether `zones[0]` parses, which is a
 // configuration-time property of the schema.
 //
-// AV-149541: zones on the singular cluster data source changed from a list to a set with
-// AV-147905, which is correct - Capella returns these in an order the provider does not
-// control - but it breaks configurations that index the attribute. Changing it back is a
-// breaking change in the other direction, so it should only happen deliberately.
-func TestClusterDatasourceZonesIsSet(t *testing.T) {
-	t.Run("couchbase-capella_cluster", func(t *testing.T) {
-		attribute, ok := OneClusterSchema().Attributes["zones"]
-		if !ok {
-			t.Fatal("zones attribute is missing from the cluster data source schema")
-		}
+// AV-149541: AV-147905 briefly made these sets, which broke configurations indexing them -
+// and neither a length guard nor try() suppresses that, because indexing a set is rejected
+// when the configuration is type-checked rather than when it is evaluated. They are lists
+// again, and NewZonesList sorts, so the ordering churn a list would otherwise risk cannot
+// happen. See TestNewZonesListIsSorted in internal/schema for the other half of that pair:
+// the type here is only safe because the order there is deterministic.
+func TestClusterDatasourceZonesIsList(t *testing.T) {
+	assertStringList := func(t *testing.T, attribute schema.Attribute, where string) {
+		t.Helper()
 
-		zones, ok := attribute.(schema.SetAttribute)
+		zones, ok := attribute.(schema.ListAttribute)
 		if !ok {
-			pointer, isPointer := attribute.(*schema.SetAttribute)
+			pointer, isPointer := attribute.(*schema.ListAttribute)
 			if !isPointer {
-				t.Fatalf("zones must be a SetAttribute so a reordering API response does not "+
-					"churn the plan, got %T", attribute)
+				t.Fatalf("%s must be a ListAttribute so configurations can keep indexing it "+
+					"(AV-149541), got %T", where, attribute)
 			}
 			zones = *pointer
 		}
 
 		if zones.ElementType != types.StringType {
-			t.Fatalf("zones element type is %v, want string", zones.ElementType)
+			t.Fatalf("%s element type is %v, want string", where, zones.ElementType)
 		}
 		if !zones.Computed {
-			t.Fatal("zones must be computed on a data source")
+			t.Fatalf("%s must be computed on a data source", where)
 		}
+	}
+
+	t.Run("couchbase-capella_cluster", func(t *testing.T) {
+		attribute, ok := OneClusterSchema().Attributes["zones"]
+		if !ok {
+			t.Fatal("zones attribute is missing from the cluster data source schema")
+		}
+		assertStringList(t, attribute, "zones")
 	})
 
 	t.Run("couchbase-capella_clusters", func(t *testing.T) {
@@ -63,11 +71,6 @@ func TestClusterDatasourceZonesIsSet(t *testing.T) {
 		if !ok {
 			t.Fatal("zones attribute is missing from the clusters data source schema")
 		}
-
-		if _, isSet := attribute.(schema.SetAttribute); !isSet {
-			if _, isPointer := attribute.(*schema.SetAttribute); !isPointer {
-				t.Fatalf("data[].zones must be a SetAttribute, got %T", attribute)
-			}
-		}
+		assertStringList(t, attribute, "data[].zones")
 	})
 }

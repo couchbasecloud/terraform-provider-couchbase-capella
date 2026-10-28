@@ -99,6 +99,51 @@ func TestAccClusterZonesMultiAZNotConfigured(t *testing.T) {
 	})
 }
 
+// TestAccClusterZonesExplicitNull covers `zones = null` written out in the configuration,
+// as distinct from leaving the attribute out altogether.
+//
+// This is the shape the repository's own example module produces:
+// examples/cluster/create_cluster.tf passes `zones = var.cluster.zones` from an
+// `optional(list(string))` variable, so an unset variable reaches the provider as an
+// explicit null rather than as an absent attribute.
+//
+// HCL treats an argument set to null as equivalent to omitting it, so the two should be
+// interchangeable - and the second step proves exactly that by switching from one to the
+// other and requiring a no-op. If they ever diverge, a practitioner toggling an optional
+// variable would see a spurious plan.
+//
+// Provisions a cluster.
+func TestAccClusterZonesExplicitNull(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceReference := "couchbase-capella_cluster." + resourceName
+	// One CIDR across both steps: cloud_provider is RequiresReplace.
+	cidr := generateRandomCIDR()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				// zones = null - Capella chooses, and the chosen zones are read back.
+				Config: testAccClusterZonesConfig(resourceName, cidr, "aws", "us-east-1", "multi", "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "zones.#", "3"),
+				),
+			},
+			{
+				// The attribute dropped entirely: the same value, so nothing to do.
+				Config: testAccClusterZonesConfig(resourceName, cidr, "aws", "us-east-1", "multi", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(resourceReference, "zones.#", "3"),
+			},
+		},
+	})
+}
+
 // TestAccClusterZonesSingleAZImportRoundTrip closes the gap left by
 // TestAccClusterResourceWithConfigurationTypeFieldAdded, whose import step sets
 // ImportStateVerify: false and so cannot prove zones survive an import.
@@ -465,18 +510,48 @@ func TestAccClusterZonesSingleAZTooMany(t *testing.T) {
 	})
 }
 
-// TestAccClusterZonesEmptyList covers the empty-collection blind spot: `zones = []` is a
-// shape practitioners reach by commenting out the contents of a list, and it is distinct
-// from omitting the attribute.
+// TestAccClusterZonesEmptyList covers `zones = []`, which is a third distinct shape
+// alongside an omitted attribute and an explicit null.
+//
+// It is accepted and means "let Capella choose", the same as omitting - but unlike omitting,
+// the empty set is kept in state rather than being replaced by the zones Capella picked.
+// That is deliberate (see zonesForState in internal/resources/cluster.go): the attribute is
+// configured, so storing the real zones would plan a replacement against the configured [].
+// The consequence is that state reports no zones for a cluster that really is in three, and
+// the data source will disagree with the resource for this config shape.
+//
+// An earlier revision of AV-147905 rejected [] outright; that was reverted to keep accepting
+// what releases before it accepted for single AZ clusters.
+//
+// Provisions a cluster.
 func TestAccClusterZonesEmptyList(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceReference := "couchbase-capella_cluster." + resourceName
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterZonesConfig(resourceName, generateRandomCIDR(), "aws", "us-east-1", "multi", `[]`),
-				ExpectError: regexp.MustCompile(`(?s)Invalid zones.*zones must not be empty`),
+				Config: testAccClusterZonesConfig(resourceName, cidr, "aws", "us-east-1", "multi", `[]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(t, resourceReference),
+					// Empty, not absent: the two are different values to Terraform, and the
+					// empty set is what the configuration asked for.
+					resource.TestCheckResourceAttr(resourceReference, "zones.#", "0"),
+				),
+			},
+			{
+				// The step's own post-apply plan already asserts emptiness is stable; this
+				// one proves the empty set does not drift into the zones Capella assigned,
+				// which would plan a replacement.
+				Config: testAccClusterZonesConfig(resourceName, cidr, "aws", "us-east-1", "multi", `[]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(resourceReference, "zones.#", "0"),
 			},
 		},
 	})
@@ -493,6 +568,76 @@ func TestAccClusterZonesAzureRejected(t *testing.T) {
 			{
 				Config:      testAccClusterZonesConfig(resourceName, generateRandomCIDR(), "azure", "eastus", "multi", `["1", "2", "3"]`),
 				ExpectError: regexp.MustCompile(`(?s)Invalid zones.*got zones for a azure cluster`),
+			},
+		},
+	})
+}
+
+// TestAccClusterZonesEmptyStringsCollapse covers the empty string, which is distinct from
+// both an empty list and an omitted attribute.
+//
+// Three empty strings are three identical elements, so the Set collapses them to one before
+// validateZones counts - the config is caught, but as "1 zone" rather than as three blank
+// ones. Pinned so a future change to that message is a deliberate one.
+func TestAccClusterZonesEmptyStringsCollapse(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterZonesConfig(resourceName, generateRandomCIDR(), "aws", "us-east-1", "multi", `["", "", ""]`),
+				ExpectError: regexp.MustCompile(`(?s)Invalid zones.*got 1 zones for a multi AZ cluster`),
+			},
+		},
+	})
+}
+
+// TestAccClusterZonesEmptyStringRejected covers a single empty string on a single AZ cluster,
+// where the count rule cannot catch it: one element is a legal count, so the blank string
+// goes to Capella and is rejected there.
+//
+// This is AV-149540 again - validateZones checks the cloud provider and the count but never
+// the identifier itself - and it is the cheapest demonstration of it, since an empty string
+// is something the provider could obviously reject on its own.
+//
+// Provisions nothing.
+func TestAccClusterZonesEmptyStringRejected(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterZonesConfig(resourceName, generateRandomCIDR(), "aws", "us-east-1", "single", `[""]`),
+				// Capella's wording for a blank zone is not assumed here; any rejection of
+				// the create is the assertion, since the point is that the provider let it
+				// through. Whitespace is \s+ because Terraform hard-wraps diagnostics.
+				ExpectError: regexp.MustCompile(`(?s)Error\s+initiating\s+cluster\s+create\s+request`),
+			},
+		},
+	})
+}
+
+// TestAccClusterZonesNonexistentIdRejected covers a well-formed zone ID that does not exist.
+//
+// Unlike a zone name, no format check could catch this, and nor could it catch a valid ID
+// from the wrong region (usw2-az1 in us-east-1, which also plans cleanly). Both are
+// necessarily the API's job, which bounds how much AV-149540 can reasonably fix: a format
+// rule would catch names and blanks at plan time, but existence and region always need
+// Capella.
+//
+// Provisions nothing.
+func TestAccClusterZonesNonexistentIdRejected(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterZonesConfig(resourceName, generateRandomCIDR(), "aws", "us-east-1", "single", `["use1-az99"]`),
+				ExpectError: regexp.MustCompile(
+					`(?s)Error\s+initiating\s+cluster\s+create\s+request.*availability\s+zone\s+'use1-az99'\s+is\s+invalid`),
 			},
 		},
 	})
