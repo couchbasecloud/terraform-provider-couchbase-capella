@@ -42,6 +42,17 @@ const (
 // Couchbase Server accepts.
 const ReplicationNetworkUsageLimitMax = 1000000
 
+// ReplicationResourceDescription describes the replication resource.
+const ReplicationResourceDescription = "This resource allows you to manage an XDCR replication from a bucket in an " +
+	"operational cluster to a bucket in another cluster.\n\n" +
+	"**Some changes replace the replication.** A change to `source_bucket`, `target` (including `target.type`) " +
+	"or `direction` cannot be applied in place, so Terraform deletes the replication and creates a new one.\n\n" +
+	"**Turning off a cluster removes its replications.** When the source or target cluster is turned off, Capella " +
+	"deletes the replication on both clusters. The next `terraform plan` then shows the replication as a new " +
+	"resource to create.\n\n" +
+	"**Two-way replications and App Services.** To create an App Service on either cluster of a `twoWay` " +
+	"replication, `mobile_sync_mode` must be `active`. Otherwise, Capella does not allow the App Service to be created."
+
 // Fallback descriptions for attributes that the published OpenAPI spec does not describe, or
 // describes for a different object.
 const (
