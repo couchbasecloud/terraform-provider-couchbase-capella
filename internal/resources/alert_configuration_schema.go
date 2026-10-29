@@ -2,11 +2,14 @@ package resources
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	alertsapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/alerts"
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -70,7 +73,9 @@ func addAlertConfigurationSettingsAttrs(attrs map[string]schema.Attribute, build
 	configs.MarkdownDescription = alertConfigsDescription
 	capellaschema.AddAttr(attrs, "configs", builder, configs)
 
-	capellaschema.AddAttr(attrs, "recipients", builder, stringSetAttribute(optional))
+	recipients := stringSetAttribute(optional)
+	recipients.Validators = append(recipients.Validators, recipientsUniqueIgnoringCase{})
+	capellaschema.AddAttr(attrs, "recipients", builder, recipients)
 
 	mutedAlerts := &schema.MapNestedAttribute{
 		Optional:     true,
@@ -123,4 +128,38 @@ func (v alertConfigurationSettingNotEmpty) ValidateObject(ctx context.Context, r
 		}
 	}
 	resp.Diagnostics.AddAttributeError(req.Path, "Empty Alert Configuration", "The alert sets no field, so there is nothing to configure: "+v.Description(ctx)+".")
+}
+
+// recipientsUniqueIgnoringCase rejects addresses that differ only by case. Capella lowercases and
+// deduplicates recipients, so it would store one address where the plan has two, and the apply
+// would fail with an inconsistent result.
+type recipientsUniqueIgnoringCase struct{}
+
+func (v recipientsUniqueIgnoringCase) Description(_ context.Context) string {
+	return "each address must be unique, ignoring case"
+}
+
+func (v recipientsUniqueIgnoringCase) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v recipientsUniqueIgnoringCase) ValidateSet(_ context.Context, req validator.SetRequest, resp *validator.SetResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	seen := make(map[string]string)
+	for _, element := range req.ConfigValue.Elements() {
+		address, ok := element.(types.String)
+		if !ok || address.IsNull() || address.IsUnknown() {
+			continue
+		}
+		key := strings.ToLower(address.ValueString())
+		if first, ok := seen[key]; ok {
+			resp.Diagnostics.AddAttributeError(req.Path, "Duplicate Recipient",
+				fmt.Sprintf("%q and %q are the same address. Capella stores addresses in lowercase, so list each address once.", first, address.ValueString()))
+			return
+		}
+		seen[key] = address.ValueString()
+	}
 }

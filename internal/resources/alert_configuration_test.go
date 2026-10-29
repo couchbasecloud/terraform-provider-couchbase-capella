@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,6 +57,38 @@ func TestAlertConfigurationUpdate(t *testing.T) {
 				assert.Nil(t, sent.CriticalThreshold, "a field the plan does not set is left out")
 				assert.Nil(t, got.Recipients)
 				assert.Nil(t, got.Alerts)
+			},
+		},
+		{
+			name: "an unknown field is left out rather than sent as 0",
+			plan: providerschema.AlertConfigurationSettings{
+				Configs: map[string]providerschema.AlertConfigurationSetting{
+					"cpu_usage_high": {FrequencyHours: types.Int64Value(3), WarningThreshold: types.Int64Unknown()},
+				},
+				Recipients: types.SetNull(types.StringType),
+			},
+			current: alertsapi.GetAlertConfigurationResponse{
+				Configs: map[string]alertsapi.AlertConfigurationEntry{"cpu_usage_high": {FrequencyHours: hours(1), WarningThreshold: num(80)}},
+			},
+			check: func(t *testing.T, got alertsapi.UpdateAlertConfigurationRequest) {
+				body, err := json.Marshal(got)
+				require.NoError(t, err)
+				assert.JSONEq(t, `{"configs":{"cpu_usage_high":{"frequencyHours":3}}}`, string(body))
+			},
+		},
+		{
+			name: "an alert whose only change is unknown is not sent",
+			plan: providerschema.AlertConfigurationSettings{
+				Configs: map[string]providerschema.AlertConfigurationSetting{
+					"cpu_usage_high": {WarningThreshold: types.Int64Unknown()},
+				},
+				Recipients: types.SetNull(types.StringType),
+			},
+			current: alertsapi.GetAlertConfigurationResponse{
+				Configs: map[string]alertsapi.AlertConfigurationEntry{"cpu_usage_high": {WarningThreshold: num(80)}},
+			},
+			check: func(t *testing.T, got alertsapi.UpdateAlertConfigurationRequest) {
+				assert.True(t, isEmptyAlertConfigurationUpdate(got))
 			},
 		},
 		{
@@ -201,4 +236,52 @@ func TestAlertConfigurationWarnings(t *testing.T) {
 		assert.Contains(t, got, "  - CBHardOutOfMemoryErrors: frequency_hours = 1\n  - cpu_usage_high: frequency_hours = 3, warning_threshold = 80")
 		assert.Empty(t, alertConfigurationLeftBehindWarning("cluster", providerschema.AlertConfigurationSettings{}))
 	})
+}
+
+func TestRecipientsUniqueIgnoringCase(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name      string
+		addresses []string
+		wantError bool
+	}{
+		{name: "addresses that differ only by case are rejected", addresses: []string{"OnCall@example.com", "oncall@example.com"}, wantError: true},
+		{name: "distinct addresses are accepted", addresses: []string{"OnCall@example.com", "team@example.com"}},
+		{name: "an empty list is accepted", addresses: []string{}},
+	}
+
+	t.Run("the recipients attribute uses the validator", func(t *testing.T) {
+		recipients, ok := ClusterAlertConfigurationSchema().Attributes["recipients"].(*schema.SetAttribute)
+		require.True(t, ok)
+		assert.Contains(t, recipients.Validators, validator.Set(recipientsUniqueIgnoringCase{}))
+	})
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			set, diags := types.SetValueFrom(ctx, types.StringType, tt.addresses)
+			require.False(t, diags.HasError())
+
+			resp := &validator.SetResponse{}
+			recipientsUniqueIgnoringCase{}.ValidateSet(ctx, validator.SetRequest{Path: path.Root("recipients"), ConfigValue: set}, resp)
+			assert.Equal(t, tt.wantError, resp.Diagnostics.HasError())
+		})
+	}
+}
+
+// When Capella already has the planned addresses, nothing is sent and state is built from the
+// first GET alone. That state must equal the plan, or the apply fails with an inconsistent result.
+func TestAlertConfigurationRecipientsWithoutPut(t *testing.T) {
+	ctx := context.Background()
+	recipients, diags := types.SetValueFrom(ctx, types.StringType, []string{"OnCall@Example.com", "team@example.com"})
+	require.False(t, diags.HasError())
+	plan := providerschema.AlertConfigurationSettings{Recipients: recipients}
+	current := alertsapi.GetAlertConfigurationResponse{Recipients: []string{"oncall@example.com", "team@example.com"}}
+
+	update, err := alertConfigurationUpdate(ctx, plan, current)
+	require.NoError(t, err)
+	require.True(t, isEmptyAlertConfigurationUpdate(update), "the addresses already match, so no PUT is sent")
+
+	got, diags := providerschema.NewAlertConfigurationSettings(ctx, plan, current)
+	require.False(t, diags.HasError(), "unexpected diagnostics: %v", diags)
+	assert.True(t, got.Recipients.Equal(plan.Recipients), "state %v must equal the plan %v", got.Recipients, plan.Recipients)
 }

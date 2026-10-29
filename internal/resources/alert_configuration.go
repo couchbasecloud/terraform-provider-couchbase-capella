@@ -93,7 +93,7 @@ func getAlertConfiguration(ctx context.Context, data *providerschema.Data, level
 
 	var config alertsapi.GetAlertConfigurationResponse
 	if err := json.Unmarshal(response.Body, &config); err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	return &config, nil
 }
@@ -108,7 +108,7 @@ func putAlertConfiguration(ctx context.Context, data *providerschema.Data, level
 func newAlertConfigurationSettings(ctx context.Context, prior providerschema.AlertConfigurationSettings, current alertsapi.GetAlertConfigurationResponse) (providerschema.AlertConfigurationSettings, error) {
 	settings, diags := providerschema.NewAlertConfigurationSettings(ctx, prior, current)
 	if diags.HasError() {
-		return providerschema.AlertConfigurationSettings{}, fmt.Errorf("%s: %v", errors.ErrRefreshingState, diags.Errors())
+		return providerschema.AlertConfigurationSettings{}, fmt.Errorf("%w: %v", errors.ErrRefreshingState, diags.Errors())
 	}
 	return settings, nil
 }
@@ -128,10 +128,10 @@ func alertConfigurationUpdate(ctx context.Context, plan providerschema.AlertConf
 				update.Configs = make(map[string]alertsapi.AlertConfigurationUpdate)
 			}
 			update.Configs[name] = alertsapi.AlertConfigurationUpdate{
-				FrequencyHours:    setting.FrequencyHours.ValueInt64Pointer(),
-				Threshold:         setting.Threshold.ValueInt64Pointer(),
-				WarningThreshold:  setting.WarningThreshold.ValueInt64Pointer(),
-				CriticalThreshold: setting.CriticalThreshold.ValueInt64Pointer(),
+				FrequencyHours:    int64Pointer(setting.FrequencyHours),
+				Threshold:         int64Pointer(setting.Threshold),
+				WarningThreshold:  int64Pointer(setting.WarningThreshold),
+				CriticalThreshold: int64Pointer(setting.CriticalThreshold),
 			}
 		}
 	}
@@ -200,13 +200,21 @@ func alertConfigurationMatches(setting providerschema.AlertConfigurationSetting,
 }
 
 // int64Matches reports whether a planned field already has its value. A field the plan does not
-// set always matches, since it is left as it is.
+// set, or does not know yet, always matches, since it is left as it is.
 func int64Matches(planned types.Int64, current *int64) bool {
-	return planned.IsNull() || (current != nil && *current == planned.ValueInt64())
+	return planned.IsNull() || planned.IsUnknown() || (current != nil && *current == planned.ValueInt64())
 }
 
 func thresholdMatches(planned types.Int64, current *float64) bool {
-	return planned.IsNull() || (current != nil && *current == float64(planned.ValueInt64()))
+	return planned.IsNull() || planned.IsUnknown() || (current != nil && *current == float64(planned.ValueInt64()))
+}
+
+// int64Pointer leaves out an unknown value, which ValueInt64Pointer would otherwise send as 0.
+func int64Pointer(v types.Int64) *int64 {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+	return v.ValueInt64Pointer()
 }
 
 func alertMuteMatches(mute providerschema.AlertMuteSetting, current alertsapi.AlertMuteState) bool {
