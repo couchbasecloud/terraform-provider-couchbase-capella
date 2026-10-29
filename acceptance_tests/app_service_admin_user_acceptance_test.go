@@ -2,6 +2,8 @@ package acceptance_tests
 
 import (
 	"context"
+	cryptorand "crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,11 +23,6 @@ import (
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
-const (
-	testAdminUserPassword    = "Password123!"
-	testAdminUserNewPassword = "NewPassword456!"
-)
-
 // TestAccAppServiceAdminUserResource covers the create/read/import/update path of an
 // admin user scoped to a named App Endpoint, and the transition from an endpoint list
 // to access_all_endpoints - the two arms of the update API's oneOf body.
@@ -33,6 +30,7 @@ func TestAccAppServiceAdminUserResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_")
 	resourceReference := "couchbase-capella_app_service_admin_user." + resourceName
 	userName := randomStringWithPrefix("tf_acc_user_")
+	password := randomPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -41,7 +39,7 @@ func TestAccAppServiceAdminUserResource(t *testing.T) {
 			// Create and Read, granting access to the shared App Endpoint.
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					fmt.Sprintf(`endpoints = ["%s"]`, globalAppEndpointName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -50,7 +48,7 @@ func TestAccAppServiceAdminUserResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "name", userName),
-					resource.TestCheckResourceAttr(resourceReference, "password", testAdminUserPassword),
+					resource.TestCheckResourceAttr(resourceReference, "password", password),
 					// endpoints is a Set, so assert membership rather than position.
 					resource.TestCheckResourceAttr(resourceReference, "endpoints.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "endpoints.*", globalAppEndpointName),
@@ -90,7 +88,7 @@ func TestAccAppServiceAdminUserResource(t *testing.T) {
 			// that changed, so a reset of another attribute is caught.
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					`access_all_endpoints = true`,
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -101,7 +99,7 @@ func TestAccAppServiceAdminUserResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "access_all_endpoints", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "name", userName),
-					resource.TestCheckResourceAttr(resourceReference, "password", testAdminUserPassword),
+					resource.TestCheckResourceAttr(resourceReference, "password", password),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -116,7 +114,7 @@ func TestAccAppServiceAdminUserResource(t *testing.T) {
 			// rather than just swapping oneOf arms.
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					fmt.Sprintf(`endpoints = ["%s"]`, globalAppEndpointName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -141,6 +139,7 @@ func TestAccAppServiceAdminUserResourceAccessAllEndpoints(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_all_")
 	resourceReference := "couchbase-capella_app_service_admin_user." + resourceName
 	userName := randomStringWithPrefix("tf_acc_user_all_")
+	password := randomPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -148,7 +147,7 @@ func TestAccAppServiceAdminUserResourceAccessAllEndpoints(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					`access_all_endpoints = true`,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -187,6 +186,7 @@ func TestAccAppServiceAdminUserExplicitAccessAllEndpointsFalse(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_false_")
 	resourceReference := "couchbase-capella_app_service_admin_user." + resourceName
 	userName := randomStringWithPrefix("tf_acc_user_false_")
+	password := randomPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -194,7 +194,7 @@ func TestAccAppServiceAdminUserExplicitAccessAllEndpointsFalse(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					fmt.Sprintf("access_all_endpoints = false\n  endpoints            = [\"%s\"]", globalAppEndpointName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -221,6 +221,8 @@ func TestAccAppServiceAdminUserPasswordRotation(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_pw_")
 	resourceReference := "couchbase-capella_app_service_admin_user." + resourceName
 	userName := randomStringWithPrefix("tf_acc_user_pw_")
+	password := randomPassword(t)
+	newPassword := randomPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -228,14 +230,14 @@ func TestAccAppServiceAdminUserPasswordRotation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					`access_all_endpoints = true`,
 				),
-				Check: resource.TestCheckResourceAttr(resourceReference, "password", testAdminUserPassword),
+				Check: resource.TestCheckResourceAttr(resourceReference, "password", password),
 			},
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserNewPassword,
+					resourceName, userName, newPassword,
 					`access_all_endpoints = true`,
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -243,7 +245,7 @@ func TestAccAppServiceAdminUserPasswordRotation(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionReplace),
 					},
 				},
-				Check: resource.TestCheckResourceAttr(resourceReference, "password", testAdminUserNewPassword),
+				Check: resource.TestCheckResourceAttr(resourceReference, "password", newPassword),
 			},
 		},
 	})
@@ -255,6 +257,7 @@ func TestAccAppServiceAdminUserPasswordRotation(t *testing.T) {
 func TestAccAppServiceAdminUserResourceInvalidAccess(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_bad_")
 	userName := randomStringWithPrefix("tf_acc_user_bad_")
+	password := randomPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -262,14 +265,14 @@ func TestAccAppServiceAdminUserResourceInvalidAccess(t *testing.T) {
 			// Neither access_all_endpoints nor endpoints.
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword, ``,
+					resourceName, userName, password, ``,
 				),
 				ExpectError: regexp.MustCompile(`(?s)Invalid App Service Admin User Configuration.*Exactly one of access_all_endpoints = true or a non-empty endpoints set`),
 			},
 			// Both access_all_endpoints = true and a non-empty endpoints set.
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					fmt.Sprintf("access_all_endpoints = true\n  endpoints            = [\"%s\"]", globalAppEndpointName),
 				),
 				ExpectError: regexp.MustCompile(`(?s)Invalid App Service Admin User Configuration.*Exactly one of access_all_endpoints = true or a non-empty endpoints set`),
@@ -277,7 +280,7 @@ func TestAccAppServiceAdminUserResourceInvalidAccess(t *testing.T) {
 			// An explicitly empty endpoints set, which the read would store as null.
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword, `endpoints = []`,
+					resourceName, userName, password, `endpoints = []`,
 				),
 				ExpectError: regexp.MustCompile(`(?s)Invalid App Service Admin User Configuration.*endpoints must not be empty`),
 			},
@@ -293,6 +296,7 @@ func TestAccDatasourceAppServiceAdminUser(t *testing.T) {
 	scopedReference := "data.couchbase-capella_app_service_admin_user.scoped_ds_" + resourceName
 	userName := randomStringWithPrefix("tf_acc_user_ds_")
 	scopedUserName := randomStringWithPrefix("tf_acc_user_ds_scoped_")
+	password := randomPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -302,7 +306,7 @@ func TestAccDatasourceAppServiceAdminUser(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppServiceAdminUserDataSourceConfig(resourceName, userName, scopedUserName),
+				Config: testAccAppServiceAdminUserDataSourceConfig(resourceName, userName, scopedUserName, password),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
@@ -334,6 +338,7 @@ func TestAccDatasourceAppServiceAdminUser(t *testing.T) {
 func TestAccDatasourceAppServiceAdminUsers(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_users_ds_")
 	userName := randomStringWithPrefix("tf_acc_user_list_")
+	password := randomPassword(t)
 	filtered := "data.couchbase-capella_app_service_admin_users.filtered_" + resourceName
 	noMatch := "data.couchbase-capella_app_service_admin_users.nomatch_" + resourceName
 	all := "data.couchbase-capella_app_service_admin_users.all_" + resourceName
@@ -343,7 +348,7 @@ func TestAccDatasourceAppServiceAdminUsers(t *testing.T) {
 		CheckDestroy:             testAccCheckAppServiceAdminUserDestroy(t, userName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppServiceAdminUsersDataSourceConfig(resourceName, userName),
+				Config: testAccAppServiceAdminUsersDataSourceConfig(resourceName, userName, password),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(filtered, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(filtered, "app_service_id", globalAppServiceId),
@@ -436,7 +441,7 @@ func testAccAppServiceAdminUserResourceConfig(resourceName, userName, password, 
 		globalAppServiceId, userName, password, accessBlock)
 }
 
-func testAccAppServiceAdminUserDataSourceConfig(resourceName, userName, scopedUserName string) string {
+func testAccAppServiceAdminUserDataSourceConfig(resourceName, userName, scopedUserName, password string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -476,10 +481,10 @@ func testAccAppServiceAdminUserDataSourceConfig(resourceName, userName, scopedUs
 	  id              = couchbase-capella_app_service_admin_user.scoped_%[2]s.id
 	}
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
-		globalAppServiceId, userName, testAdminUserPassword, scopedUserName, globalAppEndpointName)
+		globalAppServiceId, userName, password, scopedUserName, globalAppEndpointName)
 }
 
-func testAccAppServiceAdminUsersDataSourceConfig(resourceName, userName string) string {
+func testAccAppServiceAdminUsersDataSourceConfig(resourceName, userName, password string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -530,7 +535,7 @@ func testAccAppServiceAdminUsersDataSourceConfig(resourceName, userName string) 
 	  depends_on = [couchbase-capella_app_service_admin_user.%[2]s]
 	}
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
-		globalAppServiceId, userName, testAdminUserPassword)
+		globalAppServiceId, userName, password)
 }
 
 // generateAppServiceAdminUserImportIdForResource builds the composite import key the
@@ -601,6 +606,7 @@ func TestAccAppServiceAdminUserNameForcesReplacement(t *testing.T) {
 	resourceReference := "couchbase-capella_app_service_admin_user." + resourceName
 	userName := randomStringWithPrefix("tf_acc_user_rename_")
 	renamed := randomStringWithPrefix("tf_acc_user_renamed_")
+	password := randomPassword(t)
 
 	var firstId string
 
@@ -613,7 +619,7 @@ func TestAccAppServiceAdminUserNameForcesReplacement(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword, `access_all_endpoints = true`,
+					resourceName, userName, password, `access_all_endpoints = true`,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", userName),
@@ -622,7 +628,7 @@ func TestAccAppServiceAdminUserNameForcesReplacement(t *testing.T) {
 			},
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, renamed, testAdminUserPassword, `access_all_endpoints = true`,
+					resourceName, renamed, password, `access_all_endpoints = true`,
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -659,6 +665,7 @@ func TestAccAppServiceAdminUserNameForcesReplacement(t *testing.T) {
 func TestAccAppServiceAdminUserInvalidIdentifiers(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_ids_")
 	userName := randomStringWithPrefix("tf_acc_user_ids_")
+	password := randomPassword(t)
 
 	badUUID := func(field string) string {
 		cfg := map[string]string{
@@ -681,7 +688,7 @@ func TestAccAppServiceAdminUserInvalidIdentifiers(t *testing.T) {
 	  access_all_endpoints = true
 	}
 	`, globalProviderBlock, resourceName, cfg["organization_id"], cfg["project_id"],
-			cfg["cluster_id"], cfg["app_service_id"], userName, testAdminUserPassword)
+			cfg["cluster_id"], cfg["app_service_id"], userName, password)
 	}
 
 	steps := []resource.TestStep{}
@@ -694,7 +701,7 @@ func TestAccAppServiceAdminUserInvalidIdentifiers(t *testing.T) {
 	// An empty name must fail the length validator rather than reach the API.
 	steps = append(steps, resource.TestStep{
 		Config: testAccAppServiceAdminUserResourceConfig(
-			resourceName, "", testAdminUserPassword, `access_all_endpoints = true`,
+			resourceName, "", password, `access_all_endpoints = true`,
 		),
 		ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Length.*Attribute name string length must be at least 1, got: 0`),
 	})
@@ -712,6 +719,7 @@ func TestAccAppServiceAdminUserInvalidIdentifiers(t *testing.T) {
 func TestAccAppServiceAdminUserInvalidEndpoint(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_badep_")
 	userName := randomStringWithPrefix("tf_acc_user_badep_")
+	password := randomPassword(t)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -719,7 +727,7 @@ func TestAccAppServiceAdminUserInvalidEndpoint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppServiceAdminUserResourceConfig(
-					resourceName, userName, testAdminUserPassword,
+					resourceName, userName, password,
 					`endpoints = ["tf_acc_no_such_app_endpoint"]`,
 				),
 				// This matches any create failure, not specifically the rejected
@@ -748,11 +756,12 @@ func TestAccAppServiceAdminUserDeletedExternally(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_admin_user_extdel_")
 	resourceReference := "couchbase-capella_app_service_admin_user." + resourceName
 	userName := randomStringWithPrefix("tf_acc_user_extdel_")
+	password := randomPassword(t)
 
 	var userId string
 
 	cfg := testAccAppServiceAdminUserResourceConfig(
-		resourceName, userName, testAdminUserPassword, `access_all_endpoints = true`,
+		resourceName, userName, password, `access_all_endpoints = true`,
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -829,8 +838,9 @@ func TestAccAppServiceAdminUserBucketLevelEndpointExpansion(t *testing.T) {
 	userName := randomStringWithPrefix("tf_acc_user_expand_")
 	collectionName := randomStringWithPrefix("tf_acc_col_expand_")
 	secondEndpoint := randomStringWithPrefix("tf_acc_ep_expand_")
+	password := randomPassword(t)
 
-	cfg := testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectionName, secondEndpoint)
+	cfg := testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectionName, secondEndpoint, password)
 
 	// Deliberately NOT parallel. This test adds a second App Endpoint to the shared
 	// bucket, and TestAccAppServiceAdminUserResource's import step asserts a single
@@ -903,7 +913,7 @@ func TestAccAppServiceAdminUserBucketLevelEndpointExpansion(t *testing.T) {
 // bucket, plus the collection it needs, and an admin user granted only the shared
 // endpoint. cors and oidc are omitted deliberately - both are optional, and oidc carries
 // its own ordering problems that would muddy a failure here.
-func testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectionName, secondEndpoint string) string {
+func testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectionName, secondEndpoint, password string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -950,7 +960,7 @@ func testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectio
 	}
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
 		globalBucketId, globalScopeName, collectionName, globalAppServiceId, globalBucketName,
-		secondEndpoint, userName, testAdminUserPassword, globalAppEndpointName)
+		secondEndpoint, userName, password, globalAppEndpointName)
 }
 
 // TestAccDatasourceAppServiceAdminUserNotFound checks that reading an admin user that
@@ -962,12 +972,27 @@ func testAccAppServiceAdminUserExpansionConfig(resourceName, userName, collectio
 // Creating and deleting a real user is the only way to get an id that is unambiguously
 // well-formed and unambiguously absent.
 func TestAccDatasourceAppServiceAdminUserNotFound(t *testing.T) {
-	userName := randomStringWithPrefix("tf_acc_user_gone_")
+	// This setup talks to the API before resource.ParallelTest runs, so it has to apply
+	// the acceptance-test gate itself. Without it, a run with the fixture environment
+	// configured but TF_ACC unset would still create and delete a real admin user, and a
+	// setup error would fail a test that should have been skipped.
+	if os.Getenv(resource.EnvTfAcc) == "" {
+		t.Skipf("Acceptance tests skipped unless env '%s' set", resource.EnvTfAcc)
+	}
 
-	deletedId, err := createAppServiceAdminUserOutOfBand(t, userName)
+	userName := randomStringWithPrefix("tf_acc_user_gone_")
+	password := randomPassword(t)
+
+	deletedId, err := createAppServiceAdminUserOutOfBand(t, userName, password)
 	if err != nil {
 		t.Fatalf("failed to create the admin user to delete: %v", err)
 	}
+	// This user exists outside Terraform, so no TestCase teardown or CheckDestroy owns
+	// it. Register cleanup before anything can fail: deleting it is the point of the
+	// test, so on the happy path this is a no-op, but if the delete or the wait below
+	// fails it is all that stands between a failure and a leaked administrator.
+	t.Cleanup(func() { cleanupAppServiceAdminUserOutOfBand(t, deletedId) })
+
 	if err := deleteAppServiceAdminUserOutOfBand(t, deletedId); err != nil {
 		t.Fatalf("failed to delete admin user %s: %v", deletedId, err)
 	}
@@ -1067,7 +1092,7 @@ func skipKnownBug(t *testing.T, reason string) {
 
 // createAppServiceAdminUserOutOfBand creates an admin user through the API and returns
 // its id, bypassing Terraform. Used to obtain a real id for a user that is then deleted.
-func createAppServiceAdminUserOutOfBand(t *testing.T, userName string) (string, error) {
+func createAppServiceAdminUserOutOfBand(t *testing.T, userName, password string) (string, error) {
 	t.Helper()
 	data := newTestClient(t)
 
@@ -1079,7 +1104,7 @@ func createAppServiceAdminUserOutOfBand(t *testing.T, userName string) (string, 
 
 	body := map[string]any{
 		"name":     userName,
-		"password": testAdminUserPassword,
+		"password": password,
 		"access":   map[string]any{"accessAllEndpoints": true},
 	}
 	response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, body, data.Token, nil)
@@ -1139,4 +1164,46 @@ func waitForAppServiceAdminUserGone(t *testing.T, userId string) error {
 		}
 		time.Sleep(retryInterval)
 	}
+}
+
+// randomPassword returns a password unique to one test, with crypto/rand entropy.
+//
+// These configurations provision real App Service administrators, some with access to
+// every endpoint on the shared service, so a password committed to the repository would
+// be known to anyone who could reach that service and read a test's username - for the
+// length of a run, and indefinitely if cleanup ever left an account behind.
+//
+// The fixed affix supplies the upper, lower, digit and symbol classes the API requires;
+// the hex body carries the randomness.
+func randomPassword(t *testing.T) string {
+	t.Helper()
+
+	buf := make([]byte, 16)
+	if _, err := cryptorand.Read(buf); err != nil {
+		t.Fatalf("failed to generate a random password: %v", err)
+	}
+	return "Tf1!" + hex.EncodeToString(buf)
+}
+
+// cleanupAppServiceAdminUserOutOfBand deletes an admin user created outside Terraform,
+// tolerating one that is already gone so it can be registered as unconditional cleanup.
+//
+// These APIs answer 403 rather than 404 for resources that do not exist, so both count
+// as deleted. A genuine failure fails the test rather than being swallowed, because a
+// leaked administrator is worth surfacing even when the test itself passed.
+func cleanupAppServiceAdminUserOutOfBand(t *testing.T, userId string) {
+	t.Helper()
+
+	err := deleteAppServiceAdminUserOutOfBand(t, userId)
+	if err == nil {
+		return
+	}
+	if notFound, _ := api.CheckResourceNotFoundError(err); notFound {
+		return
+	}
+	var apiErr *api.Error
+	if errors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusForbidden {
+		return
+	}
+	t.Errorf("leaked out-of-band admin user %s: %v", userId, err)
 }
