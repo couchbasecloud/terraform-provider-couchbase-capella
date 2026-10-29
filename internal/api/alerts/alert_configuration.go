@@ -29,3 +29,34 @@ type GetAlertConfigurationResponse struct {
 	MutedAlerts         map[string]AlertMuteState          `json:"mutedAlerts"`
 	ResolvedMutedAlerts map[string]AlertMuteState          `json:"resolvedMutedAlerts"`
 }
+
+// UpdateAlertConfigurationRequest is the body of the update alert configuration endpoints. Every
+// field is optional: an omitted field leaves that part of the level's configuration unchanged.
+type UpdateAlertConfigurationRequest struct {
+	Configs    map[string]AlertConfigurationUpdate `json:"configs,omitempty"`
+	Recipients *[]string                           `json:"recipients,omitempty"`
+	Alerts     []AlertMuteAction                   `json:"alerts,omitempty"`
+}
+
+// AlertConfigurationUpdate sets the configuration of one alert at one level. A field that is not
+// set keeps its current value.
+type AlertConfigurationUpdate struct {
+	FrequencyHours    *int64 `json:"frequencyHours,omitempty"`
+	Threshold         *int64 `json:"threshold,omitempty"`
+	WarningThreshold  *int64 `json:"warningThreshold,omitempty"`
+	CriticalThreshold *int64 `json:"criticalThreshold,omitempty"`
+}
+
+// AlertMuteAction mutes, unmutes or clears the mute override of one alert at one level.
+type AlertMuteAction struct {
+	AlertName  string  `json:"alertName"`
+	Action     string  `json:"action"`
+	MutedFrom  *string `json:"mutedFrom,omitempty"`
+	MutedUntil *string `json:"mutedUntil,omitempty"`
+}
+
+const (
+	AlertMuteActionMute   = "mute"
+	AlertMuteActionUnmute = "unmute"
+	AlertMuteActionClear  = "clear"
+)
