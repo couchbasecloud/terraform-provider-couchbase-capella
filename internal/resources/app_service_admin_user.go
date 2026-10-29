@@ -215,13 +215,24 @@ func (a *AppServiceAdminUser) Read(ctx context.Context, req resource.ReadRequest
 }
 
 // Update changes the endpoint access of an App Service admin user.
-// The API cannot change the password, so a password change updates only the state.
+// The API cannot change the password, so a password change is rejected.
+// The check runs here and not at plan time, so that `terraform apply -replace` still works.
+// A null password in state (after import) is not a change.
 // All other attributes require replacement.
 func (a *AppServiceAdminUser) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state providerschema.AppServiceAdminUser
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !state.Password.IsNull() && !state.Password.Equal(plan.Password) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Password Update Not Supported",
+			"Updating the password of an App Service admin user is not supported.",
+		)
 		return
 	}
 
