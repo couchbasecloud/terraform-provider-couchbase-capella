@@ -38,7 +38,11 @@ func BucketSchema() schema.Schema {
 	})
 	capellaschema.AddAttr(attrs, "bucket_conflict_resolution", bucketBuilder, stringDefaultAttribute("seqno", computed, optional, requiresReplace, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "durability_level", bucketBuilder, stringAttribute([]string{computed, optional, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "replicas", bucketBuilder, int64Attribute(optional, computed, useStateForUnknown))
+	// The OpenAPI enum allows only 1 to 3, but a single-node cluster needs 0.
+	// This validator replaces the one generated from the enum.
+	replicas := int64Attribute(optional, computed, useStateForUnknown)
+	replicas.Validators = []validator.Int64{int64validator.Between(0, 3)}
+	capellaschema.AddAttr(attrs, "replicas", bucketBuilder, replicas)
 	capellaschema.AddAttr(attrs, "flush", bucketBuilder, boolDefaultAttribute(false, optional, computed))
 	capellaschema.AddAttr(attrs, "time_to_live_in_seconds", bucketBuilder, int64Attribute(optional, computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "eviction_policy", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
