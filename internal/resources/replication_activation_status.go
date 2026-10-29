@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -155,8 +156,7 @@ func (r *ReplicationActivationStatus) ImportState(ctx context.Context, req resou
 }
 
 // setActivationStatus pauses or resumes the replication, unless it already has the requested status,
-// and waits until it has that status. It retries while a cluster is not healthy, because a new
-// replication can leave both clusters in the Peering state for some minutes.
+// and waits until it has that status.
 func (r *ReplicationActivationStatus) setActivationStatus(ctx context.Context, plan providerschema.ReplicationActivationStatus) error {
 	var (
 		organizationId = plan.OrganizationId.ValueString()
@@ -169,53 +169,96 @@ func (r *ReplicationActivationStatus) setActivationStatus(ctx context.Context, p
 	ctx, cancel := context.WithTimeout(ctx, replicationActivationStatusTimeout)
 	defer cancel()
 
-	ticker := time.NewTicker(replicationActivationStatusPollInterval)
-	defer ticker.Stop()
+	status, err := r.getStatus(ctx, organizationId, projectId, clusterId, replicationId)
+	if err != nil {
+		return replicationActivationStatusError(replicationId, err)
+	}
+	if activationStatus(status) == desired {
+		return nil
+	}
 
-	var sent bool
-	for {
+	err = retryReplicationRequest(ctx, replicationId, isClusterNotHealthyError, func() error {
+		return r.sendActivationStatus(ctx, organizationId, projectId, clusterId, replicationId, desired)
+	})
+	// The API returns 409 when the replication is already paused or running. Every replication error
+	// has the same code, so a GET confirms the status.
+	if isConflictError(err) && r.hasActivationStatus(ctx, organizationId, projectId, clusterId, replicationId, desired) {
+		return nil
+	}
+	if err != nil {
+		return replicationActivationStatusError(replicationId, err)
+	}
+
+	return r.waitForActivationStatus(ctx, organizationId, projectId, clusterId, replicationId, desired)
+}
+
+// getStatus gets the replication status. It retries server errors, network errors and the 422 that
+// the API returns while a cluster is not healthy.
+func (r *ReplicationActivationStatus) getStatus(ctx context.Context, organizationId, projectId, clusterId, replicationId string) (replicationapi.Status, error) {
+	var status replicationapi.Status
+	err := retryReplicationRequest(ctx, replicationId, isRetryableGetError, func() error {
 		replicationResp, err := getReplication(ctx, r.Data, organizationId, projectId, clusterId, replicationId)
-		switch {
-		case err != nil && isClientError(err) && !isClusterNotHealthyError(err):
-			return replicationActivationStatusError(replicationId, err)
-		case err != nil:
-			tflog.Warn(ctx, "could not get the replication status, retrying", map[string]interface{}{
-				"replication_id": replicationId,
-				"error":          api.ParseError(err),
-			})
-		case activationStatus(replicationResp.Status) == desired:
-			return nil
-		case sent && replicationResp.Status == replicationapi.StatusFailed:
-			return fmt.Errorf("%w: replication %s", errors.ErrReplicationActivationStatusFailed, replicationId)
-		case !sent:
-			err = r.sendActivationStatus(ctx, organizationId, projectId, clusterId, replicationId, desired)
-			switch {
-			case err == nil:
-				sent = true
-				continue
-			case isClusterNotHealthyError(err):
-				tflog.Info(ctx, "cluster is not healthy, retrying the activation status change", map[string]interface{}{
-					"replication_id": replicationId,
-					"error":          api.ParseError(err),
-				})
-			case isConflictError(err):
-				// The API returns 409 when the replication is already paused or running. Every
-				// replication error has the same code, so a GET confirms the status.
-				if r.hasActivationStatus(ctx, organizationId, projectId, clusterId, replicationId, desired) {
-					return nil
-				}
-				return replicationActivationStatusError(replicationId, err)
-			default:
-				return replicationActivationStatusError(replicationId, err)
-			}
+		if err != nil {
+			return err
 		}
+		status = replicationResp.Status
+		return nil
+	})
+	return status, err
+}
 
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("%w: replication %s: %w", errors.ErrReplicationActivationStatusTimeout, replicationId, ctx.Err())
-		case <-ticker.C:
+// waitForActivationStatus polls the replication until it has the requested status. It stops at once
+// when the replication is failed.
+func (r *ReplicationActivationStatus) waitForActivationStatus(ctx context.Context, organizationId, projectId, clusterId, replicationId, desired string) error {
+	for {
+		status, err := r.getStatus(ctx, organizationId, projectId, clusterId, replicationId)
+		if err != nil {
+			return replicationActivationStatusError(replicationId, err)
+		}
+		if activationStatus(status) == desired {
+			return nil
+		}
+		if status == replicationapi.StatusFailed {
+			return fmt.Errorf("%w: replication %s", errors.ErrReplicationActivationStatusFailed, replicationId)
+		}
+		if err := waitForNextPoll(ctx, replicationId); err != nil {
+			return err
 		}
 	}
+}
+
+// retryReplicationRequest calls request until it succeeds or fails with an error that retryable rejects.
+// A new replication can leave both clusters in the Peering state for some minutes.
+func retryReplicationRequest(ctx context.Context, replicationId string, retryable func(error) bool, request func() error) error {
+	for {
+		err := request()
+		if err == nil || !retryable(err) {
+			return err
+		}
+		tflog.Warn(ctx, "replication request failed, retrying", map[string]interface{}{
+			"replication_id": replicationId,
+			"error":          api.ParseError(err),
+		})
+		if err := waitForNextPoll(ctx, replicationId); err != nil {
+			return err
+		}
+	}
+}
+
+// waitForNextPoll waits for the poll interval, or returns a timeout error when the context ends first.
+func waitForNextPoll(ctx context.Context, replicationId string) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("%w: replication %s: %w", errors.ErrReplicationActivationStatusTimeout, replicationId, ctx.Err())
+	case <-time.After(replicationActivationStatusPollInterval):
+		return nil
+	}
+}
+
+// isRetryableGetError reports whether a failed GET can be tried again: a server error, a network
+// error, or the 422 that the API returns while a cluster is not healthy.
+func isRetryableGetError(err error) bool {
+	return !isClientError(err) || isClusterNotHealthyError(err)
 }
 
 // sendActivationStatus sends the pause (DELETE) or resume (POST) request.
@@ -259,7 +302,12 @@ func activationStatus(status replicationapi.Status) string {
 	}
 }
 
+// replicationActivationStatusError adds the replication ID to an API error, and a hint for a 404.
+// A timeout error already has the replication ID, so it is returned as it is.
 func replicationActivationStatusError(replicationId string, err error) error {
+	if stderrors.Is(err, errors.ErrReplicationActivationStatusTimeout) {
+		return err
+	}
 	var hint string
 	if isNotFoundError(err) {
 		hint = "\n\nCheck that cluster_id is the source cluster of this replication. For the reverse direction " +
