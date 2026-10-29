@@ -17,6 +17,9 @@ type AppEndpointRequest struct {
 	// DeltaSyncEnabled enables or disables delta sync on this App Endpoint.
 	DeltaSyncEnabled bool `json:"deltaSyncEnabled,omitempty"`
 
+	// ImportPartitions is the number of import partitions for the App Endpoint. Only accepted on update.
+	ImportPartitions *int64 `json:"importPartitions,omitempty"`
+
 	// Scopes is the configuration for scopes and collections within the App Endpoint.
 	Scopes Scopes `json:"scopes,omitempty"`
 
@@ -41,6 +44,9 @@ type GetAppEndpointResponse struct {
 
 	// DeltaSyncEnabled indicates whether delta sync is enabled for this App Endpoint.
 	DeltaSyncEnabled bool `json:"deltaSyncEnabled"`
+
+	// ImportPartitions is the number of import partitions for the App Endpoint.
+	ImportPartitions int64 `json:"importPartitions"`
 
 	// Scopes is the configuration for scopes within the App Endpoint.
 	Scopes Scopes `json:"scopes"`
