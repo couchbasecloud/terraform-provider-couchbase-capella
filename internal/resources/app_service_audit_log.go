@@ -33,7 +33,7 @@ func NewAppServiceAuditLog() resource.Resource {
 
 // Metadata returns the App Service audit log resource type name.
 func (a *AppServiceAuditLog) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_app_service_audit_log"
+	resp.TypeName = req.ProviderTypeName + "_app_service_audit_logging"
 }
 
 // Schema defines the schema for the App Service audit log resource.
