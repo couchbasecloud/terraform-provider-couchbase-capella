@@ -1,4 +1,4 @@
-# Get Existing App Service Audit Log Data source
+# Get Existing App Service Audit Logging State Data source
 
 This example shows how to get the audit logging state of an App Service in Capella. It uses the organization ID, project ID, cluster ID, and App Service ID to do so.
 
@@ -13,11 +13,11 @@ Sample Output:
 
 ```
 $ terraform plan
-data.couchbase-capella_app_service_audit_log.existing_app_service_audit_log: Reading...
-data.couchbase-capella_app_service_audit_log.existing_app_service_audit_log: Read complete after 1s
+data.couchbase-capella_app_service_audit_logging_state.existing_app_service_audit_logging_state: Reading...
+data.couchbase-capella_app_service_audit_logging_state.existing_app_service_audit_logging_state: Read complete after 1s
 
 Changes to Outputs:
-  + existing_app_service_audit_log = {
+  + existing_app_service_audit_logging_state = {
       + app_service_id  = "8554d8b8-029f-449e-a644-215dd9a02129"
       + audit_enabled   = true
       + cluster_id      = "1777a520-94b7-4b99-9022-4b38996a370d"
@@ -36,11 +36,11 @@ Sample Output:
 
 ```
 $ terraform apply
-data.couchbase-capella_app_service_audit_log.existing_app_service_audit_log: Reading...
-data.couchbase-capella_app_service_audit_log.existing_app_service_audit_log: Read complete after 0s
+data.couchbase-capella_app_service_audit_logging_state.existing_app_service_audit_logging_state: Reading...
+data.couchbase-capella_app_service_audit_logging_state.existing_app_service_audit_logging_state: Read complete after 0s
 
 Changes to Outputs:
-  + existing_app_service_audit_log = {
+  + existing_app_service_audit_logging_state = {
       + app_service_id  = "8554d8b8-029f-449e-a644-215dd9a02129"
       + audit_enabled   = true
       + cluster_id      = "1777a520-94b7-4b99-9022-4b38996a370d"
@@ -61,7 +61,7 @@ Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-existing_app_service_audit_log = {
+existing_app_service_audit_logging_state = {
   "app_service_id" = "8554d8b8-029f-449e-a644-215dd9a02129"
   "audit_enabled" = true
   "cluster_id" = "1777a520-94b7-4b99-9022-4b38996a370d"

@@ -2,8 +2,8 @@ package schema
 
 import "github.com/hashicorp/terraform-plugin-framework/types"
 
-// AppServiceAuditLogData is the datasource model for the audit logging state of an App Service.
-type AppServiceAuditLogData struct {
+// AppServiceAuditLoggingStateData is the datasource model for the audit logging state of an App Service.
+type AppServiceAuditLoggingStateData struct {
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
 

@@ -15,32 +15,32 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = (*AppServiceAuditLog)(nil)
-	_ datasource.DataSourceWithConfigure = (*AppServiceAuditLog)(nil)
+	_ datasource.DataSource              = (*AppServiceAuditLoggingState)(nil)
+	_ datasource.DataSourceWithConfigure = (*AppServiceAuditLoggingState)(nil)
 )
 
-// AppServiceAuditLog is the App Service audit log data source implementation.
-type AppServiceAuditLog struct {
+// AppServiceAuditLoggingState is the App Service audit logging state data source implementation.
+type AppServiceAuditLoggingState struct {
 	*providerschema.Data
 }
 
-// NewAppServiceAuditLog is a helper function to simplify the provider implementation.
-func NewAppServiceAuditLog() datasource.DataSource {
-	return &AppServiceAuditLog{}
+// NewAppServiceAuditLoggingState is a helper function to simplify the provider implementation.
+func NewAppServiceAuditLoggingState() datasource.DataSource {
+	return &AppServiceAuditLoggingState{}
 }
 
 // Metadata returns the data source type name.
-func (d *AppServiceAuditLog) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_app_service_audit_log"
+func (d *AppServiceAuditLoggingState) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_app_service_audit_logging_state"
 }
 
 // Schema defines the schema for the data source.
-func (d *AppServiceAuditLog) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = AppServiceAuditLogSchema()
+func (d *AppServiceAuditLoggingState) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = AppServiceAuditLoggingStateSchema()
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *AppServiceAuditLog) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *AppServiceAuditLoggingState) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -57,8 +57,8 @@ func (d *AppServiceAuditLog) Configure(_ context.Context, req datasource.Configu
 }
 
 // Read refreshes the Terraform state with the audit logging state of the App Service.
-func (d *AppServiceAuditLog) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var config providerschema.AppServiceAuditLogData
+func (d *AppServiceAuditLoggingState) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var config providerschema.AppServiceAuditLoggingStateData
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
