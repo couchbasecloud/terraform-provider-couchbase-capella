@@ -43,6 +43,9 @@ const errorMessageAfterReplicationCreation = "Replication creation is successful
 	"current state. Additionally, run `terraform apply --refresh-only` to update the state from remote, " +
 	"unexpected error: "
 
+const warningMessageClusterNotHealthyOnRead = "The source cluster is not healthy, so the last known state is kept. " +
+	"Changes made outside Terraform are not detected until the cluster is healthy again, error: "
+
 // replicationDeletePollInterval and replicationDeleteTimeout are overridden in tests to avoid
 // waiting on real wall-clock time while exercising waitForReplicationDeletion's polling loop.
 var (
@@ -429,6 +432,11 @@ func (r *Replication) Read(ctx context.Context, req resource.ReadRequest, resp *
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			resp.State.RemoveResource(ctx)
+			return
+		}
+		// Keep the prior state, so that a plan is not blocked while the cluster is busy.
+		if isClusterNotHealthyError(err) {
+			resp.Diagnostics.AddWarning("Replication not refreshed", warningMessageClusterNotHealthyOnRead+errString)
 			return
 		}
 		resp.Diagnostics.AddError(
