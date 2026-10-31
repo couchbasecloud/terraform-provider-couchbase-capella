@@ -52,7 +52,8 @@ func ReplicationSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "priority", replicationBuilder, priority)
 
 	networkUsageLimit := int64DefaultAttribute(0, optional, computed)
-	networkUsageLimit.Validators = append(networkUsageLimit.Validators, int64validator.AtLeast(0))
+	networkUsageLimit.Validators = append(networkUsageLimit.Validators,
+		int64validator.Between(0, capellaschema.ReplicationNetworkUsageLimitMax))
 	capellaschema.AddAttr(attrs, "network_usage_limit", replicationBuilder, networkUsageLimit)
 
 	collectionAttrs := make(map[string]schema.Attribute)
