@@ -1,0 +1,24 @@
+variable "organization_id" {
+  description = "Capella Organization ID"
+}
+
+variable "auth_token" {
+  description = "Authentication API Key"
+  sensitive   = true
+}
+
+variable "project_id" {
+  description = "Capella Project ID"
+}
+
+variable "cluster_id" {
+  description = "Capella Cluster ID"
+}
+
+variable "app_service_id" {
+  description = "Capella App Service ID"
+}
+
+variable "export_id" {
+  description = "Audit log export job ID to filter the list by"
+}
