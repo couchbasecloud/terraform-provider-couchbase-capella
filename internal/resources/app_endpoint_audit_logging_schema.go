@@ -34,7 +34,7 @@ func AppEndpointAuditLoggingSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "disabled_roles", appEndpointAuditLoggingBuilder, disabledUserRoleSetAttribute())
 
 	return schema.Schema{
-		MarkdownDescription: "Manages the audit logging configuration of an App Endpoint. Destroying this resource removes it from the Terraform state only. The audit logging configuration in Capella stays in its last state.",
+		MarkdownDescription: "Manages the audit logging configuration of an App Endpoint. Destroying this resource removes it from the Terraform state only. The audit logging configuration in Capella stays in its last state. An attribute that is removed from the config keeps its value in Capella. To clear a set, give it an empty value.",
 		Attributes:          attrs,
 	}
 }
@@ -42,7 +42,7 @@ func AppEndpointAuditLoggingSchema() schema.Schema {
 func disabledUserRoleSetAttribute() *schema.SetNestedAttribute {
 	attrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(attrs, "domain", appEndpointAuditLoggingBuilder, stringAttribute([]string{required}, stringvalidator.LengthAtLeast(1)), "DisabledUserRole")
-	capellaschema.AddAttr(attrs, "name", appEndpointAuditLoggingBuilder, stringAttribute([]string{required}, stringvalidator.LengthAtLeast(1)), "DisabledUserRole")
+	capellaschema.AddAttr(attrs, "name", appEndpointAuditLoggingBuilder, stringAttribute([]string{required}, stringvalidator.LengthBetween(1, 256)), "DisabledUserRole")
 
 	return &schema.SetNestedAttribute{
 		Computed:      true,

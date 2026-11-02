@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_app_endpoint_audit_logging Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages the audit logging configuration of an App Endpoint. Destroying this resource removes it from the Terraform state only. The audit logging configuration in Capella stays in its last state.
+  Manages the audit logging configuration of an App Endpoint. Destroying this resource removes it from the Terraform state only. The audit logging configuration in Capella stays in its last state. An attribute that is removed from the config keeps its value in Capella. To clear a set, give it an empty value.
 ---
 
 # couchbase-capella_app_endpoint_audit_logging (Resource)
 
-Manages the audit logging configuration of an App Endpoint. Destroying this resource removes it from the Terraform state only. The audit logging configuration in Capella stays in its last state.
+Manages the audit logging configuration of an App Endpoint. Destroying this resource removes it from the Terraform state only. The audit logging configuration in Capella stays in its last state. An attribute that is removed from the config keeps its value in Capella. To clear a set, give it an empty value.
 
 ## Example Usage
 

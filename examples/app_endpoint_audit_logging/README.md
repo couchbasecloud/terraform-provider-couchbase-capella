@@ -124,7 +124,7 @@ The import ID is a comma-separated string of the App Endpoint name, App Service 
 
 Command: `terraform destroy`
 
-This command makes no API call. The audit logging configuration in Capella stays in its last state.
+This command makes no change in Capella. Terraform can refresh the state before destroy, which reads the configuration, but the delete step only removes the resource from the state file. The audit logging configuration in Capella stays in its last state.
 
 Sample Output:
 ```

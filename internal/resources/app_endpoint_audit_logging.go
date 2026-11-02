@@ -158,8 +158,10 @@ func (a *AppEndpointAuditLogging) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint_name"), req, resp)
 }
 
-// upsert sends the known attributes of the plan to the PUT endpoint and returns the refreshed state.
-// Unknown attributes are left out of the request, so Capella keeps their current values.
+// upsert sends the plan to the PUT endpoint and returns the refreshed state.
+// The PUT replaces the whole configuration, and an omitted field resets to its API default.
+// So the plan carries prior state for unconfigured attributes (UseStateForUnknown), which keeps their values.
+// Only unknown attributes, which occur on create, are left out of the request.
 func (a *AppEndpointAuditLogging) upsert(ctx context.Context, plan providerschema.AppEndpointAuditLogging) (*providerschema.AppEndpointAuditLogging, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	body := apigen.PutAppEndpointAuditLogConfigJSONRequestBody{}
@@ -210,11 +212,24 @@ func (a *AppEndpointAuditLogging) upsert(ctx context.Context, plan providerschem
 
 	refreshedState, refreshDiags, err := a.refresh(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
-		diags.AddError(
+		// The PUT succeeded, so save the plan as state. The next refresh reconciles it.
+		diags.AddWarning(
 			"Error Reading App Endpoint Audit Logging",
-			"Could not read audit logging configuration of App Endpoint "+appEndpointName+" after it was set: "+api.ParseError(err),
+			"Audit logging configuration of App Endpoint "+appEndpointName+" was set, but could not be read: "+api.ParseError(err),
 		)
-		return nil, diags
+		if plan.AuditEnabled.IsUnknown() {
+			plan.AuditEnabled = types.BoolNull()
+		}
+		if plan.EnabledEventIds.IsUnknown() {
+			plan.EnabledEventIds = types.SetNull(types.Int64Type)
+		}
+		if plan.DisabledUsers.IsUnknown() {
+			plan.DisabledUsers = types.SetNull(providerschema.AppEndpointAuditLogDisabledUserRoleType)
+		}
+		if plan.DisabledRoles.IsUnknown() {
+			plan.DisabledRoles = types.SetNull(providerschema.AppEndpointAuditLogDisabledUserRoleType)
+		}
+		return &plan, diags
 	}
 	diags.Append(refreshDiags...)
 
