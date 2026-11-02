@@ -18,10 +18,10 @@ func AppServiceAuditLogExportJobsSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_service_id", appServiceAuditLogExportJobsBuilder, requiredUUIDString())
 
 	// export_id filters the list in the provider, as the list endpoint has no filter query parameter.
-	attrs["export_id"] = &schema.StringAttribute{
-		Optional:            true,
-		MarkdownDescription: "The ID of an export job. When set, only the export job with this ID is returned. When omitted, all export jobs are returned.",
-	}
+	// The description is set after AddAttr, as the OpenAPI spec describes export_id as a backup export.
+	exportId := optionalString()
+	capellaschema.AddAttr(attrs, "export_id", appServiceAuditLogExportJobsBuilder, exportId)
+	exportId.MarkdownDescription = "The ID of an export job. When set, only the export job with this ID is returned. When omitted, all export jobs are returned."
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", appServiceAuditLogExportJobsBuilder, withDescription(computedString(), "The ID of the audit log export job."))
@@ -33,13 +33,14 @@ func AppServiceAuditLogExportJobsSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "download_expires", appServiceAuditLogExportJobsBuilder, withDescription(computedString(), "The RFC3339 timestamp at which the download expires."))
 	capellaschema.AddAttr(dataAttrs, "audit", appServiceAuditLogExportJobsBuilder, computedAudit())
 
-	capellaschema.AddAttr(attrs, "data", appServiceAuditLogExportJobsBuilder, &schema.ListNestedAttribute{
-		Computed:            true,
-		MarkdownDescription: "The audit log export jobs of the App Service.",
+	data := &schema.ListNestedAttribute{
+		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: dataAttrs,
 		},
-	})
+	}
+	data.MarkdownDescription = "The audit log export jobs of the App Service."
+	capellaschema.AddAttr(attrs, "data", appServiceAuditLogExportJobsBuilder, data)
 
 	return schema.Schema{
 		MarkdownDescription: "The data source to retrieve the audit log export jobs of an App Service, optionally filtered by export ID.",
