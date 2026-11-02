@@ -40,10 +40,10 @@ resource "couchbase-capella_app_service_audit_log_export_job" "new_app_service_a
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `download_expires` (String) The RFC3339 timestamp when the download expires.
-- `download_id` (String) The ID used to download the exported audit logs.
+- `download_expires` (String)
+- `download_id` (String)
 - `id` (String) The ID of this resource.
-- `status` (String) The status of the export job.
+- `status` (String)
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`

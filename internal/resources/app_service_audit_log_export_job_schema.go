@@ -19,9 +19,9 @@ func AppServiceAuditLogExportJobSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_service_id", appServiceAuditLogExportJobBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "start", appServiceAuditLogExportJobBuilder, stringAttribute([]string{required, requiresReplace}, rfc3339TimestampValidator{attributeName: "start"}), "CreateClusterAuditLogExportRequest")
 	capellaschema.AddAttr(attrs, "end", appServiceAuditLogExportJobBuilder, stringAttribute([]string{required, requiresReplace}, rfc3339TimestampValidator{attributeName: "end"}), "CreateClusterAuditLogExportRequest")
-	capellaschema.AddAttr(attrs, "status", appServiceAuditLogExportJobBuilder, &schema.StringAttribute{Computed: true, MarkdownDescription: "The status of the export job."})
-	capellaschema.AddAttr(attrs, "download_id", appServiceAuditLogExportJobBuilder, &schema.StringAttribute{Computed: true, MarkdownDescription: "The ID used to download the exported audit logs."})
-	capellaschema.AddAttr(attrs, "download_expires", appServiceAuditLogExportJobBuilder, &schema.StringAttribute{Computed: true, MarkdownDescription: "The RFC3339 timestamp when the download expires."})
+	capellaschema.AddAttr(attrs, "status", appServiceAuditLogExportJobBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "download_id", appServiceAuditLogExportJobBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "download_expires", appServiceAuditLogExportJobBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "audit", appServiceAuditLogExportJobBuilder, computedAuditAttribute())
 
 	return schema.Schema{

@@ -96,9 +96,30 @@ func (a *AppServiceAuditLogExportJob) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	// The schema validator already checked that start and end are RFC3339.
-	start, _ := time.Parse(time.RFC3339, plan.Start.ValueString())
-	end, _ := time.Parse(time.RFC3339, plan.End.ValueString())
+	// Validators skip values that are unknown at plan time, so check again here.
+	start, err := time.Parse(time.RFC3339, plan.Start.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating App Service audit log export job",
+			"Could not parse start time: "+err.Error(),
+		)
+		return
+	}
+	end, err := time.Parse(time.RFC3339, plan.End.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating App Service audit log export job",
+			"Could not parse end time: "+err.Error(),
+		)
+		return
+	}
+	if end.Before(start) {
+		resp.Diagnostics.AddError(
+			"Error creating App Service audit log export job",
+			"end must not be earlier than start",
+		)
+		return
+	}
 
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/auditLogExports",
