@@ -2,7 +2,7 @@
 
 This example lists the audit log export jobs of a Capella App Service.
 
-It uses the organization, project, cluster and App Service IDs to list the export jobs. Set the optional `export_id` argument in `list_app_service_audit_log_export_jobs.tf` to return only one export job.
+It uses the organization, project, cluster and App Service IDs to list the export jobs. Set the optional `export_id` variable in `terraform.tfvars` to return only one export job.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 

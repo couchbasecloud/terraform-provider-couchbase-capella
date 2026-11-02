@@ -21,4 +21,6 @@ variable "app_service_id" {
 
 variable "export_id" {
   description = "Audit log export job ID to filter the list by"
+  type        = string
+  default     = null
 }

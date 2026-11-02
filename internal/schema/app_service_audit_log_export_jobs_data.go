@@ -51,6 +51,9 @@ func NewAppServiceAuditLogExportJob(ctx context.Context, job apigen.GetAuditExpo
 	auditObj := types.ObjectNull(CouchbaseAuditData{}.AttributeTypes())
 	if job.Audit != nil {
 		audit := NewCouchbaseAuditData(api.CouchbaseAuditData(*job.Audit))
+		// NewCouchbaseAuditData formats times with time.Time.String(), but the schema documents RFC3339.
+		audit.CreatedAt = types.StringValue(job.Audit.CreatedAt.Format(time.RFC3339))
+		audit.ModifiedAt = types.StringValue(job.Audit.ModifiedAt.Format(time.RFC3339))
 		auditObj, diags = types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	}
 
