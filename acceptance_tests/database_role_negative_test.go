@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -150,6 +151,35 @@ resource "couchbase-capella_database_role" %[5]q {
 	}
 }
 
+// TestAccDatabaseRoleInvalidNameLength is the AV-141832 regression: Capella caps role
+// names at 2-32 characters, so the LengthBetween validator on name must reject both
+// bounds at plan time instead of letting apply fail with a 422.
+func TestAccDatabaseRoleInvalidNameLength(t *testing.T) {
+	testCases := []struct {
+		name   string
+		length int
+	}{
+		{name: "too_short", length: 1},
+		{name: "too_long", length: 33},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccDatabaseRoleConfigAccess(tc.name, strings.Repeat("a", tc.length), "",
+							accessCollectionLevel("dataRead")),
+						ExpectError: regexp.MustCompile(`(?s)` + whitespaceTolerant(
+							fmt.Sprintf("string length must be between 2 and 32, got: %d", tc.length))),
+					},
+				},
+			})
+		})
+	}
+}
+
 // --- Rejected by the V4 API ---
 
 // TestAccDatabaseRolePrivilegeLevelMismatch is the AV-141821 regression: queryManage is
@@ -221,7 +251,6 @@ func TestAccDatabaseRoleEmptyPrivileges(t *testing.T) {
 		},
 	})
 }
-
 
 func TestAccDatabaseRoleNonExistentKeyspace(t *testing.T) {
 	testCases := []struct {
