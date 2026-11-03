@@ -18,18 +18,15 @@ func AppEndpointAuditLogEventIDsSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_service_id", appEndpointAuditLogEventIDsBuilder, requiredUUIDString())
 	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointAuditLogEventIDsBuilder, requiredStringWithValidator())
 
-	// The spec types events as an untyped map, so the nested fields carry call-site descriptions.
-	dataAttrs := map[string]schema.Attribute{
-		"id":          &schema.Int64Attribute{Computed: true, MarkdownDescription: "The ID of the audit event."},
-		"name":        &schema.StringAttribute{Computed: true, MarkdownDescription: "The name of the audit event."},
-		"description": &schema.StringAttribute{Computed: true, MarkdownDescription: "The description of the audit event."},
-		"enabled":     &schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the audit event is enabled."},
-		"filterable":  &schema.BoolAttribute{Computed: true, MarkdownDescription: "Whether the audit event can be filtered."},
-	}
+	dataAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(dataAttrs, "id", appEndpointAuditLogEventIDsBuilder, computedInt64())
+	capellaschema.AddAttr(dataAttrs, "name", appEndpointAuditLogEventIDsBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "description", appEndpointAuditLogEventIDsBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "enabled", appEndpointAuditLogEventIDsBuilder, computedBool())
+	capellaschema.AddAttr(dataAttrs, "filterable", appEndpointAuditLogEventIDsBuilder, computedBool())
 
 	capellaschema.AddAttr(attrs, "data", appEndpointAuditLogEventIDsBuilder, &schema.SetNestedAttribute{
-		Computed:            true,
-		MarkdownDescription: "The audit events of the App Endpoint.",
+		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: dataAttrs,
 		},

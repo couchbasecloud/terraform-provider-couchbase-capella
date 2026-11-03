@@ -35,15 +35,15 @@ data "couchbase-capella_app_endpoint_audit_log_event_ids" "existing_app_endpoint
 
 ### Read-Only
 
-- `data` (Attributes Set) The audit events of the App Endpoint. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes Set) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Read-Only:
 
-- `description` (String) The description of the audit event.
-- `enabled` (Boolean) Whether the audit event is enabled.
-- `filterable` (Boolean) Whether the audit event can be filtered.
-- `id` (Number) The ID of the audit event.
-- `name` (String) The name of the audit event.
+- `description` (String)
+- `enabled` (Boolean)
+- `filterable` (Boolean)
+- `id` (Number)
+- `name` (String)
