@@ -20,7 +20,7 @@ func AppServiceMaintenanceWindowSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_service_id", appServiceMaintenanceWindowBuilder, requiredUUIDStringAttribute())
 
 	preferredDay := stringAttribute([]string{required},
-		validator.String(stringvalidator.OneOf(weekdays[:]...)))
+		validator.String(stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")))
 	preferredDay.MarkdownDescription = "The day of the week the maintenance window starts on, in lowercase: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday` or `sunday`."
 	capellaschema.AddAttr(attrs, "preferred_day", appServiceMaintenanceWindowBuilder, preferredDay)
 

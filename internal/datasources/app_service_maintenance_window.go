@@ -20,8 +20,10 @@ var (
 	_ datasource.DataSourceWithConfigure = &AppServiceMaintenanceWindow{}
 )
 
-// errorCodeForMaintenanceWindowNotFound is the V4 API error code for an App Service that has
-// no maintenance window set. It tells that 404 apart from the one for an unknown App Service.
+// errorCodeForMaintenanceWindowNotFound is the code of the V4 API error AppServiceMaintenanceWindowNotFound,
+// returned when an App Service has no maintenance window set. It tells that 404 apart from the
+// BackendNotFound 404 for an unknown App Service. The value has not been confirmed against the
+// published error catalog; a wrong value makes a no-window read fail instead of returning nulls.
 const errorCodeForMaintenanceWindowNotFound = 11074
 
 // AppServiceMaintenanceWindow is the App Service maintenance window data source implementation.
