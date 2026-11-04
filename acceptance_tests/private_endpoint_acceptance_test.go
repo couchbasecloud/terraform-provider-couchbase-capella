@@ -16,14 +16,16 @@ import (
 func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_private_endpoint_service_")
 	dataSourceName := randomStringWithPrefix("tf_acc_private_endpoints_ds_")
+	serviceDataSourceName := randomStringWithPrefix("tf_acc_private_endpoint_service_ds_")
 	resourceReference := "couchbase-capella_private_endpoint_service." + resourceName
 	dataSourceReference := "data.couchbase-capella_private_endpoints." + dataSourceName
+	serviceDataSourceReference := "data.couchbase-capella_private_endpoint_service." + serviceDataSourceName
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrivateEndpointsDataSourceNoEndpointConfig(resourceName, dataSourceName),
+				Config: testAccPrivateEndpointsDataSourceNoEndpointConfig(resourceName, dataSourceName, serviceDataSourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
@@ -34,19 +36,79 @@ func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "private_endpoint_dns"),
 					resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
+					// The service data source sees the enabled service and its service_name.
+					resource.TestCheckResourceAttr(serviceDataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(serviceDataSourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(serviceDataSourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(serviceDataSourceReference, "enabled", "true"),
+					resource.TestCheckResourceAttrSet(serviceDataSourceReference, "status"),
+					resource.TestCheckResourceAttrSet(serviceDataSourceReference, "service_name"),
 				),
 			},
 			{
-				Config: testAccPrivateEndpointServiceEnableConfig(resourceName, false),
+				Config: testAccPrivateEndpointServiceDisableWithDataSourceConfig(resourceName, serviceDataSourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "enabled", "false"),
+					// The data source follows the service to disabled.
+					resource.TestCheckResourceAttr(serviceDataSourceReference, "enabled", "false"),
 				),
 			},
 		},
 	})
+}
+
+// TestAccDatasourcePrivateEndpointServiceMissingRequiredFields verifies each required
+// identifier is enforced by Terraform before any API call is made.
+func TestAccDatasourcePrivateEndpointServiceMissingRequiredFields(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+	}{
+		{
+			name: "organization_id",
+			body: fmt.Sprintf(`
+  project_id = "%s"
+  cluster_id = "%s"
+`, globalProjectId, globalClusterId),
+		},
+		{
+			name: "project_id",
+			body: fmt.Sprintf(`
+  organization_id = "%s"
+  cluster_id      = "%s"
+`, globalOrgId, globalClusterId),
+		},
+		{
+			name: "cluster_id",
+			body: fmt.Sprintf(`
+  organization_id = "%s"
+  project_id      = "%s"
+`, globalOrgId, globalProjectId),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			dataSourceName := randomStringWithPrefix("tf_acc_pe_service_ds_missing_")
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_private_endpoint_service" "%[2]s" {%[3]s}
+`, globalProviderBlock, dataSourceName, test.body),
+						ExpectError: regexp.MustCompile(fmt.Sprintf(`The argument "%s" is required`, test.name)),
+					},
+				},
+			})
+		})
+	}
 }
 
 // TestAccAWSPrivateEndpointCommandInvalidVPCID verifies that the AWS private endpoint
@@ -158,7 +220,7 @@ func testAccPrivateEndpointServiceEnableConfig(resourceName string, enabled bool
 		`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, enabled)
 }
 
-func testAccPrivateEndpointsDataSourceNoEndpointConfig(serviceResourceName, dataSourceName string) string {
+func testAccPrivateEndpointsDataSourceNoEndpointConfig(serviceResourceName, dataSourceName, serviceDataSourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -176,7 +238,39 @@ data "couchbase-capella_private_endpoints" "%[3]s" {
 
   depends_on = [couchbase-capella_private_endpoint_service.%[2]s]
 }
-`, globalProviderBlock, serviceResourceName, dataSourceName, globalOrgId, globalProjectId, globalClusterId)
+
+data "couchbase-capella_private_endpoint_service" "%[7]s" {
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+
+  depends_on = [couchbase-capella_private_endpoint_service.%[2]s]
+}
+`, globalProviderBlock, serviceResourceName, dataSourceName, globalOrgId, globalProjectId, globalClusterId, serviceDataSourceName)
+}
+
+// testAccPrivateEndpointServiceDisableWithDataSourceConfig disables the service and reads
+// it back through the data source in the same apply, so the data source is exercised
+// against a disabled service as well as an enabled one.
+func testAccPrivateEndpointServiceDisableWithDataSourceConfig(serviceResourceName, serviceDataSourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_private_endpoint_service" "%[2]s" {
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+  enabled         = false
+}
+
+data "couchbase-capella_private_endpoint_service" "%[3]s" {
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+
+  depends_on = [couchbase-capella_private_endpoint_service.%[2]s]
+}
+`, globalProviderBlock, serviceResourceName, serviceDataSourceName, globalOrgId, globalProjectId, globalClusterId)
 }
 
 // TestAccPrivateEndpointsInvalidEndpointID verifies that the private endpoints resource rejects
