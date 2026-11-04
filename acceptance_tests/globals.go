@@ -93,6 +93,8 @@ var (
 	globalOIDCBucketName              = "tf_acc_oidc_bkt"
 	globalDefaultOIDCEndpointName     = "tf_acc_test_doidc_endpoint"
 	globalDefaultOIDCBucketName       = "tf_acc_doidc_bkt"
+	globalOIDCIdEndpointName          = "tf_acc_test_oidcid_endpoint"
+	globalOIDCIdBucketName            = "tf_acc_oidcid_bkt"
 	appEndpointActivationEndpointName = "tf_acc_test_activation_endpoint"
 	appEndpointActivationBucketName   = "tf_acc_activation_bkt"
 	appEndpointLoggingEndpointName    = "tf_acc_test_logging_endpoint"
