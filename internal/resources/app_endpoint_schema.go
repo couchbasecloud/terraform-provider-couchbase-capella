@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -26,6 +27,10 @@ func AppEndpointSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "name", appEndpointBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
 	capellaschema.AddAttr(attrs, "user_xattr_key", appEndpointBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "delta_sync_enabled", appEndpointBuilder, boolAttribute(optional, computed, useStateForUnknown))
+
+	importPartitions := int64Attribute(optional, computed, useStateForUnknown)
+	importPartitions.Validators = []validator.Int64{int64validator.OneOf(16, 32, 64, 128)}
+	capellaschema.AddAttr(attrs, "import_partitions", appEndpointBuilder, importPartitions, "UpdateAppEndpointRequest")
 
 	// Collection attributes - use alternate schemas for string-type schemas
 	collectionAttrs := make(map[string]schema.Attribute)

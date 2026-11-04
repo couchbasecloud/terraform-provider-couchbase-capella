@@ -29,6 +29,8 @@ This resource allows you to manage an App Endpoint configuration for a Couchbase
 - `cors` (Attributes) (see [below for nested schema](#nestedatt--cors))
 - `delta_sync_enabled` (Boolean) - Enable/disable delta sync
  - **Default**: `false`
+- `import_partitions` (Number) - Number of import partitions used to process mutations from the backing bucket. Higher values increase import concurrency for write-heavy workloads. Changing it briefly restarts import processing for the App Endpoint.
+ - **Valid Values**: `16`, `32`, `64`, `128`
 - `oidc` (Attributes List) - OpenID Connect provider configuration. (see [below for nested schema](#nestedatt--oidc))
 - `scopes` (Attributes Map) - **Default**: `map[_default:map[collections:map[_default:map[accessControlFunction:function(doc){channel(doc.channels);} importFilter: function(doc) { if (doc.type != 'mobile') { return false; } return true; }]]]]` (see [below for nested schema](#nestedatt--scopes))
 - `user_xattr_key` (String) - The key of the user-extended attributes (xattr) that will be accessible from the Access control and validation function. If left empty, the feature will be disabled.

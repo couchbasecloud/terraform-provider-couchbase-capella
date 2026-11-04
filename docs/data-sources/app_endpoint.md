@@ -29,6 +29,7 @@ The data source retrieves a single App Endpoint configuration for an App Service
 - `bucket` (String) - The Capella Cluster backing bucket for the App Endpoint.
 - `cors` (Attributes) (see [below for nested schema](#nestedatt--cors))
 - `delta_sync_enabled` (Boolean) - Enable/disable delta sync
+- `import_partitions` (Number) - Number of import partitions used to process mutations from the backing bucket. Defaults to 16.
  - **Default**: `false`
 - `metrics_url` (String)
 - `oidc` (Attributes Set) - OpenID Connect provider configuration. (see [below for nested schema](#nestedatt--oidc))

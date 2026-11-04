@@ -22,7 +22,7 @@ func TestAccAppEndpoint(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true),
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true, 32),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -33,14 +33,16 @@ func TestAccAppEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "syncFnXattr"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "32"),
 				),
 			},
 			{
-				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "new_xattr", false),
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "new_xattr", false, 64),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "new_xattr"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "64"),
 				),
 			},
 			{
@@ -97,7 +99,7 @@ func TestAccAppEndpointInexistentCollection(t *testing.T) {
 	})
 }
 
-func testAccAppEndpointResourceConfig(resourceName, endpointName, collectionName, userXattr string, deltaSync bool) string {
+func testAccAppEndpointResourceConfig(resourceName, endpointName, collectionName, userXattr string, deltaSync bool, importPartitions int) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -110,6 +112,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	name               = "%[8]s"
 	user_xattr_key     = "%[9]s"
 	delta_sync_enabled = %[10]t
+	import_partitions  = %[11]d
 	cors = {
 		origin = ["*"]
 	}
@@ -139,6 +142,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		endpointName,
 		userXattr,
 		deltaSync,
+		importPartitions,
 	)
 }
 
@@ -164,6 +168,7 @@ func TestAccAppEndpointNoCors(t *testing.T) {
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckNoResourceAttr(resourceReference, "cors"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "16"),
 				),
 			},
 			// Re-apply the same config; expect no changes (no perpetual drift).
