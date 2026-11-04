@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,4 +94,31 @@ func TestCapellaProvider_Resources(t *testing.T) {
 
 	require.NotNil(t, resources)
 	assert.NotEmpty(t, resources, "provider should expose resources")
+}
+
+func TestCapellaProvider_UniqueTypeNames(t *testing.T) {
+	p := &capellaProvider{name: providerName}
+	ctx := context.Background()
+
+	t.Run("resources", func(t *testing.T) {
+		seen := map[string]bool{}
+		for _, factory := range p.Resources(ctx) {
+			var resp resource.MetadataResponse
+			factory().Metadata(ctx, resource.MetadataRequest{ProviderTypeName: providerName}, &resp)
+			assert.False(t, seen[resp.TypeName], "duplicate resource type %s", resp.TypeName)
+			seen[resp.TypeName] = true
+		}
+		assert.True(t, seen[providerName+"_app_service_maintenance_window"])
+	})
+
+	t.Run("data sources", func(t *testing.T) {
+		seen := map[string]bool{}
+		for _, factory := range p.DataSources(ctx) {
+			var resp datasource.MetadataResponse
+			factory().Metadata(ctx, datasource.MetadataRequest{ProviderTypeName: providerName}, &resp)
+			assert.False(t, seen[resp.TypeName], "duplicate data source type %s", resp.TypeName)
+			seen[resp.TypeName] = true
+		}
+		assert.True(t, seen[providerName+"_app_service_maintenance_window"])
+	})
 }
