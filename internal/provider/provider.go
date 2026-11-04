@@ -298,6 +298,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewEventingFunction,
 		datasources.NewEventingFunctions,
 		datasources.NewDataApi,
+		datasources.NewAppServiceMaintenanceWindow,
 	}
 }
 
@@ -353,5 +354,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewDatabaseRole,
 		resources.NewEventingFunction,
 		resources.NewDataApi,
+		resources.NewAppServiceMaintenanceWindow,
 	}
 }
