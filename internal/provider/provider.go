@@ -325,7 +325,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAuditLogSettings,
 		resources.NewAuditLogExport,
 		resources.NewPrivateEndpointService,
-		resources.NewAppServicePrivateEndpointService,
 		resources.NewPrivateEndpoint,
 		resources.NewAppServicePrivateEndpoint,
 		resources.NewNetworkPeer,
