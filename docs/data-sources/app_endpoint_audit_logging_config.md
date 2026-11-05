@@ -36,9 +36,9 @@ data "couchbase-capella_app_endpoint_audit_logging_config" "existing_app_endpoin
 ### Read-Only
 
 - `audit_enabled` (Boolean) - Determines whether audit logging is enabled
-- `disabled_roles` (Attributes Set) The roles that are excluded from audit logging. (see [below for nested schema](#nestedatt--disabled_roles))
-- `disabled_users` (Attributes Set) The users that are excluded from audit logging. (see [below for nested schema](#nestedatt--disabled_users))
-- `enabled_event_ids` (Set of Number) The IDs of the audit events that are enabled.
+- `disabled_roles` (Attributes Set) (see [below for nested schema](#nestedatt--disabled_roles))
+- `disabled_users` (Attributes Set) (see [below for nested schema](#nestedatt--disabled_users))
+- `enabled_event_ids` (Set of Number)
 
 <a id="nestedatt--disabled_roles"></a>
 ### Nested Schema for `disabled_roles`

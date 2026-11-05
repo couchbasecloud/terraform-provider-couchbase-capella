@@ -20,12 +20,11 @@ func AppEndpointAuditLoggingConfigSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointAuditLoggingConfigBuilder, requiredStringWithValidator())
 	capellaschema.AddAttr(attrs, "audit_enabled", appEndpointAuditLoggingConfigBuilder, computedBool())
 	capellaschema.AddAttr(attrs, "enabled_event_ids", appEndpointAuditLoggingConfigBuilder, &schema.SetAttribute{
-		Computed:            true,
-		ElementType:         types.Int64Type,
-		MarkdownDescription: "The IDs of the audit events that are enabled.",
+		Computed:    true,
+		ElementType: types.Int64Type,
 	})
-	capellaschema.AddAttr(attrs, "disabled_users", appEndpointAuditLoggingConfigBuilder, computedAppEndpointAuditDisabledRoles("The users that are excluded from audit logging."))
-	capellaschema.AddAttr(attrs, "disabled_roles", appEndpointAuditLoggingConfigBuilder, computedAppEndpointAuditDisabledRoles("The roles that are excluded from audit logging."))
+	capellaschema.AddAttr(attrs, "disabled_users", appEndpointAuditLoggingConfigBuilder, computedAppEndpointAuditDisabledRoles())
+	capellaschema.AddAttr(attrs, "disabled_roles", appEndpointAuditLoggingConfigBuilder, computedAppEndpointAuditDisabledRoles())
 
 	return schema.Schema{
 		MarkdownDescription: "The data source to retrieve the audit logging config of an App Endpoint.",
@@ -33,14 +32,13 @@ func AppEndpointAuditLoggingConfigSchema() schema.Schema {
 	}
 }
 
-func computedAppEndpointAuditDisabledRoles(description string) *schema.SetNestedAttribute {
+func computedAppEndpointAuditDisabledRoles() *schema.SetNestedAttribute {
 	attrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(attrs, "domain", appEndpointAuditLoggingConfigBuilder, computedString(), "DisabledUserRole")
 	capellaschema.AddAttr(attrs, "name", appEndpointAuditLoggingConfigBuilder, computedString(), "DisabledUserRole")
 
 	return &schema.SetNestedAttribute{
-		Computed:            true,
-		MarkdownDescription: description,
+		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: attrs,
 		},
