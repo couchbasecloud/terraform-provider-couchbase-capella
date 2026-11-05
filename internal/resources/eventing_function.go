@@ -719,7 +719,10 @@ func (e *EventingFunction) waitForStatus(
 			// ok to pass nil as we just need the status
 			f, err := e.retrieveEventingFunction(ctx, organizationId, projectId, clusterId, name, nil)
 			if err != nil {
-				return fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
+				return api.PollError(ctx,
+					fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err),
+					fmt.Errorf("timed out waiting for eventing function %q to reach status %q: %w", name, target, ctx.Err()),
+				)
 			}
 
 			if f.State.ValueString() == target {

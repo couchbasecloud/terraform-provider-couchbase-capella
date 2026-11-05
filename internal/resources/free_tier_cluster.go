@@ -361,7 +361,7 @@ func (f *FreeTierCluster) checkForFreeTierClusterStatus(ctx context.Context, org
 				const msg = "waiting for free tier cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
-				return nil, err
+				return nil, api.PollError(ctx, err, fmt.Errorf("free tier cluster creation status transition timed out after initiation, unexpected error: %w", err))
 			}
 		}
 	}

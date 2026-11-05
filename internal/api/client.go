@@ -85,7 +85,7 @@ func (c *Client) ExecuteWithRetry(
 	}
 
 	var fn = func() (response *Response, backoff time.Duration, err error) {
-		req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
+		req, err := http.NewRequestWithContext(ctx, endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
 		if err != nil {
 			return nil, dur, fmt.Errorf("%s: %w", errors.ErrConstructingRequest, err)
 		}

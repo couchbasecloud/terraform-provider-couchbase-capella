@@ -120,6 +120,9 @@ func WatchIndexes(
 				cfg := EndpointCfg{Url: indexURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 				response, err := exec(cfg)
 				if err != nil {
+					if ctx.Err() != nil {
+						return internalerrors.ErrMonitorTimeout
+					}
 					var apiErr *Error
 					if errors.As(err, &apiErr) && apiErr.HttpStatusCode != http.StatusNotFound {
 						return err
