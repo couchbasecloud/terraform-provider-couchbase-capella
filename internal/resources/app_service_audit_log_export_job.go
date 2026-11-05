@@ -244,7 +244,7 @@ func (a *AppServiceAuditLogExportJob) refresh(ctx context.Context, state provide
 
 	var exportResp apigen.GetAuditExportDocResponse
 	if err := json.Unmarshal(response.Body, &exportResp); err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	state.Status = types.StringPointerValue(exportResp.Status)
@@ -259,7 +259,7 @@ func (a *AppServiceAuditLogExportJob) refresh(ctx context.Context, state provide
 		audit := providerschema.NewCouchbaseAuditData(api.CouchbaseAuditData(*exportResp.Audit))
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 		if diags.HasError() {
-			return nil, fmt.Errorf("%s: %v", errors.ErrUnableToConvertAuditData, diags.Errors())
+			return nil, fmt.Errorf("%w: %v", errors.ErrUnableToConvertAuditData, diags.Errors())
 		}
 		state.Audit = auditObj
 	}
