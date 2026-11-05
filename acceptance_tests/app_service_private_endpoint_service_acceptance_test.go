@@ -18,11 +18,14 @@ import (
 // endpoint tests do not interfere with each other on the shared global App Service. Every
 // subtest enables the private endpoint service and disables it again on destroy, so running
 // them concurrently would let one subtest's destroy disable the service the others still need.
+//
+// This test deliberately does NOT call t.Parallel(). That would only serialize the subtests
+// against each other, leaving the whole group free to overlap other top-level tests that share
+// globalAppServiceId - in particular TestAccAppServicePrivateEndpointResource, which is a
+// ParallelTest and needs the private endpoint service to stay enabled for its whole run. Staying
+// sequential puts this test in the phase that completes before any parallel test resumes, so no
+// subtest destroy can disable the service out from under it.
 func TestAccAppServicePrivateEndpoint(t *testing.T) {
-	// Allow this test to run in parallel with other top-level tests, but ensure that the subtests run sequentially.
-	// This is normally set by resource.ParallelTest.
-	t.Parallel()
-
 	t.Run("App Service Private Endpoint Service Resource", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,

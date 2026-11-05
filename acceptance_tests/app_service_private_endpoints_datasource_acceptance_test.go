@@ -3,9 +3,11 @@ package acceptance_tests
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // appServicePrivateEndpointsDatasourceSteps lists the private endpoints of the global App Service,
@@ -32,9 +34,7 @@ func appServicePrivateEndpointsDatasourceSteps() []resource.TestStep {
 				resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
 				resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
 				resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
-				// The test App Service has no CSP private endpoint attached to it, so the
-				// unfiltered list is empty.
-				resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
+				testAccCheckAppServicePrivateEndpointsWellFormed(dataSourceReference),
 			),
 		},
 		{
@@ -71,6 +71,41 @@ data "couchbase-capella_app_service_private_endpoints" "test" {
 			},
 		},
 	})
+}
+
+// testAccCheckAppServicePrivateEndpointsWellFormed asserts that every endpoint the data source
+// returned carries an id and a status, which guards the conversion of the API response into state.
+//
+// It deliberately does not assert the length. The shared App Service can be supplied through
+// TF_VAR_app_service_id and may already carry endpoints, and the ACC_APP_SERVICE_ENDPOINT_ID
+// scenario requires one on that same App Service, so an exact count is environment-dependent. An
+// empty list passes trivially; the emptiness assertion belongs on the filtered step, where the
+// filter is what makes the result predictable.
+//
+// service_name is not checked: the API models it as optional, so a null value is legitimate.
+func testAccCheckAppServicePrivateEndpointsWellFormed(dataSourceReference string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ds, ok := s.RootModule().Resources[dataSourceReference]
+		if !ok {
+			return fmt.Errorf("data source %s not found in state", dataSourceReference)
+		}
+
+		count, err := strconv.Atoi(ds.Primary.Attributes["data.#"])
+		if err != nil {
+			return fmt.Errorf("could not read %s data.#: %w", dataSourceReference, err)
+		}
+
+		for i := 0; i < count; i++ {
+			for _, attr := range []string{"id", "status"} {
+				key := fmt.Sprintf("data.%d.%s", i, attr)
+				if ds.Primary.Attributes[key] == "" {
+					return fmt.Errorf("%s %s is empty", dataSourceReference, key)
+				}
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccAppServicePrivateEndpointsDatasourceConfig(serviceName, dataSourceName, statusFilter string) string {
