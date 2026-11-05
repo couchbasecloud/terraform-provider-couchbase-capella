@@ -52,7 +52,7 @@ func (a *AppServiceAuditLogStreaming) Validate() (map[Attr]string, error) {
 
 	IDs, err := validateSchemaState(state, AppServiceId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrValidatingResource, err)
 	}
 
 	return IDs, nil
