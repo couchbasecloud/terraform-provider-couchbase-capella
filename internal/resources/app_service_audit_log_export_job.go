@@ -21,11 +21,12 @@ import (
 var (
 	_ resource.Resource                   = (*AppServiceAuditLogExportJob)(nil)
 	_ resource.ResourceWithConfigure      = (*AppServiceAuditLogExportJob)(nil)
-	_ resource.ResourceWithImportState    = (*AppServiceAuditLogExportJob)(nil)
 	_ resource.ResourceWithValidateConfig = (*AppServiceAuditLogExportJob)(nil)
 )
 
 // AppServiceAuditLogExportJob is the App Service audit log export job resource implementation.
+// It does not support import: the API does not return start and end, so an imported job
+// would have them null in state, and the next plan would replace it with a new job.
 type AppServiceAuditLogExportJob struct {
 	*providerschema.Data
 }
@@ -223,13 +224,8 @@ func (a *AppServiceAuditLogExportJob) Update(_ context.Context, _ resource.Updat
 func (a *AppServiceAuditLogExportJob) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
 }
 
-// ImportState imports an existing export job into Terraform.
-func (a *AppServiceAuditLogExportJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
 // refresh gets the export job and copies the computed fields into state.
-// The API does not return start and end, so they keep their state values (null after import).
+// The API does not return start and end, so they keep their state values.
 func (a *AppServiceAuditLogExportJob) refresh(ctx context.Context, state providerschema.AppServiceAuditLogExportJobResource) (*providerschema.AppServiceAuditLogExportJobResource, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/auditLogExports/%s",

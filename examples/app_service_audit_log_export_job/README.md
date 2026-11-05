@@ -10,7 +10,7 @@ In this example, we are going to do the following.
 
 1. CREATE: Create a new App Service audit log export job, as stated in the `create_app_service_audit_log_export_job.tf` file.
 2. UPDATE: Not supported. A change to any argument destroys the export job and creates a new one.
-3. IMPORT: Import an existing App Service audit log export job.
+3. IMPORT: Not supported. The API does not return `start` and `end`, so an imported export job would be replaced on the next apply.
 4. DELETE: Not supported by the API. Destroy only removes the export job from the Terraform state.
 
 Copy the `terraform.template.tfvars` file to `terraform.tfvars`, and update the values of the variables for your organization.
@@ -155,38 +155,6 @@ No changes. Your infrastructure matches the configuration.
 
 Terraform has compared your real infrastructure against your configuration
 and found no differences, so no changes are needed.
-```
-
-## IMPORT
-### Remove the resource from the Terraform state file
-
-Command: `terraform state rm couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job`
-
-Sample Output:
-```
-$ terraform state rm couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job
-Removed couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job
-Successfully removed 1 resource instance(s).
-```
-
-### Import the export job
-
-Command: `terraform import couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job id=<export_id>,app_service_id=<app_service_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
-
-The API does not return `start` and `end`, so they are null after import. A plan after import shows that the export job will be replaced.
-
-Sample Output:
-```
-$ terraform import couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
-couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
-couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job: Import prepared!
-  Prepared couchbase-capella_app_service_audit_log_export_job for import
-couchbase-capella_app_service_audit_log_export_job.new_app_service_audit_log_export_job: Refreshing state... [id=id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
-
-Import successful!
-
-The resources that were imported are shown above. These resources are now in
-your Terraform state and will henceforth be managed by Terraform.
 ```
 
 ## DELETE
