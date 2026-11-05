@@ -53,9 +53,11 @@ func awsClusterPlan(storage, iops types.Int64) providerschema.Cluster {
 //
 // It deliberately does not assert what happens to an unknown attribute. The mapping still
 // turns one into a 0, because DiskAWS has plain int fields with no omitempty and skipping
-// the assignment would leave the zero value in place anyway. That config never reaches the
-// mapping now - validateCreateCluster rejects it first, which is what
-// TestValidateCreateClusterAwsDiskRequired_AV_145015 below asserts.
+// the assignment would leave the zero value in place anyway. Nothing reaches the mapping
+// with an unknown any more, but it is kept out on two different paths: on create
+// validateCreateCluster rejects the config, which TestValidateCreateClusterAwsDiskRequired_AV_145015
+// below asserts; on update useStateForUnknown resolves the unknown back to the value the
+// cluster already has, which TestUpdateBodyAttributesResolveUnknownsToState asserts.
 func TestMorphToApiServiceGroupsAWSDisk(t *testing.T) {
 	c := &Cluster{}
 	serviceGroups, err := c.morphToApiServiceGroups(awsClusterPlan(types.Int64Value(50), types.Int64Value(3000)))
