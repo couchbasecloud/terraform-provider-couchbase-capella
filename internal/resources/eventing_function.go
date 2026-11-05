@@ -477,7 +477,8 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 
 	// Apply a deployment state change first if the desired state was set and differs from the prior state.
 	if !plan.State.IsNull() && plan.State.ValueString() != state.State.ValueString() {
-		if err := e.setActivationState(ctx, organizationId, projectId, clusterId, name, plan.State.ValueString()); err != nil {
+		target := activationTarget(state.State.ValueString(), plan.State.ValueString())
+		if err := e.setActivationState(ctx, organizationId, projectId, clusterId, name, target); err != nil {
 			resp.Diagnostics.AddError(
 				"Error setting state of eventing function for update",
 				"Could not set activation state for eventing function "+name+": "+api.ParseError(err),
@@ -671,6 +672,23 @@ func activationVerb(state string) string {
 	}
 
 	return action
+}
+
+// activationTarget returns the state to drive setActivationState with for a transition from prior
+// to desired. The two differ only when resuming: Capella rejects the deploy verb on a paused
+// function with 422 "Cannot deploy eventing function ... while it is in a paused state", so the
+// transition has to go through resumed, whose verb is resume and whose terminal status is still
+// deployed.
+//
+// resumed is deliberately not one of the state attribute's accepted values. A resumed function
+// reports deployed, so practitioners configure deployed for both routes to that status and the
+// provider picks the verb that the prior state allows.
+func activationTarget(prior, desired string) string {
+	if prior == eventingStatePaused && desired == eventingStateDeployed {
+		return eventingStateResumed
+	}
+
+	return desired
 }
 
 // targetStatus returns the runtime status the given state drives the function to. resumed has no
