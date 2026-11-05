@@ -14,36 +14,69 @@ import (
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
-func TestAccAppServicePrivateEndpointServiceResource(t *testing.T) {
+// TestAccAppServicePrivateEndpoint uses sequential subtests so that the App Service private
+// endpoint tests do not interfere with each other on the shared global App Service. Every
+// subtest enables the private endpoint service and disables it again on destroy, so running
+// them concurrently would let one subtest's destroy disable the service the others still need.
+func TestAccAppServicePrivateEndpoint(t *testing.T) {
+	// Allow this test to run in parallel with other top-level tests, but ensure that the subtests run sequentially.
+	// This is normally set by resource.ParallelTest.
+	t.Parallel()
+
+	t.Run("App Service Private Endpoint Service Resource", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			CheckDestroy:             testAccCheckAppServicePrivateEndpointServiceDestroy(t),
+			Steps:                    appServicePrivateEndpointServiceSteps(),
+		})
+	})
+
+	t.Run("App Service Private Endpoints Datasource", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    appServicePrivateEndpointsDatasourceSteps(),
+		})
+	})
+
+	t.Run("App Service Private Endpoint Service AWS Command Datasource", func(t *testing.T) {
+		// appServicePrivateEndpointServiceAWSCommandSteps skips the subtest when the AWS
+		// environment variables are unset, which stops it before resource.Test runs.
+		steps := appServicePrivateEndpointServiceAWSCommandSteps(t)
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    steps,
+		})
+	})
+}
+
+// appServicePrivateEndpointServiceSteps enables the private endpoint service on the global
+// App Service, then imports it. Destroy disables it again.
+func appServicePrivateEndpointServiceSteps() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_service_pe_service_")
 	resourceReference := "couchbase-capella_app_service_private_endpoint_service." + resourceName
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		CheckDestroy:             testAccCheckAppServicePrivateEndpointServiceDestroy(t),
-		Steps: []resource.TestStep{
-			// Create and Read
-			{
-				Config: testAccAppServicePrivateEndpointServiceResourceConfig(resourceName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "state", "enabled"),
-				),
-			},
-			// ImportState
-			{
-				ResourceName:                         resourceReference,
-				ImportStateIdFunc:                    generateAppServicePrivateEndpointServiceImportIdForResource(resourceReference),
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "app_service_id",
-			},
-			// Delete testing automatically occurs in TestCase
+	return []resource.TestStep{
+		// Create and Read
+		{
+			Config: testAccAppServicePrivateEndpointServiceResourceConfig(resourceName),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "state", "enabled"),
+			),
 		},
-	})
+		// ImportState
+		{
+			ResourceName:                         resourceReference,
+			ImportStateIdFunc:                    generateAppServicePrivateEndpointServiceImportIdForResource(resourceReference),
+			ImportState:                          true,
+			ImportStateVerify:                    true,
+			ImportStateVerifyIdentifierAttribute: "app_service_id",
+		},
+		// Delete testing automatically occurs in TestCase
+	}
 }
 
 func testAccAppServicePrivateEndpointServiceResourceConfig(resourceName string) string {

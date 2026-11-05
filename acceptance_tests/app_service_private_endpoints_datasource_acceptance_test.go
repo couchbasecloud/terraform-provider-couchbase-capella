@@ -8,36 +8,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccDatasourceAppServicePrivateEndpoints lists the private endpoints of the global App Service,
+// appServicePrivateEndpointsDatasourceSteps lists the private endpoints of the global App Service,
 // first without a filter and then filtered by status.
-func TestAccDatasourceAppServicePrivateEndpoints(t *testing.T) {
+//
+// The list endpoint is only reachable once the private endpoint service is enabled on the App
+// Service - it returns 400 "Private endpoints aren't enabled for this cluster" otherwise - so every
+// config enables the service and the data source depends on it. The depends_on also defers the read
+// to apply time, so the pre-apply plan of the first step does not call the API before the service
+// exists.
+//
+// These steps run as a subtest of TestAccAppServicePrivateEndpoint, which serialises them against
+// the private endpoint service resource test on the same shared App Service.
+func appServicePrivateEndpointsDatasourceSteps() []resource.TestStep {
+	serviceName := randomStringWithPrefix("tf_acc_app_service_pes_service_")
 	dataSourceName := randomStringWithPrefix("tf_acc_app_service_pes_")
 	dataSourceReference := "data.couchbase-capella_app_service_private_endpoints." + dataSourceName
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppServicePrivateEndpointsDatasourceConfig(dataSourceName, ""),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttrSet(dataSourceReference, "data.#"),
-				),
-			},
-			{
-				// The test App Service has no endpoint in the unrecognized status, so the
-				// filtered list is empty.
-				Config: testAccAppServicePrivateEndpointsDatasourceConfig(dataSourceName, `status = ["unrecognized"]`),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceReference, "status.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
-				),
-			},
+	return []resource.TestStep{
+		{
+			Config: testAccAppServicePrivateEndpointsDatasourceConfig(serviceName, dataSourceName, ""),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
+				// The test App Service has no CSP private endpoint attached to it, so the
+				// unfiltered list is empty.
+				resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
+			),
 		},
-	})
+		{
+			// The test App Service has no endpoint in the unrecognized status, so the
+			// filtered list is empty.
+			Config: testAccAppServicePrivateEndpointsDatasourceConfig(serviceName, dataSourceName, `status = ["unrecognized"]`),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(dataSourceReference, "status.#", "1"),
+				resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
+			),
+		},
+	}
 }
 
 // TestAccDatasourceAppServicePrivateEndpointsInvalidStatus verifies that an unknown status fails at
@@ -64,16 +73,25 @@ data "couchbase-capella_app_service_private_endpoints" "test" {
 	})
 }
 
-func testAccAppServicePrivateEndpointsDatasourceConfig(dataSourceName, statusFilter string) string {
+func testAccAppServicePrivateEndpointsDatasourceConfig(serviceName, dataSourceName, statusFilter string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-data "couchbase-capella_app_service_private_endpoints" "%[2]s" {
-  organization_id = "%[3]s"
-  project_id      = "%[4]s"
-  cluster_id      = "%[5]s"
-  app_service_id  = "%[6]s"
-  %[7]s
+resource "couchbase-capella_app_service_private_endpoint_service" "%[2]s" {
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+  app_service_id  = "%[7]s"
 }
-`, globalProviderBlock, dataSourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, statusFilter)
+
+data "couchbase-capella_app_service_private_endpoints" "%[3]s" {
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+  app_service_id  = "%[7]s"
+  %[8]s
+
+  depends_on = [couchbase-capella_app_service_private_endpoint_service.%[2]s]
+}
+`, globalProviderBlock, serviceName, dataSourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, statusFilter)
 }
