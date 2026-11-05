@@ -60,6 +60,24 @@ func TestAccReplicationActivationStatusResource(t *testing.T) {
 				ImportStateVerify:                    true,
 			},
 			{
+				Config: testAccReplicationActivationStatusConfigWithSettings(buckets, replicationTwoWay+replicationUpdatedSettings, "paused", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(testAccReplicationForwardStatusReference, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(testAccReplicationReference, "priority", "low"),
+					resource.TestCheckResourceAttr(testAccReplicationForwardStatusReference, "state", "paused"),
+					testAccCheckReplicationDirectionStatus(t, false, "paused"),
+				),
+			},
+			{
+				Config:   testAccReplicationActivationStatusConfigWithSettings(buckets, replicationTwoWay+replicationUpdatedSettings, "paused", ""),
+				PlanOnly: true,
+			},
+			{
 				Config: testAccReplicationActivationStatusConfig(buckets, "running", "paused"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -180,7 +198,11 @@ func generateReplicationActivationStatusImportId(resourceReference string) resou
 // testAccReplicationActivationStatusConfig is a twoWay replication with an activation status for each
 // direction. An empty state leaves out the resource for that direction.
 func testAccReplicationActivationStatusConfig(buckets replicationTestBuckets, forward, reverse string) string {
-	config := testAccReplicationConfig(buckets, replicationTwoWay)
+	return testAccReplicationActivationStatusConfigWithSettings(buckets, replicationTwoWay, forward, reverse)
+}
+
+func testAccReplicationActivationStatusConfigWithSettings(buckets replicationTestBuckets, settings, forward, reverse string) string {
+	config := testAccReplicationConfig(buckets, settings)
 	if forward != "" {
 		config += fmt.Sprintf(`
 resource "couchbase-capella_replication_activation_status" "forward" {

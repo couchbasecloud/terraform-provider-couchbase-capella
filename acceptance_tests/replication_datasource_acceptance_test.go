@@ -1,7 +1,9 @@
 package acceptance_tests
 
 import (
+	"encoding/base64"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -87,6 +89,29 @@ func TestAccReplicationDataSource(t *testing.T) {
 					resource.TestCheckNoResourceAttr(testAccReplicationDataSourceReference, "filter.expressions.skip_restream"),
 					resource.TestCheckNoResourceAttr(testAccReplicationDataSourceReference, "reverse_replication_id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccReplicationDataSourceNotFound(t *testing.T) {
+	missingId := base64.StdEncoding.EncodeToString([]byte("00000000000000000000000000000000/tf_acc_missing/tf_acc_missing"))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_replication" "replication" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  id              = "%[5]s"
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, missingId),
+				ExpectError: regexp.MustCompile(`(?i)not\s+found|404`),
 			},
 		},
 	})
