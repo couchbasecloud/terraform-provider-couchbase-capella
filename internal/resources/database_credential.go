@@ -33,12 +33,12 @@ const (
 	credentialTypeAdvanced = "advanced"
 )
 
-const errorMessageAfterDatabaseCredentialCreation = "Bucket creation is successful, but encountered an error while checking the current" +
-	" state of the bucket. Please run `terraform plan` after 1-2 minutes to know the" +
-	" current bucket state. Additionally, run `terraform apply --refresh-only` to update" +
+const errorMessageAfterDatabaseCredentialCreation = "Database credential creation is successful, but encountered an error while checking the current" +
+	" state of the database credential. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current database credential state. Additionally, run `terraform apply --refresh-only` to update" +
 	" the state from remote, unexpected error: "
 
-const errorMessageWhileDatabaseCredentialCreation = "There is an error during bucket creation. Please check in Capella to see if any hanging resources" +
+const errorMessageWhileDatabaseCredentialCreation = "There is an error during database credential creation. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
 // DatabaseCredential is the database credential resource implementation.
