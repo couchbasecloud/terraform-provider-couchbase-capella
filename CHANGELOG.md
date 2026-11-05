@@ -1,5 +1,125 @@
 # Changelog
 
+## [v1.13.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.13.0) (2026-11-05)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.12.0...v1.13.0)
+
+**Implemented enhancements:**
+
+- \[AV-141832\] Validate database role name length at plan time [\#870](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/870) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-121444\] Implement app service audit log datasource [\#867](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/867) ([l0n3star](https://github.com/l0n3star))
+- \[AV-148055\] Add acceptance tests for billing admin, billing viewer and org read-only roles [\#833](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/833) ([AnkitP2000](https://github.com/AnkitP2000))
+- \[AV-147905\] Add zone selection for multi-AZ AWS clusters [\#832](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/832) ([ajsqr](https://github.com/ajsqr))
+- \[AV-121832\] Implement app service pe datasource [\#830](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/830) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121824\] Implement app service pe resource [\#829](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/829) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121821\] Implement app service private endpoint service datasource [\#828](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/828) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121818\] Implement app service private endpoint service resource [\#827](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/827) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147794\] Implement app service admin user datasources [\#819](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/819) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147790\] Implement resource for  app service admin user [\#818](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/818) ([l0n3star](https://github.com/l0n3star))
+- \[AV-142970\] Add billing admin, viewer and org read-only roles [\#816](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/816) ([Killerrekt](https://github.com/Killerrekt))
+
+**Fixed bugs:**
+
+- \[AV-149572\] Reject password change for app service admin user [\#864](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/864) ([l0n3star](https://github.com/l0n3star))
+- \[AV-149567\] Store access\_all\_endpoints = false in state [\#863](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/863) ([l0n3star](https://github.com/l0n3star))
+- \[AV-140030\] Validate UUID format for database roles data source IDs [\#826](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/826) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-141821\] Fix database role example: granting queryManage at collection level [\#824](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/824) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-145497\] OIDC orphan on unmarshal failure [\#813](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/813) ([l0n3star](https://github.com/l0n3star))
+
+**Merged pull requests:**
+
+- \[AV-146772\] Parametrise the Couchbase Server version for acceptance tests [\#815](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/815) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
+## [v1.13.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.13.0) (2026-11-05)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.12.0...v1.13.0)
+
+**Implemented enhancements:**
+
+- \[AV-141832\] Validate database role name length at plan time [\#870](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/870) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-121444\] Implement app service audit log datasource [\#867](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/867) ([l0n3star](https://github.com/l0n3star))
+- \[AV-148055\] Add acceptance tests for billing admin, billing viewer and org read-only roles [\#833](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/833) ([AnkitP2000](https://github.com/AnkitP2000))
+- \[AV-147905\] Add zone selection for multi-AZ AWS clusters [\#832](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/832) ([ajsqr](https://github.com/ajsqr))
+- \[AV-121832\] Implement app service pe datasource [\#830](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/830) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121824\] Implement app service pe resource [\#829](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/829) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121821\] Implement app service private endpoint service datasource [\#828](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/828) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121818\] Implement app service private endpoint service resource [\#827](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/827) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147794\] Implement app service admin user datasources [\#819](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/819) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147790\] Implement resource for  app service admin user [\#818](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/818) ([l0n3star](https://github.com/l0n3star))
+- \[AV-142970\] Add billing admin, viewer and org read-only roles [\#816](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/816) ([Killerrekt](https://github.com/Killerrekt))
+
+**Fixed bugs:**
+
+- \[AV-149572\] Reject password change for app service admin user [\#864](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/864) ([l0n3star](https://github.com/l0n3star))
+- \[AV-149567\] Store access\_all\_endpoints = false in state [\#863](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/863) ([l0n3star](https://github.com/l0n3star))
+- \[AV-140030\] Validate UUID format for database roles data source IDs [\#826](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/826) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-141821\] Fix database role example: granting queryManage at collection level [\#824](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/824) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-145497\] OIDC orphan on unmarshal failure [\#813](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/813) ([l0n3star](https://github.com/l0n3star))
+
+**Merged pull requests:**
+
+- \[AV-146772\] Parametrise the Couchbase Server version for acceptance tests [\#815](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/815) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
+## [v1.13.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.13.0) (2026-11-05)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.12.0...v1.13.0)
+
+**Implemented enhancements:**
+
+- \[AV-141832\] Validate database role name length at plan time [\#870](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/870) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-121444\] Implement app service audit log datasource [\#867](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/867) ([l0n3star](https://github.com/l0n3star))
+- \[AV-148055\] Add acceptance tests for billing admin, billing viewer and org read-only roles [\#833](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/833) ([AnkitP2000](https://github.com/AnkitP2000))
+- \[AV-147905\] Add zone selection for multi-AZ AWS clusters [\#832](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/832) ([ajsqr](https://github.com/ajsqr))
+- \[AV-121832\] Implement app service pe datasource [\#830](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/830) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121824\] Implement app service pe resource [\#829](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/829) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121821\] Implement app service private endpoint service datasource [\#828](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/828) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121818\] Implement app service private endpoint service resource [\#827](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/827) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147794\] Implement app service admin user datasources [\#819](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/819) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147790\] Implement resource for  app service admin user [\#818](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/818) ([l0n3star](https://github.com/l0n3star))
+- \[AV-142970\] Add billing admin, viewer and org read-only roles [\#816](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/816) ([Killerrekt](https://github.com/Killerrekt))
+
+**Fixed bugs:**
+
+- \[AV-149572\] Reject password change for app service admin user [\#864](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/864) ([l0n3star](https://github.com/l0n3star))
+- \[AV-149567\] Store access\_all\_endpoints = false in state [\#863](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/863) ([l0n3star](https://github.com/l0n3star))
+- \[AV-140030\] Validate UUID format for database roles data source IDs [\#826](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/826) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-141821\] Fix database role example: granting queryManage at collection level [\#824](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/824) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-145497\] OIDC orphan on unmarshal failure [\#813](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/813) ([l0n3star](https://github.com/l0n3star))
+
+**Merged pull requests:**
+
+- \[AV-146772\] Parametrise the Couchbase Server version for acceptance tests [\#815](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/815) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
+## [v1.13.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.13.0) (2026-11-05)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.12.0...v1.13.0)
+
+**Implemented enhancements:**
+
+- \[AV-141832\] Validate database role name length at plan time [\#870](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/870) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-121444\] Implement app service audit log datasource [\#867](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/867) ([l0n3star](https://github.com/l0n3star))
+- \[AV-148055\] Add acceptance tests for billing admin, billing viewer and org read-only roles [\#833](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/833) ([AnkitP2000](https://github.com/AnkitP2000))
+- \[AV-147905\] Add zone selection for multi-AZ AWS clusters [\#832](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/832) ([ajsqr](https://github.com/ajsqr))
+- \[AV-121832\] Implement app service pe datasource [\#830](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/830) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121824\] Implement app service pe resource [\#829](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/829) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121821\] Implement app service private endpoint service datasource [\#828](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/828) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121818\] Implement app service private endpoint service resource [\#827](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/827) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147794\] Implement app service admin user datasources [\#819](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/819) ([l0n3star](https://github.com/l0n3star))
+- \[AV-147790\] Implement resource for  app service admin user [\#818](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/818) ([l0n3star](https://github.com/l0n3star))
+- \[AV-142970\] Add billing admin, viewer and org read-only roles [\#816](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/816) ([Killerrekt](https://github.com/Killerrekt))
+
+**Fixed bugs:**
+
+- \[AV-149572\] Reject password change for app service admin user [\#864](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/864) ([l0n3star](https://github.com/l0n3star))
+- \[AV-149567\] Store access\_all\_endpoints = false in state [\#863](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/863) ([l0n3star](https://github.com/l0n3star))
+- \[AV-140030\] Validate UUID format for database roles data source IDs [\#826](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/826) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-141821\] Fix database role example: granting queryManage at collection level [\#824](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/824) ([Killerrekt](https://github.com/Killerrekt))
+- \[AV-145497\] OIDC orphan on unmarshal failure [\#813](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/813) ([l0n3star](https://github.com/l0n3star))
+
+**Merged pull requests:**
+
+- \[AV-146772\] Parametrise the Couchbase Server version for acceptance tests [\#815](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/815) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
 ## [v1.12.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.12.0) (2026-09-30)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.11.1...v1.12.0)

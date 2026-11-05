@@ -27,14 +27,14 @@ def get_prs_since_tag(repo, since_tag: str):
     try:
         tag = repo.get_git_ref(f"tags/{since_tag}")
         tag_sha = tag.object.sha
-        tag_commit = repo.get_commit(tag_sha)
+        tag_commit = repo.get_commit(since_tag)
         tag_date = tag_commit.commit.author.date
         print(f"   Tag date: {tag_date.strftime('%Y-%m-%d')}")
     except Exception as e:
         print(f"WARNING: Could not find tag {since_tag}: {e}")
-        from datetime import datetime, timedelta
-        tag_date = datetime.now() - timedelta(days=30)
-        print(f"   Using fallback: last 30 days")
+        from datetime import datetime, timedelta, timezone
+        tag_date = datetime.now(timezone.utc) - timedelta(days=45)
+        print(f"   Using fallback: last 45 days")
     
     print(f"   Fetching closed PRs (this may take 30-60 seconds)...")
     pulls = repo.get_pulls(state='closed', sort='updated', direction='desc')

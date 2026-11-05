@@ -42,7 +42,7 @@ resource "couchbase-capella_user" "new_user" {
 - `email` (String) - Email of the user.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (List of String) - Organization roles assigned to the User. To learn more, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
- - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`
+ - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`, `organizationBillingAdmin`, `organizationBillingViewer`, `organizationReadOnly`
 
 ### Optional
 
