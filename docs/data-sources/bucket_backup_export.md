@@ -31,7 +31,8 @@ data "couchbase-capella_bucket_backup_export" "existing_bucket_backup_export" {
 - `backup_id` (String) The GUID4 ID of the backup.
 - `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `id` (String) - The ID of the backup export job, returned when the export was created.
+- `id` (String) - The ID of the backup export job.
+ - **Format**: UUID (GUID4)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
@@ -40,8 +41,11 @@ data "couchbase-capella_bucket_backup_export" "existing_bucket_backup_export" {
 - `backup_download_url` (String, Sensitive) - Pre-signed URL to download the exported backup archive. A fresh URL is generated on every read and each URL is valid for 1 hour. Present only while the export is complete and the archive has not expired.
 - `bucket_name` (String) - The name of the bucket the exported backup belongs to.
 - `created_at` (String) - The RFC3339 timestamp at which the export was requested.
+ - **Format**: Date-time in RFC3339 format
 - `cycle_id` (String) The GUID4 ID of the cycle.
-- `expiration` (String) - The RFC3339 timestamp after which Capella stops offering the archive for download. Past it the export is reported as `expired` and the backup must be exported again to be downloaded. The archive itself is removed from cloud storage separately, shortly afterwards.
+- `expiration` (String) - The RFC3339 timestamp after which Capella stops offering this archive for download. Past it the export is reported as `expired` and the backup must be exported again to be downloaded. The archive itself is removed from cloud storage separately, shortly afterwards. Present once the export is complete.
+ - **Format**: Date-time in RFC3339 format
 - `sha256_checksum` (String) - The SHA-256 hash of the exported archive, for verifying the integrity of the downloaded file. Present once the export is complete.
-- `size_in_bytes` (Number) - The size of the exported archive in bytes. Present once the export is complete.
-- `status` (String) - The status of the export job: pending, processing, complete, failed or expired.
+- `size_in_bytes` (Number) - The size of the exported archive in bytes. Exports run up to the 5 TB limit, so this does not fit in a 32-bit integer. Present once the export is complete.
+- `status` (String) - The status of the backup export job. An export starts as `pending`, moves to `processing` while the backup node runs it, and finishes as `complete` or `failed`. A complete export whose archive has passed its expiration is reported as `expired`; the backup must be exported again before it can be downloaded.
+ - **Valid Values**: `pending`, `processing`, `complete`, `failed`, `expired`
