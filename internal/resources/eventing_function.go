@@ -180,21 +180,35 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 		plan.Settings = settings
 	}
 
+	// Only unknown values are resolved: a value the practitioner configured must reach state as
+	// planned, or Terraform reports an inconsistent result after apply and taints the resource.
 	if plan.Bindings != nil {
 		for i := range plan.Bindings.Buckets {
-			plan.Bindings.Buckets[i].Scope = types.StringNull()
-			plan.Bindings.Buckets[i].Collection = types.StringNull()
-			plan.Bindings.Buckets[i].Permission = types.StringNull()
+			if plan.Bindings.Buckets[i].Scope.IsUnknown() {
+				plan.Bindings.Buckets[i].Scope = types.StringNull()
+			}
+			if plan.Bindings.Buckets[i].Collection.IsUnknown() {
+				plan.Bindings.Buckets[i].Collection = types.StringNull()
+			}
+			if plan.Bindings.Buckets[i].Permission.IsUnknown() {
+				plan.Bindings.Buckets[i].Permission = types.StringNull()
+			}
 		}
 		for i := range plan.Bindings.Urls {
-			plan.Bindings.Urls[i].AllowCookies = types.BoolNull()
-			plan.Bindings.Urls[i].ValidateTLSCertificate = types.BoolNull()
+			if plan.Bindings.Urls[i].AllowCookies.IsUnknown() {
+				plan.Bindings.Urls[i].AllowCookies = types.BoolNull()
+			}
+			if plan.Bindings.Urls[i].ValidateTLSCertificate.IsUnknown() {
+				plan.Bindings.Urls[i].ValidateTLSCertificate = types.BoolNull()
+			}
 
-			plan.Bindings.Urls[i].Authentication = types.ObjectNull(
-				providerschema.
-					EventingFunctionURLBindingAuthentication{}.
-					AttributeTypes(),
-			)
+			if plan.Bindings.Urls[i].Authentication.IsUnknown() {
+				plan.Bindings.Urls[i].Authentication = types.ObjectNull(
+					providerschema.
+						EventingFunctionURLBindingAuthentication{}.
+						AttributeTypes(),
+				)
+			}
 		}
 	}
 
