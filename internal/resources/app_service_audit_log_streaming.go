@@ -186,7 +186,9 @@ func (a *AppServiceAuditLogStreaming) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	if _, err := a.waitForFinalState(ctx, state); err != nil {
+	// The config is removed when the GET no longer returns an output type.
+	configRemoved := func(r *apigen.GetAuditLogStreamingResponse) bool { return r.OutputType == nil }
+	if _, err := a.waitForFinalState(ctx, state, configRemoved); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting App Service Audit Log Streaming",
 			"Audit log streaming disable was initiated, but checking its state failed: "+err.Error(),
@@ -231,9 +233,12 @@ func (a *AppServiceAuditLogStreaming) put(ctx context.Context, plan *providersch
 		return fmt.Errorf("failed to set credentials: %w", err)
 	}
 
+	// ElementsAs turns a null set into a nil slice, which marshals to null, so only convert a set that is present.
 	disabledAppEndpoints := []string{}
-	if diags := plan.DisabledAppEndpoints.ElementsAs(ctx, &disabledAppEndpoints, false); diags.HasError() {
-		return fmt.Errorf("failed to read disabled_app_endpoints: %s", diags.Errors())
+	if !plan.DisabledAppEndpoints.IsNull() {
+		if diags := plan.DisabledAppEndpoints.ElementsAs(ctx, &disabledAppEndpoints, false); diags.HasError() {
+			return fmt.Errorf("failed to read disabled_app_endpoints: %s", diags.Errors())
+		}
 	}
 
 	outputType := apigen.PutAuditLogStreamingRequestOutputType(plan.OutputType.ValueString())
@@ -295,8 +300,13 @@ func (a *AppServiceAuditLogStreaming) get(ctx context.Context, m providerschema.
 	return &streamingResp, nil
 }
 
-// waitForFinalState polls the GET endpoint until the streaming state is no longer transitional.
-func (a *AppServiceAuditLogStreaming) waitForFinalState(ctx context.Context, m providerschema.AppServiceAuditLogStreaming) (*apigen.GetAuditLogStreamingResponse, error) {
+// waitForFinalState polls the GET endpoint until the streaming state is not transitional and done reports the requested outcome.
+// It fails on the errored state.
+func (a *AppServiceAuditLogStreaming) waitForFinalState(
+	ctx context.Context,
+	m providerschema.AppServiceAuditLogStreaming,
+	done func(*apigen.GetAuditLogStreamingResponse) bool,
+) (*apigen.GetAuditLogStreamingResponse, error) {
 	const timeout = 3 * time.Minute
 	const interval = 3 * time.Second
 
@@ -322,10 +332,14 @@ func (a *AppServiceAuditLogStreaming) waitForFinalState(ctx context.Context, m p
 			}
 			switch state {
 			case "enabling", "disabling", "pausing":
-				tflog.Info(ctx, "waiting for audit log streaming state transition", map[string]interface{}{"state": state})
+			case "errored":
+				return nil, fmt.Errorf("audit log streaming reached the errored state")
 			default:
-				return streamingResp, nil
+				if done(streamingResp) {
+					return streamingResp, nil
+				}
 			}
+			tflog.Info(ctx, "waiting for audit log streaming state transition", map[string]interface{}{"state": state})
 		}
 	}
 }
@@ -337,7 +351,18 @@ func (a *AppServiceAuditLogStreaming) waitAndSetState(
 	state *tfsdk.State,
 	diags *diag.Diagnostics,
 ) {
-	streamingResp, err := a.waitForFinalState(ctx, plan)
+	// Save the applied plan first, so a failed wait does not lose the config or the credentials, which the API does not return.
+	plan.LogStreamingState = types.StringNull()
+	diags.Append(state.Set(ctx, plan)...)
+	if diags.HasError() {
+		return
+	}
+
+	wantEnabled := plan.StreamingEnabled.ValueBool()
+	streamingEnabledMatches := func(r *apigen.GetAuditLogStreamingResponse) bool {
+		return r.StreamingEnabled != nil && *r.StreamingEnabled == wantEnabled
+	}
+	streamingResp, err := a.waitForFinalState(ctx, plan, streamingEnabledMatches)
 	if err != nil {
 		diags.AddError(
 			"Error Refreshing App Service Audit Log Streaming",
