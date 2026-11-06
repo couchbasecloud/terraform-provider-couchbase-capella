@@ -332,6 +332,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewFreeTierAppService,
 		resources.NewAppServiceCidr,
 		resources.NewAppServiceAdminUser,
+		resources.NewAppServiceAuditLog,
 		resources.NewSnapshotBackup,
 		resources.NewAccessControlFunction,
 		resources.NewImportFilter,
