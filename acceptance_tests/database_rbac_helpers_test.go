@@ -50,12 +50,12 @@ func whitespaceTolerant(phrase string) string {
 // Shared helpers for the fine-grained RBAC acceptance tests: database roles,
 // database credentials and the data sources that list them.
 //
-// Naming constraint: Capella rejects a database role name longer than 32 characters
-// with a 422. randomStringWithPrefix appends 10 characters, so any prefix used as a
-// role name must be at most 22. Overshooting is easy to miss because the resulting
-// 422 satisfies a loosely written ExpectError and the test passes for the wrong
-// reason - match on the message, not just the status code. Database credential names
-// are not subject to this limit.
+// Naming constraint: a database role name must be 2-32 characters, which the name
+// validator enforces at plan time. randomStringWithPrefix appends 10 characters, so any
+// prefix used as a role name must be at most 22. Overshooting is easy to miss because
+// the resulting validation error satisfies a loosely written ExpectError and the test
+// passes for the wrong reason - match on the message, not just the summary. Database
+// credential names are not subject to this limit.
 
 func databaseRoleURL(organizationId, projectId, clusterId, roleId string) string {
 	return fmt.Sprintf(
