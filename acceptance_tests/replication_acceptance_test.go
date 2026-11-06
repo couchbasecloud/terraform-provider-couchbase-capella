@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -931,21 +930,10 @@ func testAccCheckReplicationGone(t *testing.T, id *string) resource.TestCheckFun
 
 func testAccDeleteReplicationOutsideTerraform(t *testing.T, id *string) func() {
 	return func() {
-		cfg := api.EndpointCfg{
-			Url:           replicationapi.ReplicationURL(globalHost, globalOrgId, globalProjectId, globalClusterId, *id),
-			Method:        http.MethodDelete,
-			SuccessStatus: http.StatusNoContent,
-		}
-		if _, err := newTestClient(t).ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, globalToken, nil); err != nil {
+		url := replicationapi.ReplicationURL(globalHost, globalOrgId, globalProjectId, globalClusterId, *id)
+		if err := deleteReplicationAnchorResource(context.Background(), newTestClient(t).ClientV1, url); err != nil {
 			t.Fatalf("deleting replication %s: %s", *id, api.ParseError(err))
 		}
-		for i := 0; i < 30; i++ {
-			if testAccCheckReplicationGone(t, id)(nil) == nil {
-				return
-			}
-			time.Sleep(10 * time.Second)
-		}
-		t.Fatalf("replication %s still exists after the delete", *id)
 	}
 }
 
