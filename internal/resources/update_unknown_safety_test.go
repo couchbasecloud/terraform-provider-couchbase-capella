@@ -49,6 +49,16 @@ func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
 			attributes: AuditLogSettingsSchema().Attributes,
 			attrNames:  []string{"audit_enabled", "enabled_event_ids", "disabled_users"},
 		},
+		{
+			// UpdateClusterRequest, via morphToApiServiceGroups. service_groups is a set and
+			// Terraform correlates set elements by value, so changing anything inside an
+			// element leaves these unknown on that element. On AWS they are plain ints with
+			// no omitempty, so an unwrapped unknown is sent as "storage": 0 and Capella
+			// rejects the update with a range error (AV-145015).
+			name:       "cluster_disk",
+			attributes: clusterDiskAttributes(t),
+			attrNames:  []string{"storage", "iops"},
+		},
 	}
 
 	for _, tc := range cases {
@@ -74,6 +84,27 @@ func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
 			}
 		})
 	}
+}
+
+// clusterDiskAttributes returns the attributes of service_groups[].node.disk, which the
+// table above treats like any other map of attributes. The disk block is nested three
+// levels down, so it cannot be reached through ClusterSchema().Attributes directly.
+func clusterDiskAttributes(t *testing.T) map[string]schema.Attribute {
+	t.Helper()
+
+	serviceGroups, ok := ClusterSchema().Attributes["service_groups"].(*schema.SetNestedAttribute)
+	if !ok {
+		t.Fatalf("service_groups is %T, want *schema.SetNestedAttribute", ClusterSchema().Attributes["service_groups"])
+	}
+	node, ok := serviceGroups.NestedObject.Attributes["node"].(*schema.SingleNestedAttribute)
+	if !ok {
+		t.Fatalf("node is %T, want *schema.SingleNestedAttribute", serviceGroups.NestedObject.Attributes["node"])
+	}
+	disk, ok := node.Attributes["disk"].(*schema.SingleNestedAttribute)
+	if !ok {
+		t.Fatalf("disk is %T, want *schema.SingleNestedAttribute", node.Attributes["disk"])
+	}
+	return disk.Attributes
 }
 
 // resolvesUnknownToState reports whether an unconfigured value (null config, unknown plan)
