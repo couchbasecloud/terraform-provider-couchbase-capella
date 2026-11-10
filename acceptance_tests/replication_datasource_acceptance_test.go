@@ -59,6 +59,7 @@ func TestAccReplicationDataSource(t *testing.T) {
 						"source_details.bucket.name",
 						"source_details.bucket.conflict_resolution_type",
 						"target_details.project.id",
+						"target_details.project.name",
 						"target_details.cluster.id",
 						"target_details.cluster.name",
 						"target_details.bucket.id",
@@ -81,6 +82,7 @@ func TestAccReplicationDataSource(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttrSet(testAccReplicationDataSourceReference, "status"),
 					resource.TestCheckResourceAttrSet(testAccReplicationDataSourceReference, "changes_left"),
+					resource.TestCheckNoResourceAttr(testAccReplicationDataSourceReference, "error"),
 					resource.TestCheckNoResourceAttr(testAccReplicationDataSourceReference, "conflict_logging.%"),
 					resource.TestCheckNoResourceAttr(testAccReplicationDataSourceReference, "filter.expressions.skip_restream"),
 					resource.TestCheckNoResourceAttr(testAccReplicationDataSourceReference, "reverse_replication_id"),
@@ -93,11 +95,14 @@ func TestAccReplicationDataSource(t *testing.T) {
 // testAccCheckReplicationDataSourceMatchesResource checks that each attribute of the data source has the
 // same value as in the replication resource.
 func testAccCheckReplicationDataSourceMatchesResource(attributes ...string) resource.TestCheckFunc {
-	checks := make([]resource.TestCheckFunc, 0, len(attributes))
+	checks := make([]resource.TestCheckFunc, 0, 2*len(attributes))
 	for _, attribute := range attributes {
-		checks = append(checks, resource.TestCheckResourceAttrPair(
-			testAccReplicationDataSourceReference, attribute, testAccReplicationReference, attribute,
-		))
+		checks = append(checks,
+			resource.TestCheckResourceAttrSet(testAccReplicationDataSourceReference, attribute),
+			resource.TestCheckResourceAttrPair(
+				testAccReplicationDataSourceReference, attribute, testAccReplicationReference, attribute,
+			),
+		)
 	}
 	return resource.ComposeAggregateTestCheckFunc(checks...)
 }
