@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -158,6 +159,22 @@ func TestAccReplicationResourceMappings(t *testing.T) {
 			},
 			testAccReplicationImportStep(),
 			{
+				Config: testAccReplicationConfig(buckets, replicationMappingsSalesOnly),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(testAccReplicationReference, "mappings.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(testAccReplicationReference, "mappings.*", map[string]string{
+						"source_scope":                    "sales",
+						"target_scope":                    "sales",
+						"collections.0.source_collection": "orders",
+					}),
+				),
+			},
+			{
 				Config: testAccReplicationConfig(buckets, ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -199,6 +216,10 @@ func TestAccReplicationResourceFilter(t *testing.T) {
 				),
 			},
 			testAccReplicationImportStep(),
+			{
+				Config:      testAccReplicationConfig(buckets, replicationInvalidFilter),
+				ExpectError: regexp.MustCompile("Error updating replication"),
+			},
 			{
 				Config: testAccReplicationConfig(buckets, replicationExpressionOnlyFilter),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -422,10 +443,183 @@ func TestAccReplicationResourceInvalidConfig(t *testing.T) {
 				ExpectError: regexp.MustCompile("source_bucket must be a bucket ID"),
 			},
 			{
-				Config:      testAccReplicationPlanOnlyConfig(replicationConflictLoggingHalfRule),
-				PlanOnly:    true,
+				Config:   testAccReplicationPlanOnlyConfig(replicationConflictLoggingHalfRule),
+				PlanOnly: true,
 				// Terraform wraps long error messages, so the pattern allows any white space between the words.
 				ExpectError: regexp.MustCompile(`must\s+set\s+both\s+bucket\s+and\s+collection,\s+or\s+neither`),
+			},
+		},
+	})
+}
+
+func TestAccReplicationResourceReplaceTarget(t *testing.T) {
+	requireReplicationAnchor(t)
+	buckets := newReplicationTestBuckets(false)
+	target2 := testAccReplicationSecondTargetBucketConfig(randomStringWithPrefix("tf_acc_repl_tgt2_"))
+	var oldId string
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckReplicationClustersHealthy(),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
+				Config:    testAccReplicationBucketsConfig(buckets) + target2,
+				Check:     testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, "") + target2,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationClustersHealthy(),
+					testAccCheckReplicationCaptureId(&oldId),
+				),
+			},
+			{
+				Config: testAccReplicationBucketsConfig(buckets) + target2 +
+					testAccReplicationResourceConfig("replication", "couchbase-capella_bucket.target2", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationClustersHealthy(),
+					resource.TestCheckResourceAttrPair(testAccReplicationReference, "target.bucket", "couchbase-capella_bucket.target2", "id"),
+					resource.TestCheckResourceAttrPair(testAccReplicationReference, "target_details.bucket.name", "couchbase-capella_bucket.target2", "name"),
+					testAccCheckReplicationIdChanged(&oldId),
+					testAccCheckReplicationGone(t, &oldId),
+				),
+			},
+		},
+	})
+}
+
+func TestAccReplicationResourceDuplicate(t *testing.T) {
+	requireReplicationAnchor(t)
+	buckets := newReplicationTestBuckets(false)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckReplicationClustersHealthy(),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
+				Config:    testAccReplicationBucketsConfig(buckets),
+				Check:     testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, ""),
+				Check:  testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, "") +
+					testAccReplicationResourceConfig("duplicate", "couchbase-capella_bucket.target", "  depends_on = [couchbase-capella_replication.replication]\n"),
+				ExpectError: regexp.MustCompile(`(?s)already\s+exists.*terraform\s+import`),
+			},
+			{
+				Config:   testAccReplicationConfig(buckets, ""),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccReplicationResourceDeletedOutsideTerraform(t *testing.T) {
+	requireReplicationAnchor(t)
+	buckets := newReplicationTestBuckets(false)
+	var id string
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckReplicationClustersHealthy(),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
+				Config:    testAccReplicationBucketsConfig(buckets),
+				Check:     testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationClustersHealthy(),
+					testAccCheckReplicationCaptureId(&id),
+				),
+			},
+			{
+				PreConfig:          testAccDeleteReplicationOutsideTerraform(t, &id),
+				Config:             testAccReplicationConfig(buckets, ""),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccReplicationConfig(buckets, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationClustersHealthy(),
+					resource.TestCheckResourceAttrSet(testAccReplicationReference, "id"),
+					resource.TestCheckResourceAttrSet(testAccReplicationReference, "status"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccReplicationResourceCreateFailure(t *testing.T) {
+	requireReplicationAnchor(t)
+	buckets := newReplicationTestBuckets(false)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckReplicationClustersHealthy(),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
+				Config:    testAccReplicationBucketsConfig(buckets),
+				Check:     testAccCheckReplicationClustersHealthy(),
+			},
+			{
+				Config:      testAccReplicationConfig(buckets, replicationInvalidFilter),
+				ExpectError: regexp.MustCompile("Error creating replication"),
+			},
+			{
+				Config: testAccReplicationConfig(buckets, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccReplicationReference, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationClustersHealthy(),
+					resource.TestCheckResourceAttrSet(testAccReplicationReference, "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccReplicationResourceImportNotFound(t *testing.T) {
+	missingId := base64.StdEncoding.EncodeToString([]byte("00000000000000000000000000000000/tf_acc_missing/tf_acc_missing"))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:        testAccReplicationPlanOnlyConfig(replicationBucketIds),
+				ResourceName:  testAccReplicationReference,
+				ImportState:   true,
+				ImportStateId: fmt.Sprintf("id=%s,cluster_id=%s,project_id=%s,organization_id=%s", missingId, globalClusterId, globalProjectId, globalOrgId),
+				ExpectError:   regexp.MustCompile(`(?i)non-existent|not\s+found`),
+			},
+			{
+				Config:        testAccReplicationPlanOnlyConfig(replicationBucketIds),
+				ResourceName:  testAccReplicationReference,
+				ImportState:   true,
+				ImportStateId: fmt.Sprintf("id=%s,cluster_id=%s", missingId, globalClusterId),
+				ExpectError:   regexp.MustCompile(`Error reading replication`),
 			},
 		},
 	})
@@ -658,8 +852,12 @@ resource "couchbase-capella_collection" "log_inventory" {
 
 // testAccReplicationConfig is testAccReplicationBucketsConfig plus the replication.
 func testAccReplicationConfig(buckets replicationTestBuckets, settings string) string {
-	return testAccReplicationBucketsConfig(buckets) + fmt.Sprintf(`
-resource "couchbase-capella_replication" "replication" {
+	return testAccReplicationBucketsConfig(buckets) + testAccReplicationResourceConfig("replication", "couchbase-capella_bucket.target", settings)
+}
+
+func testAccReplicationResourceConfig(name, targetBucket, settings string) string {
+	return fmt.Sprintf(`
+resource "couchbase-capella_replication" "%[6]s" {
   organization_id = "%[1]s"
   project_id      = "%[2]s"
   cluster_id      = "%[3]s"
@@ -667,11 +865,76 @@ resource "couchbase-capella_replication" "replication" {
 
   target = {
     cluster = "%[4]s"
-    bucket  = couchbase-capella_bucket.target.id
+    bucket  = %[7]s.id
   }
 %[5]s
 }
-`, globalOrgId, globalProjectId, globalClusterId, dmClusterId, settings)
+`, globalOrgId, globalProjectId, globalClusterId, dmClusterId, settings, name, targetBucket)
+}
+
+func testAccReplicationSecondTargetBucketConfig(name string) string {
+	return fmt.Sprintf(`
+resource "couchbase-capella_bucket" "target2" {
+  organization_id            = "%[1]s"
+  project_id                 = "%[2]s"
+  cluster_id                 = "%[3]s"
+  name                       = "%[4]s"
+  storage_backend            = "couchstore"
+  memory_allocation_in_mb    = 100
+  bucket_conflict_resolution = "seqno"
+}
+`, globalOrgId, globalProjectId, dmClusterId, name)
+}
+
+func testAccCheckReplicationCaptureId(id *string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		replication, ok := state.RootModule().Resources[testAccReplicationReference]
+		if !ok {
+			return fmt.Errorf("resource %q not found in the state", testAccReplicationReference)
+		}
+		*id = replication.Primary.Attributes["id"]
+		return nil
+	}
+}
+
+func testAccCheckReplicationIdChanged(oldId *string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		replication, ok := state.RootModule().Resources[testAccReplicationReference]
+		if !ok {
+			return fmt.Errorf("resource %q not found in the state", testAccReplicationReference)
+		}
+		if replication.Primary.Attributes["id"] == *oldId {
+			return fmt.Errorf("replication ID %s did not change after the replace", *oldId)
+		}
+		return nil
+	}
+}
+
+func testAccCheckReplicationGone(t *testing.T, id *string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		cfg := api.EndpointCfg{
+			Url:           replicationapi.ReplicationURL(globalHost, globalOrgId, globalProjectId, globalClusterId, *id),
+			Method:        http.MethodGet,
+			SuccessStatus: http.StatusOK,
+		}
+		_, err := newTestClient(t).ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, globalToken, nil)
+		if err == nil {
+			return fmt.Errorf("replication %s still exists", *id)
+		}
+		if notFound, errString := api.CheckResourceNotFoundError(err); !notFound {
+			return fmt.Errorf("could not confirm replication %s was deleted: %s", *id, errString)
+		}
+		return nil
+	}
+}
+
+func testAccDeleteReplicationOutsideTerraform(t *testing.T, id *string) func() {
+	return func() {
+		url := replicationapi.ReplicationURL(globalHost, globalOrgId, globalProjectId, globalClusterId, *id)
+		if err := deleteReplicationAnchorResource(context.Background(), newTestClient(t).ClientV1, url); err != nil {
+			t.Fatalf("deleting replication %s: %s", *id, api.ParseError(err))
+		}
+	}
 }
 
 // testAccReplicationScopesAndCollectionsConfig makes the scopes and the collections for the replication test.
@@ -752,6 +1015,29 @@ const (
   ]
 `
 
+	replicationMappingsSalesOnly = `
+  mappings = [
+    {
+      source_scope = "sales"
+      target_scope = "sales"
+      collections  = [{ source_collection = "orders", target_collection = "orders" }]
+    },
+  ]
+
+  depends_on = [
+    couchbase-capella_collection.source_orders,
+    couchbase-capella_collection.target_orders,
+  ]
+`
+
+	replicationInvalidFilter = `
+  filter = {
+    expressions = {
+      reg_ex = "REGEXP_CONTAINS(META().id"
+    }
+  }
+`
+
 	replicationFullFilter = `
   filter = {
     document_exclude_options = {
@@ -787,6 +1073,14 @@ const (
     type    = "external"
   }
   direction = "twoWay"
+`
+
+	replicationBucketIds = `
+  source_bucket = "c291cmNl"
+  target = {
+    cluster = "ffffffff-aaaa-1414-eeee-000000000000"
+    bucket  = "dGFyZ2V0"
+  }
 `
 
 	replicationBucketNameAsId = `
