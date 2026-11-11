@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	clusterAlertConfigurationBuilder = capellaschema.NewSchemaBuilder("clusterAlertConfiguration", "UpdateAlertConfigurationRequest")
-	alertConfigurationSettingBuilder = capellaschema.NewSchemaBuilder("alertConfigurationSetting", "AlertConfigurationEntry")
-	alertMuteSettingBuilder          = capellaschema.NewSchemaBuilder("alertMuteSetting", "AlertMuteAction")
+	alertConfigurationResourceBuilder = capellaschema.NewSchemaBuilder("alertConfiguration", "UpdateAlertConfigurationRequest")
+	alertConfigurationSettingBuilder  = capellaschema.NewSchemaBuilder("alertConfigurationSetting", "AlertConfigurationEntry")
+	alertMuteSettingBuilder           = capellaschema.NewSchemaBuilder("alertMuteSetting", "AlertMuteAction")
 )
 
 // The OpenAPI loader does not read a description written next to a $ref inside allOf, which is how
@@ -46,13 +46,40 @@ On destroy, Terraform clears the mutes and recipients it manages, so the level g
 
 Mute keys must be the alert identifier used in ` + "`configs`" + `, such as ` + "`cpu_usage_high`" + `, not a severity-specific name such as ` + "`CPUUsageHighWarning`" + `. A mute whose ` + "`muted_until`" + ` has passed stays at this level and in state until it is changed or removed; set a later ` + "`muted_until`" + ` before changing anything else on it.`
 
+// OrganizationAlertConfigurationSchema returns the schema for the organization alert configuration resource.
+func OrganizationAlertConfigurationSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(attrs, "organization_id", alertConfigurationResourceBuilder, requiredUUIDStringAttribute())
+	addAlertConfigurationSettingsAttrs(attrs)
+
+	return schema.Schema{
+		MarkdownDescription: "Manages the alert configuration that an organization sets for itself: threshold and frequency overrides, email recipients and mutes. Its projects and clusters inherit it unless they override it. What the organization inherits from the Capella defaults is shown by the `couchbase-capella_organization_alert_configuration` data source." +
+			alertConfigurationOwnershipDescription,
+		Attributes: attrs,
+	}
+}
+
+// ProjectAlertConfigurationSchema returns the schema for the project alert configuration resource.
+func ProjectAlertConfigurationSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(attrs, "organization_id", alertConfigurationResourceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", alertConfigurationResourceBuilder, requiredUUIDStringAttribute())
+	addAlertConfigurationSettingsAttrs(attrs)
+
+	return schema.Schema{
+		MarkdownDescription: "Manages the alert configuration that a project sets for itself: threshold and frequency overrides, email recipients and mutes. Its clusters inherit it unless they override it. What the project inherits from its organization and the Capella defaults is shown by the `couchbase-capella_project_alert_configuration` data source." +
+			alertConfigurationOwnershipDescription,
+		Attributes: attrs,
+	}
+}
+
 // ClusterAlertConfigurationSchema returns the schema for the cluster alert configuration resource.
 func ClusterAlertConfigurationSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(attrs, "organization_id", clusterAlertConfigurationBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "project_id", clusterAlertConfigurationBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "cluster_id", clusterAlertConfigurationBuilder, requiredUUIDStringAttribute())
-	addAlertConfigurationSettingsAttrs(attrs, clusterAlertConfigurationBuilder)
+	capellaschema.AddAttr(attrs, "organization_id", alertConfigurationResourceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", alertConfigurationResourceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", alertConfigurationResourceBuilder, requiredUUIDStringAttribute())
+	addAlertConfigurationSettingsAttrs(attrs)
 
 	return schema.Schema{
 		MarkdownDescription: "Manages the alert configuration that a cluster sets for itself: threshold and frequency overrides, email recipients and mutes. What the cluster inherits from its project, its organization and the Capella defaults is shown by the `couchbase-capella_cluster_alert_configuration` data source." +
@@ -62,7 +89,7 @@ func ClusterAlertConfigurationSchema() schema.Schema {
 }
 
 // addAlertConfigurationSettingsAttrs adds the attributes shared by the alert configuration resources of every level.
-func addAlertConfigurationSettingsAttrs(attrs map[string]schema.Attribute, builder *capellaschema.SchemaBuilder) {
+func addAlertConfigurationSettingsAttrs(attrs map[string]schema.Attribute) {
 	configs := &schema.MapNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
@@ -71,18 +98,18 @@ func addAlertConfigurationSettingsAttrs(attrs map[string]schema.Attribute, build
 		},
 	}
 	configs.MarkdownDescription = alertConfigsDescription
-	capellaschema.AddAttr(attrs, "configs", builder, configs)
+	capellaschema.AddAttr(attrs, "configs", alertConfigurationResourceBuilder, configs)
 
 	recipients := stringSetAttribute(optional)
 	recipients.Validators = append(recipients.Validators, recipientsUniqueIgnoringCase{})
-	capellaschema.AddAttr(attrs, "recipients", builder, recipients)
+	capellaschema.AddAttr(attrs, "recipients", alertConfigurationResourceBuilder, recipients)
 
 	mutedAlerts := &schema.MapNestedAttribute{
 		Optional:     true,
 		NestedObject: schema.NestedAttributeObject{Attributes: alertMuteSettingAttrs()},
 	}
 	mutedAlerts.MarkdownDescription = alertMutedAlertsDescription
-	capellaschema.AddAttr(attrs, "muted_alerts", builder, mutedAlerts)
+	capellaschema.AddAttr(attrs, "muted_alerts", alertConfigurationResourceBuilder, mutedAlerts)
 }
 
 func alertConfigurationSettingAttrs() map[string]schema.Attribute {

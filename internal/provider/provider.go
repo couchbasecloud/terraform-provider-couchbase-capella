@@ -357,6 +357,8 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewDatabaseRole,
 		resources.NewEventingFunction,
 		resources.NewDataApi,
+		resources.NewOrganizationAlertConfiguration,
+		resources.NewProjectAlertConfiguration,
 		resources.NewClusterAlertConfiguration,
 	}
 }

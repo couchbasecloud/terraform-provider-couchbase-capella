@@ -9,11 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	alertsapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/alerts"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -250,10 +253,12 @@ func TestRecipientsUniqueIgnoringCase(t *testing.T) {
 		{name: "an empty list is accepted", addresses: []string{}},
 	}
 
-	t.Run("the recipients attribute uses the validator", func(t *testing.T) {
-		recipients, ok := ClusterAlertConfigurationSchema().Attributes["recipients"].(*schema.SetAttribute)
-		require.True(t, ok)
-		assert.Contains(t, recipients.Validators, validator.Set(recipientsUniqueIgnoringCase{}))
+	t.Run("the recipients attribute uses the validator at every level", func(t *testing.T) {
+		for _, s := range []schema.Schema{OrganizationAlertConfigurationSchema(), ProjectAlertConfigurationSchema(), ClusterAlertConfigurationSchema()} {
+			recipients, ok := s.Attributes["recipients"].(*schema.SetAttribute)
+			require.True(t, ok)
+			assert.Contains(t, recipients.Validators, validator.Set(recipientsUniqueIgnoringCase{}))
+		}
 	})
 
 	for _, tt := range tests {
@@ -284,4 +289,55 @@ func TestAlertConfigurationRecipientsWithoutPut(t *testing.T) {
 	got, diags := providerschema.NewAlertConfigurationSettings(ctx, plan, current)
 	require.False(t, diags.HasError(), "unexpected diagnostics: %v", diags)
 	assert.True(t, got.Recipients.Equal(plan.Recipients), "state %v must equal the plan %v", got.Recipients, plan.Recipients)
+}
+
+// Each level's schema must have exactly the attributes of its model, or reading the plan fails at runtime.
+func TestAlertConfigurationSchemasMatchModels(t *testing.T) {
+	ctx := context.Background()
+	settings := providerschema.AlertConfigurationSettings{Recipients: types.SetNull(types.StringType)}
+	tests := []struct {
+		name   string
+		schema schema.Schema
+		model  any
+	}{
+		{name: "organization", schema: OrganizationAlertConfigurationSchema(), model: &providerschema.OrganizationAlertConfigurationResource{AlertConfigurationSettings: settings}},
+		{name: "project", schema: ProjectAlertConfigurationSchema(), model: &providerschema.ProjectAlertConfigurationResource{AlertConfigurationSettings: settings}},
+		{name: "cluster", schema: ClusterAlertConfigurationSchema(), model: &providerschema.ClusterAlertConfigurationResource{AlertConfigurationSettings: settings}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state := tfsdk.State{Schema: tt.schema, Raw: tftypes.NewValue(tt.schema.Type().TerraformType(ctx), nil)}
+			diags := state.Set(ctx, tt.model)
+			assert.False(t, diags.HasError(), "unexpected diagnostics: %v", diags)
+		})
+	}
+}
+
+func TestParseOrganizationAlertConfigurationImportID(t *testing.T) {
+	const organizationId = "5ae82d34-5da8-4313-af5f-90ea4142a4c6"
+	tests := []struct {
+		name     string
+		importID string
+		want     string
+		wantErr  bool
+	}{
+		{name: "key=value form", importID: "organization_id=" + organizationId, want: organizationId},
+		{name: "bare ID is rejected", importID: organizationId, wantErr: true},
+		{name: "empty ID is rejected", importID: "organization_id=", wantErr: true},
+		{name: "other levels' IDs are rejected", importID: "organization_id=" + organizationId + ",project_id=b02d46ce-c3b1-4a5e-8f3f-ad49112b1dc6", wantErr: true},
+		{name: "other keys are rejected", importID: "id=" + organizationId, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseOrganizationAlertConfigurationImportID(tt.importID)
+			if tt.wantErr {
+				assert.ErrorIs(t, err, errors.ErrInvalidImport)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

@@ -40,6 +40,49 @@ type AlertMuteSetting struct {
 	MutedUntil timetypes.RFC3339 `tfsdk:"muted_until"`
 }
 
+// OrganizationAlertConfigurationResource is the Terraform resource model for an organization's alert configuration.
+type OrganizationAlertConfigurationResource struct {
+	OrganizationId types.String `tfsdk:"organization_id"`
+	AlertConfigurationSettings
+}
+
+// Validate checks the organization ID in state. Import stores it already parsed, because the
+// shared import parser only recognises an import string when organization_id is null.
+func (o *OrganizationAlertConfigurationResource) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: o.OrganizationId,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %w", err)
+	}
+
+	return IDs, nil
+}
+
+// ProjectAlertConfigurationResource is the Terraform resource model for a project's alert configuration.
+type ProjectAlertConfigurationResource struct {
+	OrganizationId types.String `tfsdk:"organization_id"`
+	ProjectId      types.String `tfsdk:"project_id"`
+	AlertConfigurationSettings
+}
+
+// Validate checks the IDs in state, including the comma-separated form that import stores in project_id.
+func (p *ProjectAlertConfigurationResource) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: p.OrganizationId,
+		ProjectId:      p.ProjectId,
+	}
+
+	IDs, err := validateSchemaState(state, ProjectId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %w", err)
+	}
+
+	return IDs, nil
+}
+
 // ClusterAlertConfigurationResource is the Terraform resource model for a cluster's alert configuration.
 type ClusterAlertConfigurationResource struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
