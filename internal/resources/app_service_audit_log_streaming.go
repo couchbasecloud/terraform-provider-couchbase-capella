@@ -390,11 +390,10 @@ func setAuditLogStreamingState(ctx context.Context, m *providerschema.AppService
 	m.LogStreamingState = types.StringPointerValue(streamingResp.LogStreamingState)
 
 	// The API returns no list when nothing is excluded. Keep null in that case to match an omitted attribute.
-	if streamingResp.DisabledAppEndpoints == nil || len(*streamingResp.DisabledAppEndpoints) == 0 {
-		if m.DisabledAppEndpoints.IsNull() || m.DisabledAppEndpoints.IsUnknown() {
-			m.DisabledAppEndpoints = types.SetNull(types.StringType)
-			return diags
-		}
+	if (streamingResp.DisabledAppEndpoints == nil || len(*streamingResp.DisabledAppEndpoints) == 0) &&
+		(m.DisabledAppEndpoints.IsNull() || m.DisabledAppEndpoints.IsUnknown()) {
+		m.DisabledAppEndpoints = types.SetNull(types.StringType)
+		return diags
 	}
 	endpoints := []string{}
 	if streamingResp.DisabledAppEndpoints != nil {
