@@ -512,8 +512,8 @@ func (r *AppServiceLogStreaming) buildPostLogStreamingRequest(ctx context.Contex
 // logStreamingCredentials returns the generated API credentials struct that matches outputType.
 // It is shared by the log streaming and audit log streaming resources, whose request unions accept the same structs.
 func logStreamingCredentials(ctx context.Context, outputType string, creds *providerschema.LogStreamingCredentials) (any, error) {
-	switch outputType {
-	case "datadog":
+	switch apigen.PostLogStreamingRequestOutputType(outputType) {
+	case apigen.PostLogStreamingRequestOutputTypeDatadog:
 		dd, diags := creds.AsDatadogCredentials(ctx)
 		if diags.HasError() {
 			return nil, fmt.Errorf("failed to extract datadog credentials: %s", diags.Errors())
@@ -523,7 +523,7 @@ func logStreamingCredentials(ctx context.Context, outputType string, creds *prov
 		}
 		return apigen.Datadog{Url: dd.Url.ValueString(), ApiKey: dd.ApiKey.ValueString()}, nil
 
-	case "dynatrace":
+	case apigen.PostLogStreamingRequestOutputTypeDynatrace:
 		dt, diags := creds.AsDynatraceCredentials(ctx)
 		if diags.HasError() {
 			return nil, fmt.Errorf("failed to extract dynatrace credentials: %s", diags.Errors())
@@ -533,7 +533,7 @@ func logStreamingCredentials(ctx context.Context, outputType string, creds *prov
 		}
 		return apigen.Dynatrace{Url: dt.Url.ValueString(), ApiToken: dt.ApiToken.ValueString()}, nil
 
-	case "elastic":
+	case apigen.PostLogStreamingRequestOutputTypeElastic:
 		el, diags := creds.AsElasticCredentials(ctx)
 		if diags.HasError() {
 			return nil, fmt.Errorf("failed to extract elastic credentials: %s", diags.Errors())
@@ -543,7 +543,7 @@ func logStreamingCredentials(ctx context.Context, outputType string, creds *prov
 		}
 		return apigen.Elastic{Url: el.Url.ValueString(), User: el.User.ValueString(), Password: el.Password.ValueString()}, nil
 
-	case "generic_http":
+	case apigen.PostLogStreamingRequestOutputTypeGenericHttp:
 		gh, diags := creds.AsGenericHttpCredentials(ctx)
 		if diags.HasError() {
 			return nil, fmt.Errorf("failed to extract generic_http credentials: %s", diags.Errors())
@@ -558,7 +558,7 @@ func logStreamingCredentials(ctx context.Context, outputType string, creds *prov
 			Password: gh.Password.ValueStringPointer(),
 		}, nil
 
-	case "loki":
+	case apigen.PostLogStreamingRequestOutputTypeLoki:
 		lk, diags := creds.AsLokiCredentials(ctx)
 		if diags.HasError() {
 			return nil, fmt.Errorf("failed to extract loki credentials: %s", diags.Errors())
@@ -568,7 +568,7 @@ func logStreamingCredentials(ctx context.Context, outputType string, creds *prov
 		}
 		return apigen.Loki{Url: lk.Url.ValueString(), User: lk.User.ValueString(), Password: lk.Password.ValueString()}, nil
 
-	case "splunk":
+	case apigen.PostLogStreamingRequestOutputTypeSplunk:
 		sp, diags := creds.AsSplunkCredentials(ctx)
 		if diags.HasError() {
 			return nil, fmt.Errorf("failed to extract splunk credentials: %s", diags.Errors())
@@ -578,7 +578,7 @@ func logStreamingCredentials(ctx context.Context, outputType string, creds *prov
 		}
 		return apigen.Splunk{Url: sp.Url.ValueString(), SplunkToken: sp.SplunkToken.ValueString()}, nil
 
-	case "sumologic":
+	case apigen.PostLogStreamingRequestOutputTypeSumologic:
 		sl, diags := creds.AsSumologicCredentials(ctx)
 		if diags.HasError() {
 			return nil, fmt.Errorf("failed to extract sumologic credentials: %s", diags.Errors())
