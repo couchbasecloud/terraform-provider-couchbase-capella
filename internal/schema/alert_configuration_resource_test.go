@@ -83,3 +83,34 @@ func TestNewAlertConfigurationSettings(t *testing.T) {
 		assert.True(t, diags.HasError())
 	})
 }
+
+func TestAlertConfigurationResourceValidate(t *testing.T) {
+	const (
+		organizationId = "5ae82d34-5da8-4313-af5f-90ea4142a4c6"
+		projectId      = "b02d46ce-c3b1-4a5e-8f3f-ad49112b1dc6"
+	)
+
+	t.Run("project import string is split", func(t *testing.T) {
+		resource := ProjectAlertConfigurationResource{
+			OrganizationId: types.StringNull(),
+			ProjectId:      types.StringValue("project_id=" + projectId + ",organization_id=" + organizationId),
+		}
+		IDs, err := resource.Validate()
+		require.NoError(t, err)
+		assert.Equal(t, organizationId, IDs[OrganizationId])
+		assert.Equal(t, projectId, IDs[ProjectId])
+	})
+
+	t.Run("organization ID is read as is", func(t *testing.T) {
+		resource := OrganizationAlertConfigurationResource{OrganizationId: types.StringValue(organizationId)}
+		IDs, err := resource.Validate()
+		require.NoError(t, err)
+		assert.Equal(t, organizationId, IDs[OrganizationId])
+	})
+
+	t.Run("empty organization ID is rejected", func(t *testing.T) {
+		resource := OrganizationAlertConfigurationResource{OrganizationId: types.StringValue("")}
+		_, err := resource.Validate()
+		assert.Error(t, err)
+	})
+}
