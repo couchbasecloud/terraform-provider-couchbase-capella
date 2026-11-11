@@ -91,7 +91,7 @@ func TestAppServiceMaintenanceWindowSchemaValidators(t *testing.T) {
 func TestAppServiceMaintenanceWindowCreateConflict(t *testing.T) {
 	ctx := context.Background()
 	r, requests := newTestMaintenanceWindow(t, http.StatusConflict,
-		`{"code":11075,"message":"exists","httpStatusCode":409}`)
+		`{"code":11074,"message":"exists","httpStatusCode":409}`)
 
 	s := AppServiceMaintenanceWindowSchema()
 	plan := tfsdk.Plan{Schema: s}
@@ -107,6 +107,35 @@ func TestAppServiceMaintenanceWindowCreateConflict(t *testing.T) {
 	assert.True(t, resp.State.Raw.IsNull(), "nothing may be written to state")
 }
 
+func TestAppServiceMaintenanceWindowCreate(t *testing.T) {
+	ctx := context.Background()
+	var methods []string
+	data := newTestProviderData(t, func(w http.ResponseWriter, r *http.Request) {
+		methods = append(methods, r.Method)
+		if r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusCreated)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"preferredDay":"sunday","preferredHour":2,"preferredMinute":30}`))
+	})
+	r := &AppServiceMaintenanceWindow{Data: data}
+
+	s := AppServiceMaintenanceWindowSchema()
+	plan := tfsdk.Plan{Schema: s}
+	require.False(t, plan.Set(ctx, testMaintenanceWindowModel()).HasError())
+	resp := &resource.CreateResponse{State: tfsdk.State{Schema: s}}
+
+	r.Create(ctx, resource.CreateRequest{Plan: plan}, resp)
+
+	require.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
+	require.Empty(t, resp.Diagnostics.Warnings(), resp.Diagnostics)
+	assert.Equal(t, []string{http.MethodPost, http.MethodGet}, methods)
+	var got providerschema.AppServiceMaintenanceWindow
+	require.False(t, resp.State.Get(ctx, &got).HasError())
+	assert.Equal(t, testMaintenanceWindowModel(), got)
+}
+
 func TestAppServiceMaintenanceWindowRead(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -118,7 +147,7 @@ func TestAppServiceMaintenanceWindowRead(t *testing.T) {
 		{
 			name:          "404 removes the resource from state",
 			status:        http.StatusNotFound,
-			body:          `{"code":11074,"message":"not found","httpStatusCode":404}`,
+			body:          `{"code":11075,"message":"not found","httpStatusCode":404}`,
 			expectRemoved: true,
 		},
 		{
@@ -174,7 +203,7 @@ func TestAppServiceMaintenanceWindowRead(t *testing.T) {
 func TestAppServiceMaintenanceWindowDeleteNotFound(t *testing.T) {
 	ctx := context.Background()
 	r, _ := newTestMaintenanceWindow(t, http.StatusNotFound,
-		`{"code":11074,"message":"not found","httpStatusCode":404}`)
+		`{"code":11075,"message":"not found","httpStatusCode":404}`)
 
 	state := tfsdk.State{Schema: AppServiceMaintenanceWindowSchema()}
 	require.False(t, state.Set(ctx, testMaintenanceWindowModel()).HasError())

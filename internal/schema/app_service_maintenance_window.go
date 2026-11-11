@@ -52,7 +52,7 @@ func (a *AppServiceMaintenanceWindow) Validate() (map[Attr]string, error) {
 
 // NewAppServiceMaintenanceWindow creates a new AppServiceMaintenanceWindow from the V4 API response.
 func NewAppServiceMaintenanceWindow(
-	resp *appservice_maintenance_window.GetMaintenanceWindowResponse,
+	resp *appservice_maintenance_window.MaintenanceWindow,
 	organizationId, projectId, clusterId, appServiceId string,
 ) *AppServiceMaintenanceWindow {
 	return &AppServiceMaintenanceWindow{

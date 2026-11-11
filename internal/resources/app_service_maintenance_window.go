@@ -13,14 +13,15 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice_maintenance_window"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &AppServiceMaintenanceWindow{}
-	_ resource.ResourceWithConfigure   = &AppServiceMaintenanceWindow{}
-	_ resource.ResourceWithImportState = &AppServiceMaintenanceWindow{}
+	_ resource.Resource                = (*AppServiceMaintenanceWindow)(nil)
+	_ resource.ResourceWithConfigure   = (*AppServiceMaintenanceWindow)(nil)
+	_ resource.ResourceWithImportState = (*AppServiceMaintenanceWindow)(nil)
 )
 
 // AppServiceMaintenanceWindow is the App Service maintenance window resource implementation.
@@ -59,13 +60,13 @@ func (a *AppServiceMaintenanceWindow) Create(ctx context.Context, req resource.C
 		appServiceId   = plan.AppServiceId.ValueString()
 	)
 
-	createRequest := appservice_maintenance_window.CreateMaintenanceWindowRequest{
+	createRequest := appservice_maintenance_window.MaintenanceWindow{
 		PreferredDay:    plan.PreferredDay.ValueString(),
 		PreferredHour:   plan.PreferredHour.ValueInt64(),
 		PreferredMinute: plan.PreferredMinute.ValueInt64(),
 	}
 
-	cfg := api.EndpointCfg{Url: a.maintenanceWindowURL(organizationId, projectId, clusterId, appServiceId), Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
+	cfg := api.EndpointCfg{Url: a.maintenanceWindowURL(organizationId, projectId, clusterId, appServiceId), Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	if _, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, createRequest, a.Token, nil); err != nil {
 		var apiErr *api.Error
 		if stderrors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusConflict {
@@ -169,7 +170,7 @@ func (a *AppServiceMaintenanceWindow) Update(ctx context.Context, req resource.U
 		appServiceId   = resourceIDs[providerschema.AppServiceId]
 	)
 
-	updateRequest := appservice_maintenance_window.UpdateMaintenanceWindowRequest{
+	updateRequest := appservice_maintenance_window.MaintenanceWindow{
 		PreferredDay:    plan.PreferredDay.ValueString(),
 		PreferredHour:   plan.PreferredHour.ValueInt64(),
 		PreferredMinute: plan.PreferredMinute.ValueInt64(),
@@ -267,12 +268,12 @@ func (a *AppServiceMaintenanceWindow) retrieveMaintenanceWindow(ctx context.Cont
 	cfg := api.EndpointCfg{Url: a.maintenanceWindowURL(organizationId, projectId, clusterId, appServiceId), Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
 	}
 
-	var windowResp appservice_maintenance_window.GetMaintenanceWindowResponse
+	var windowResp appservice_maintenance_window.MaintenanceWindow
 	if err = json.Unmarshal(response.Body, &windowResp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	return providerschema.NewAppServiceMaintenanceWindow(&windowResp, organizationId, projectId, clusterId, appServiceId), nil

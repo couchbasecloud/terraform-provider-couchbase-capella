@@ -18,15 +18,15 @@ func AppServiceMaintenanceWindowSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_service_id", appServiceMaintenanceWindowBuilder, requiredUUIDString())
 
 	preferredDay := computedString()
-	preferredDay.MarkdownDescription = "The day of the week the maintenance window starts on, in lowercase. Null when no window is set."
+	preferredDay.MarkdownDescription = "The day of the week (UTC) the maintenance window starts on, in lowercase. Null when no window is set."
 	capellaschema.AddAttr(attrs, "preferred_day", appServiceMaintenanceWindowBuilder, preferredDay)
 
 	preferredHour := computedInt64()
-	preferredHour.MarkdownDescription = "The hour of the day (0-23) the maintenance window starts at. Null when no window is set."
+	preferredHour.MarkdownDescription = "The hour of the day (0-23, UTC) the maintenance window starts at. Null when no window is set."
 	capellaschema.AddAttr(attrs, "preferred_hour", appServiceMaintenanceWindowBuilder, preferredHour)
 
 	preferredMinute := computedInt64()
-	preferredMinute.MarkdownDescription = "The minute of the hour (0-59) the maintenance window starts at. Null when no window is set."
+	preferredMinute.MarkdownDescription = "The minute of the hour (0-59, UTC) the maintenance window starts at. Null when no window is set."
 	capellaschema.AddAttr(attrs, "preferred_minute", appServiceMaintenanceWindowBuilder, preferredMinute)
 
 	return schema.Schema{

@@ -38,9 +38,9 @@ resource "couchbase-capella_app_service_maintenance_window" "new_maintenance_win
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
-- `preferred_day` (String) The day of the week the maintenance window starts on, in lowercase: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday` or `sunday`.
-- `preferred_hour` (Number) The hour of the day the maintenance window starts at, from 0 to 23.
-- `preferred_minute` (Number) The minute of the hour the maintenance window starts at, from 0 to 59.
+- `preferred_day` (String) The day of the week (UTC) the maintenance window starts on, in lowercase: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday` or `sunday`.
+- `preferred_hour` (Number) The hour of the day (UTC) the maintenance window starts at, from 0 to 23.
+- `preferred_minute` (Number) The minute of the hour (UTC) the maintenance window starts at, from 0 to 59.
 - `project_id` (String) The GUID4 ID of the project.
 
 ## Import

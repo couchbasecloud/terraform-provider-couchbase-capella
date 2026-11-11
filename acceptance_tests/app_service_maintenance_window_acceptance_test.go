@@ -90,9 +90,9 @@ func TestAccAppServiceMaintenanceWindowInvalidValues(t *testing.T) {
 		hour, minute int
 		expectError  string
 	}{
-		{"Sunday", 2, 30, `preferred_day value must be one of`},
-		{"sunday", 24, 30, `preferred_hour value must be between 0 and 23`},
-		{"sunday", 2, 60, `preferred_minute value must be between 0 and 59`},
+		{"Sunday", 2, 30, `(?s)preferred_day.*value must be one of`},
+		{"sunday", 24, 30, `(?s)preferred_hour.*value must be between 0 and 23`},
+		{"sunday", 2, 60, `(?s)preferred_minute.*value must be between 0 and 59`},
 	}
 
 	steps := make([]resource.TestStep, 0, len(cases))

@@ -16,15 +16,14 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &AppServiceMaintenanceWindow{}
-	_ datasource.DataSourceWithConfigure = &AppServiceMaintenanceWindow{}
+	_ datasource.DataSource              = (*AppServiceMaintenanceWindow)(nil)
+	_ datasource.DataSourceWithConfigure = (*AppServiceMaintenanceWindow)(nil)
 )
 
 // errorCodeForMaintenanceWindowNotFound is the code of the V4 API error AppServiceMaintenanceWindowNotFound,
 // returned when an App Service has no maintenance window set. It tells that 404 apart from the
-// BackendNotFound 404 for an unknown App Service. The value has not been confirmed against the
-// published error catalog; a wrong value makes a no-window read fail instead of returning nulls.
-const errorCodeForMaintenanceWindowNotFound = 11074
+// 404s for an unknown App Service or cluster.
+const errorCodeForMaintenanceWindowNotFound = 11075
 
 // AppServiceMaintenanceWindow is the App Service maintenance window data source implementation.
 type AppServiceMaintenanceWindow struct {
@@ -88,7 +87,7 @@ func (a *AppServiceMaintenanceWindow) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	var windowResp appservice_maintenance_window.GetMaintenanceWindowResponse
+	var windowResp appservice_maintenance_window.MaintenanceWindow
 	if err = json.Unmarshal(response.Body, &windowResp); err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading App Service maintenance window",

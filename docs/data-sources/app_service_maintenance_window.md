@@ -33,6 +33,6 @@ data "couchbase-capella_app_service_maintenance_window" "existing_maintenance_wi
 
 ### Read-Only
 
-- `preferred_day` (String) The day of the week the maintenance window starts on, in lowercase. Null when no window is set.
-- `preferred_hour` (Number) The hour of the day (0-23) the maintenance window starts at. Null when no window is set.
-- `preferred_minute` (Number) The minute of the hour (0-59) the maintenance window starts at. Null when no window is set.
+- `preferred_day` (String) The day of the week (UTC) the maintenance window starts on, in lowercase. Null when no window is set.
+- `preferred_hour` (Number) The hour of the day (0-23, UTC) the maintenance window starts at. Null when no window is set.
+- `preferred_minute` (Number) The minute of the hour (0-59, UTC) the maintenance window starts at. Null when no window is set.

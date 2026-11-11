@@ -46,7 +46,13 @@ func TestAppServiceMaintenanceWindowDataSourceRead(t *testing.T) {
 		{
 			name:        "unknown app service is an error",
 			status:      http.StatusNotFound,
-			body:        `{"code":11999,"message":"app service not found","httpStatusCode":404}`,
+			body:        `{"code":404,"message":"app service not found","httpStatusCode":404}`,
+			expectError: true,
+		},
+		{
+			name:        "unknown cluster is an error",
+			status:      http.StatusNotFound,
+			body:        `{"code":4025,"message":"cluster not found","httpStatusCode":404}`,
 			expectError: true,
 		},
 		{

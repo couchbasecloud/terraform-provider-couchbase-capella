@@ -11,6 +11,7 @@ import (
 
 var appServiceMaintenanceWindowBuilder = capellaschema.NewSchemaBuilder("appServiceMaintenanceWindow")
 
+// AppServiceMaintenanceWindowSchema returns the schema for the AppServiceMaintenanceWindow resource.
 func AppServiceMaintenanceWindowSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
@@ -21,17 +22,17 @@ func AppServiceMaintenanceWindowSchema() schema.Schema {
 
 	preferredDay := stringAttribute([]string{required},
 		validator.String(stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")))
-	preferredDay.MarkdownDescription = "The day of the week the maintenance window starts on, in lowercase: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday` or `sunday`."
+	preferredDay.MarkdownDescription = "The day of the week (UTC) the maintenance window starts on, in lowercase: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday` or `sunday`."
 	capellaschema.AddAttr(attrs, "preferred_day", appServiceMaintenanceWindowBuilder, preferredDay)
 
 	preferredHour := int64Attribute(required)
 	preferredHour.Validators = []validator.Int64{int64validator.Between(0, 23)}
-	preferredHour.MarkdownDescription = "The hour of the day the maintenance window starts at, from 0 to 23."
+	preferredHour.MarkdownDescription = "The hour of the day (UTC) the maintenance window starts at, from 0 to 23."
 	capellaschema.AddAttr(attrs, "preferred_hour", appServiceMaintenanceWindowBuilder, preferredHour)
 
 	preferredMinute := int64Attribute(required)
 	preferredMinute.Validators = []validator.Int64{int64validator.Between(0, 59)}
-	preferredMinute.MarkdownDescription = "The minute of the hour the maintenance window starts at, from 0 to 59."
+	preferredMinute.MarkdownDescription = "The minute of the hour (UTC) the maintenance window starts at, from 0 to 59."
 	capellaschema.AddAttr(attrs, "preferred_minute", appServiceMaintenanceWindowBuilder, preferredMinute)
 
 	return schema.Schema{

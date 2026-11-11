@@ -59,7 +59,7 @@ func TestAppServiceMaintenanceWindowValidate(t *testing.T) {
 }
 
 func TestNewAppServiceMaintenanceWindow(t *testing.T) {
-	got := NewAppServiceMaintenanceWindow(&appservice_maintenance_window.GetMaintenanceWindowResponse{
+	got := NewAppServiceMaintenanceWindow(&appservice_maintenance_window.MaintenanceWindow{
 		PreferredDay:    "sunday",
 		PreferredHour:   2,
 		PreferredMinute: 30,
