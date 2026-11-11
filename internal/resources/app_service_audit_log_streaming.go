@@ -262,6 +262,89 @@ func (a *AppServiceAuditLogStreaming) put(ctx context.Context, plan *providersch
 	return nil
 }
 
+// logStreamingCredentials returns the generated API credentials struct that matches outputType.
+func logStreamingCredentials(ctx context.Context, outputType string, creds *providerschema.LogStreamingCredentials) (any, error) {
+	switch outputType {
+	case "datadog":
+		dd, diags := creds.AsDatadogCredentials(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("failed to extract datadog credentials: %s", diags.Errors())
+		}
+		if dd == nil {
+			return nil, fmt.Errorf("datadog credentials are required when output_type is 'datadog'")
+		}
+		return apigen.Datadog{Url: dd.Url.ValueString(), ApiKey: dd.ApiKey.ValueString()}, nil
+
+	case "dynatrace":
+		dt, diags := creds.AsDynatraceCredentials(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("failed to extract dynatrace credentials: %s", diags.Errors())
+		}
+		if dt == nil {
+			return nil, fmt.Errorf("dynatrace credentials are required when output_type is 'dynatrace'")
+		}
+		return apigen.Dynatrace{Url: dt.Url.ValueString(), ApiToken: dt.ApiToken.ValueString()}, nil
+
+	case "elastic":
+		el, diags := creds.AsElasticCredentials(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("failed to extract elastic credentials: %s", diags.Errors())
+		}
+		if el == nil {
+			return nil, fmt.Errorf("elastic credentials are required when output_type is 'elastic'")
+		}
+		return apigen.Elastic{Url: el.Url.ValueString(), User: el.User.ValueString(), Password: el.Password.ValueString()}, nil
+
+	case "generic_http":
+		gh, diags := creds.AsGenericHttpCredentials(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("failed to extract generic_http credentials: %s", diags.Errors())
+		}
+		if gh == nil {
+			return nil, fmt.Errorf("generic_http credentials are required when output_type is 'generic_http'")
+		}
+		// User and password are optional for generic_http
+		return apigen.GenericHttp{
+			Url:      gh.Url.ValueString(),
+			User:     gh.User.ValueStringPointer(),
+			Password: gh.Password.ValueStringPointer(),
+		}, nil
+
+	case "loki":
+		lk, diags := creds.AsLokiCredentials(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("failed to extract loki credentials: %s", diags.Errors())
+		}
+		if lk == nil {
+			return nil, fmt.Errorf("loki credentials are required when output_type is 'loki'")
+		}
+		return apigen.Loki{Url: lk.Url.ValueString(), User: lk.User.ValueString(), Password: lk.Password.ValueString()}, nil
+
+	case "splunk":
+		sp, diags := creds.AsSplunkCredentials(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("failed to extract splunk credentials: %s", diags.Errors())
+		}
+		if sp == nil {
+			return nil, fmt.Errorf("splunk credentials are required when output_type is 'splunk'")
+		}
+		return apigen.Splunk{Url: sp.Url.ValueString(), SplunkToken: sp.SplunkToken.ValueString()}, nil
+
+	case "sumologic":
+		sl, diags := creds.AsSumologicCredentials(ctx)
+		if diags.HasError() {
+			return nil, fmt.Errorf("failed to extract sumologic credentials: %s", diags.Errors())
+		}
+		if sl == nil {
+			return nil, fmt.Errorf("sumologic credentials are required when output_type is 'sumologic'")
+		}
+		return apigen.Sumologic{Url: sl.Url.ValueString()}, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported output_type: %s", outputType)
+	}
+}
+
 func (a *AppServiceAuditLogStreaming) patch(ctx context.Context, plan providerschema.AppServiceAuditLogStreaming) error {
 	body := apigen.PatchAuditLogStreamingRequest{
 		Op:    apigen.Update,
