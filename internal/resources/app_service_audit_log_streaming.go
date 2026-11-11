@@ -326,13 +326,16 @@ func (a *AppServiceAuditLogStreaming) waitForFinalState(
 				return nil, fmt.Errorf("%s", api.ParseError(err))
 			}
 
-			var state string
+			// The spec has no enum for the audit log streaming state, but its values match the log streaming config states.
+			var state apigen.GetLogStreamingResponseConfigState
 			if streamingResp.LogStreamingState != nil {
-				state = *streamingResp.LogStreamingState
+				state = apigen.GetLogStreamingResponseConfigState(*streamingResp.LogStreamingState)
 			}
 			switch state {
-			case "enabling", "disabling", "pausing":
-			case "errored":
+			case apigen.GetLogStreamingResponseConfigStateEnabling,
+				apigen.GetLogStreamingResponseConfigStateDisabling,
+				apigen.GetLogStreamingResponseConfigStatePausing:
+			case apigen.GetLogStreamingResponseConfigStateErrored:
 				return nil, fmt.Errorf("audit log streaming reached the errored state")
 			default:
 				if done(streamingResp) {
