@@ -4,12 +4,12 @@ resource "couchbase-capella_project_alert_configuration" "example" {
 
   configs = {
     disk_usage_high = {
-      warning_threshold  = 75
-      critical_threshold = 85
+      warning_threshold  = 80
+      critical_threshold = 90
     }
   }
 
-  recipients = ["project-team@example.com"]
+  recipients = ["project-team@couchbase.com"]
 
   muted_alerts = {
     cpu_usage_high = {

@@ -14,7 +14,7 @@ resource "couchbase-capella_cluster_alert_configuration" "example" {
     }
   }
 
-  recipients = ["oncall@example.com"]
+  recipients = ["oncall@couchbase.com"]
 
   muted_alerts = {
     disk_usage_high = {

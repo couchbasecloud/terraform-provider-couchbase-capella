@@ -11,7 +11,7 @@ resource "couchbase-capella_organization_alert_configuration" "new_organization_
     }
   }
 
-  recipients = ["platform@example.com"]
+  recipients = ["platform@couchbase.com"]
 
   muted_alerts = {
     disk_usage_high = {

@@ -62,7 +62,7 @@ Sample Output:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000002"
       + recipients      = [
-          + "oncall@example.com",
+          + "oncall@couchbase.com",
         ]
     }
 
@@ -81,7 +81,7 @@ Sample Output:
         }
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + recipients      = [
-          + "platform@example.com",
+          + "platform@couchbase.com",
         ]
     }
 
@@ -89,8 +89,8 @@ Sample Output:
   + resource "couchbase-capella_project_alert_configuration" "new_project_alert_configuration" {
       + configs         = {
           + "disk_usage_high" = {
-              + critical_threshold = 85
-              + warning_threshold  = 75
+              + critical_threshold = 90
+              + warning_threshold  = 80
             },
         }
       + muted_alerts    = {
@@ -102,7 +102,7 @@ Sample Output:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000002"
       + recipients      = [
-          + "project-team@example.com",
+          + "project-team@couchbase.com",
         ]
     }
 
