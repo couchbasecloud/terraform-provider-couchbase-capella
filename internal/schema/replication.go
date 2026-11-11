@@ -38,6 +38,10 @@ const (
 	ReplicationMobileSyncModeActive = "active"
 )
 
+// ReplicationNetworkUsageLimitMax is the largest network_usage_limit, in MiB per second, that
+// Couchbase Server accepts.
+const ReplicationNetworkUsageLimitMax = 1000000
+
 // Fallback descriptions for attributes that the published OpenAPI spec does not describe, or
 // describes for a different object.
 const (
