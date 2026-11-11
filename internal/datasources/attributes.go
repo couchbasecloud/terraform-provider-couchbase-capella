@@ -39,6 +39,15 @@ func requiredUUIDString() *schema.StringAttribute {
 	}
 }
 
+func optionalUUIDString() *schema.StringAttribute {
+	return &schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.RegexMatches(uuidRegex, "must be a valid UUID"),
+		},
+	}
+}
+
 func computedString() *schema.StringAttribute {
 	return &schema.StringAttribute{
 		Computed: true,
