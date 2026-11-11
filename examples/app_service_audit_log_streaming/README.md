@@ -15,6 +15,8 @@ In this example, we are going to do the following.
 3. IMPORT: Import audit log streaming that is configured for an App Service but is not in the Terraform state file.
 4. DELETE: Disable audit log streaming and remove its configuration.
 
+This example uses Datadog. The variables, `terraform.template.tfvars` and the resource file also have commented-out settings for Sumo Logic, Elasticsearch, Grafana Loki, Splunk, Dynatrace and a custom HTTP collector. To use one of them, uncomment its settings, comment out the Datadog settings, and change `output_type`.
+
 Copy the `terraform.template.tfvars` file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
 ## CREATE
