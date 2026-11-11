@@ -74,6 +74,7 @@ type replicationBackend struct {
 	jobState           string
 	jobLastError       string
 	getStatuses        []int
+	getErrorMessage    string
 	updateStatus       int
 	deleteStatus       int
 	createBody         string
@@ -120,7 +121,7 @@ func (b *replicationBackend) handler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet + " " + testReplicationPath:
 		status := b.getStatuses[min(b.calls[key]-1, len(b.getStatuses)-1)]
 		if status != http.StatusOK {
-			writeReplicationError(w, status, "")
+			writeReplicationError(w, status, b.getErrorMessage)
 			return
 		}
 		_, _ = w.Write([]byte(testReplicationGetBody))
@@ -477,7 +478,23 @@ func TestReplicationRead(t *testing.T) {
 		assert.True(t, resp.State.Raw.IsNull())
 	})
 
-	t.Run("an unhealthy source cluster (422) is an error and keeps the state", func(t *testing.T) {
+	t.Run("an unhealthy source cluster is a warning and keeps the state", func(t *testing.T) {
+		backend := newReplicationBackend(t)
+		backend.getStatuses = []int{http.StatusUnprocessableEntity}
+		backend.getErrorMessage = testClusterNotHealthyMessage
+		r := &Replication{Data: newTestProviderData(t, backend.handler)}
+
+		prior := replicationStateFrom(t, ctx, testReplicationStateModel(t))
+		resp := resource.ReadResponse{State: prior}
+		r.Read(ctx, resource.ReadRequest{State: prior}, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError())
+		require.Len(t, resp.Diagnostics.Warnings(), 1)
+		assert.Equal(t, "Replication not refreshed", resp.Diagnostics.Warnings()[0].Summary())
+		assert.True(t, resp.State.Raw.Equal(prior.Raw))
+	})
+
+	t.Run("a 422 that is not about cluster health is an error", func(t *testing.T) {
 		backend := newReplicationBackend(t)
 		backend.getStatuses = []int{http.StatusUnprocessableEntity}
 		r := &Replication{Data: newTestProviderData(t, backend.handler)}
@@ -487,7 +504,6 @@ func TestReplicationRead(t *testing.T) {
 		r.Read(ctx, resource.ReadRequest{State: prior}, &resp)
 
 		assert.True(t, resp.Diagnostics.HasError())
-		assert.False(t, resp.State.Raw.IsNull())
 	})
 
 	t.Run("import resolves the IDs and has no reverse replication ID", func(t *testing.T) {

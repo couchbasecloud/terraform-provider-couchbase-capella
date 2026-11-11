@@ -307,6 +307,21 @@ func TestReplicationActivationStatusRead(t *testing.T) {
 		assert.True(t, resp.State.Raw.IsNull())
 	})
 
+	t.Run("an unhealthy source cluster is a warning and keeps the state", func(t *testing.T) {
+		backend := newActivationStatusBackend(t)
+		backend.getCodes = []int{http.StatusUnprocessableEntity}
+		r := &ReplicationActivationStatus{Data: newTestProviderData(t, backend.handler)}
+
+		prior := activationStatusStateFrom(t, ctx, testActivationStatusModel("running"))
+		resp := resource.ReadResponse{State: prior}
+		r.Read(ctx, resource.ReadRequest{State: prior}, &resp)
+
+		assert.False(t, resp.Diagnostics.HasError())
+		require.Len(t, resp.Diagnostics.Warnings(), 1)
+		assert.Equal(t, "Replication activation status not refreshed", resp.Diagnostics.Warnings()[0].Summary())
+		assert.True(t, resp.State.Raw.Equal(prior.Raw))
+	})
+
 	t.Run("import resolves the IDs from the import string", func(t *testing.T) {
 		backend := newActivationStatusBackend(t, "paused")
 		r := &ReplicationActivationStatus{Data: newTestProviderData(t, backend.handler)}
