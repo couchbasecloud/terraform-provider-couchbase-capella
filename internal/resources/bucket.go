@@ -356,6 +356,7 @@ func (c *Bucket) retrieveBucket(
 			DiskUsedInMiB:   types.Int64Value(bucketResp.Stats.DiskUsedInMib),
 			MemoryUsedInMiB: types.Int64Value(bucketResp.Stats.MemoryUsedInMib),
 		},
+		EnableCrossClusterVersioning: types.BoolValue(bucketResp.EnableCrossClusterVersioning),
 	}
 
 	return &refreshedState, nil
@@ -469,6 +470,9 @@ func initializeBucketWithPlanAndId(plan providerschema.Bucket, id string) provid
 	}
 	if plan.Vbuckets.IsNull() || plan.Vbuckets.IsUnknown() {
 		plan.Vbuckets = types.Int64Null()
+	}
+	if plan.EnableCrossClusterVersioning.IsNull() || plan.EnableCrossClusterVersioning.IsUnknown() {
+		plan.EnableCrossClusterVersioning = types.BoolNull()
 	}
 
 	plan.Stats = types.ObjectNull(providerschema.Stats{}.AttributeTypes())

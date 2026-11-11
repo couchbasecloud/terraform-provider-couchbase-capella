@@ -42,6 +42,7 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 
 - `bucket_conflict_resolution` (String)
 - `durability_level` (String)
+- `enable_cross_cluster_versioning` (Boolean) - This being enabled is a pre-requisite to a few XDCR features. When enabled, each document processed by XDCR will have additional metadata stored, called the Hybrid Logical Vector (HLV), in the document extended attributes (xattrs). The Cross Cluster Versioning setting cannot be disabled after it is enabled. By default, this value reflects what its current value is in the bucket, so omit this setting to leave it as it's current value. See the documentation for enableCrossClusterVersioning and the dependent features for important details on when to enable this setting.
 - `eviction_policy` (String)
 - `flush` (Boolean)
 - `id` (String) The ID of this resource.

@@ -30,6 +30,7 @@ func BucketsSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "replicas", bucketsBuilder, computedInt64())
 	capellaschema.AddAttr(dataAttrs, "vbuckets", bucketsBuilder, computedInt64())
 	capellaschema.AddAttr(dataAttrs, "flush", bucketsBuilder, computedBool())
+	capellaschema.AddAttr(dataAttrs, "enable_cross_cluster_versioning", bucketsBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "time_to_live_in_seconds", bucketsBuilder, computedInt64())
 	capellaschema.AddAttr(dataAttrs, "eviction_policy", bucketsBuilder, computedString())
 
