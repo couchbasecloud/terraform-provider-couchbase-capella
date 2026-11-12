@@ -48,6 +48,7 @@ func AppEndpointSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "bucket", appEndpointBuilder, computedString())
 	capellaschema.AddAttr(attrs, "user_xattr_key", appEndpointBuilder, computedString())
 	capellaschema.AddAttr(attrs, "delta_sync_enabled", appEndpointBuilder, computedBool())
+	capellaschema.AddAttr(attrs, "import_partitions", appEndpointBuilder, computedInt64(), "GetAppEndpointResponse")
 
 	collectionAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(collectionAttrs, "access_control_function", appEndpointBuilder, computedString(), "AccessFunction")

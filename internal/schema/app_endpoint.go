@@ -65,6 +65,9 @@ type AppEndpoint struct {
 	// DeltaSyncEnabled Indicates whether Delta Sync is enabled for the App Endpoint.
 	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
 
+	// ImportPartitions is the number of import partitions used to process mutations from the backing bucket.
+	ImportPartitions types.Int64 `tfsdk:"import_partitions"`
+
 	// Scopes is a map of scope names to scope configurations.
 	Scopes types.Map `tfsdk:"scopes"`
 
@@ -120,6 +123,9 @@ type OneAppEndpoint struct {
 
 	// DeltaSyncEnabled Indicates whether Delta Sync is enabled for the App Endpoint.
 	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
+
+	// ImportPartitions is the number of import partitions used to process mutations from the backing bucket.
+	ImportPartitions types.Int64 `tfsdk:"import_partitions"`
 
 	// Scopes is a map of scope names to scope configurations.
 	Scopes types.Map `tfsdk:"scopes"`

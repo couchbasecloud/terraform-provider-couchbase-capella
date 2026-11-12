@@ -90,6 +90,7 @@ func AppEndpointsSchema() schema.Schema {
 	capellaschema.AddAttr(appEndpointAttrs, "name", appEndpointsBuilder, computedString())
 	capellaschema.AddAttr(appEndpointAttrs, "user_xattr_key", appEndpointsBuilder, computedString())
 	capellaschema.AddAttr(appEndpointAttrs, "delta_sync_enabled", appEndpointsBuilder, computedBool())
+	capellaschema.AddAttr(appEndpointAttrs, "import_partitions", appEndpointsBuilder, computedInt64(), "GetAppEndpointResponse")
 	capellaschema.AddAttr(appEndpointAttrs, "scopes", appEndpointsBuilder, &schema.MapNestedAttribute{
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
