@@ -35,7 +35,10 @@ func TestAccAppServiceMaintenancesDataSource(t *testing.T) {
 // TestAccAppServiceMaintenanceSchedule needs a pending, Couchbase-initiated maintenance on the shared
 // App Service, which the provider cannot create; it skips when there is none.
 func TestAccAppServiceMaintenanceSchedule(t *testing.T) {
-	maintenance := findReschedulableAppServiceMaintenance(t)
+	maintenance, err := findReschedulableAppServiceMaintenance(context.Background())
+	if err != nil {
+		t.Skipf("skipping: could not list maintenances of app service %s: %v", globalAppServiceId, err)
+	}
 	if maintenance == nil {
 		t.Skip("no pending, Couchbase-initiated maintenance on app service " + globalAppServiceId)
 	}
@@ -43,7 +46,8 @@ func TestAccAppServiceMaintenanceSchedule(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_app_service_maintenance_schedule_")
 	resourceReference := "couchbase-capella_app_service_maintenance_schedule." + resourceName
 	currentQueueAt := maintenance.QueueAt.UTC().Format(time.RFC3339)
-	laterQueueAt := maintenance.QueueAt.Add(time.Hour).UTC().Format(time.RFC3339)
+	// The API exposes no scheduling-window end, so the step stays small to keep the new time inside it.
+	laterQueueAt := maintenance.QueueAt.Add(5 * time.Minute).UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -108,20 +112,19 @@ func appServiceMaintenancesURL() string {
 		globalHost, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId)
 }
 
-func findReschedulableAppServiceMaintenance(t *testing.T) *appservice_maintenance.GetMaintenanceResponse {
-	t.Helper()
+func findReschedulableAppServiceMaintenance(ctx context.Context) (*appservice_maintenance.GetMaintenanceResponse, error) {
 	cfg := api.EndpointCfg{Url: appServiceMaintenancesURL(), Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	maintenances, err := api.GetPaginated[[]appservice_maintenance.GetMaintenanceResponse](context.Background(), globalClient, globalToken, cfg, "")
+	maintenances, err := api.GetPaginated[[]appservice_maintenance.GetMaintenanceResponse](ctx, globalClient, globalToken, cfg, "")
 	if err != nil {
-		t.Fatalf("could not list maintenances of app service %s: %s", globalAppServiceId, err)
+		return nil, err
 	}
 	for i := range maintenances {
 		m := maintenances[i]
 		if m.CurrentState == "pending" && m.InitiatedBy == "couchbase" && m.QueueAt != nil {
-			return &m
+			return &m, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // testAccCheckAppServiceMaintenanceStillExists asserts destroy left the maintenance record in place.

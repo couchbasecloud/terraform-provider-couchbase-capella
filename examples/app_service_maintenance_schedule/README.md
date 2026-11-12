@@ -24,6 +24,8 @@ Command: `terraform plan`, then `terraform apply`
 
 The data source output lists every maintenance with its `id`, `kind`, `initiated_by`, `current_state` and `queue_at`. The resource adopts the first pending, Couchbase-initiated one and, if its `queue_at` differs from `var.queue_at`, reschedules it. If the App Service has no such maintenance, `terraform plan` fails on the empty `local.reschedulable_maintenance_ids` list.
 
+Taking the first ID from the list only suits a one-shot run. Once that maintenance starts, the list changes, and the next plan replaces the resource onto a different maintenance. To keep managing one maintenance, set `maintenance_id` to its ID from the data source output instead.
+
 ## UPDATE
 
 Change `queue_at` in `terraform.tfvars` to another time in the future and within the scheduling window, then run `terraform apply`. The maintenance is rescheduled in place. Capella rejects the change if the maintenance is no longer pending or the time is outside the window. Changing any of the IDs replaces the resource.
