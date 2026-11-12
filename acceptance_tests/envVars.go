@@ -36,6 +36,7 @@ func getEnvVars() error {
 		globalBucketName = bucketName
 	}
 	dmClusterId = os.Getenv("TF_VAR_dm_cluster_id")
+	sparseVectorClusterId = os.Getenv("TF_VAR_sparse_vector_cluster_id")
 
 	// TF_VAR_server_version pins the Couchbase Server version for every cluster the
 	// suite creates. Terraform reads the same variable directly for the
