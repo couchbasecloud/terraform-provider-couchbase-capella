@@ -40,7 +40,7 @@ func TestAccAppServiceMaintenanceSchedule(t *testing.T) {
 		t.Skipf("skipping: could not list maintenances of app service %s: %v", globalAppServiceId, err)
 	}
 	if maintenance == nil {
-		t.Skip("no pending, Couchbase-initiated maintenance on app service " + globalAppServiceId)
+		t.Skip("no pending, Couchbase-initiated maintenance queued at least 30 minutes ahead on app service " + globalAppServiceId)
 	}
 
 	resourceName := randomStringWithPrefix("tf_acc_app_service_maintenance_schedule_")
@@ -118,9 +118,11 @@ func findReschedulableAppServiceMaintenance(ctx context.Context) (*appservice_ma
 	if err != nil {
 		return nil, err
 	}
+	// The queue time must stay in the future while the test runs and after the update step moves it.
+	earliest := time.Now().Add(30 * time.Minute)
 	for i := range maintenances {
 		m := maintenances[i]
-		if m.CurrentState == "pending" && m.InitiatedBy == "couchbase" && m.QueueAt != nil {
+		if m.CurrentState == "pending" && m.InitiatedBy == "couchbase" && m.QueueAt != nil && m.QueueAt.After(earliest) {
 			return &m, nil
 		}
 	}
