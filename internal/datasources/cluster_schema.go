@@ -27,10 +27,14 @@ func OneClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "etag", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "if_match", oneClusterBuilder, computedString())
 
-	capellaschema.AddAttr(attrs, "zones", oneClusterBuilder, &schema.ListAttribute{
+	zones := &schema.ListAttribute{
 		Computed:    true,
 		ElementType: types.StringType,
-	})
+	}
+	capellaschema.AddAttr(attrs, "zones", oneClusterBuilder, zones)
+	// Set after AddAttr so the description survives once the OpenAPI spec documents zones.
+	zones.MarkdownDescription = "The AWS availability zone IDs (for example `use1-az1`) the cluster is deployed in. " +
+		"Null when the zone IDs are not known, for example for GCP and Azure clusters."
 
 	// cloud_provider
 	cloudProviderAttrs := make(map[string]schema.Attribute)

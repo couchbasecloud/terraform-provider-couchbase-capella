@@ -43,6 +43,11 @@ type Availability struct {
 // AvailabilityType is availability zone type, either 'single' or 'multi'.
 type AvailabilityType string
 
+const (
+	Single AvailabilityType = "single"
+	Multi  AvailabilityType = "multi"
+)
+
 // ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'.
 type ConfigurationType string
 
@@ -96,7 +101,7 @@ type CreateClusterRequest struct {
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution *bool `json:"enablePrivateDNSResolution,omitempty"`
 
-	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+	// Zones is the AWS availability zone IDs (for example use1-az1) for the cluster: at most 1 for a single AZ cluster, exactly 3 for a multi AZ cluster.
 	Zones []string `json:"zones"`
 }
 
@@ -153,7 +158,7 @@ type GetClusterResponse struct {
 	// Description depicts description of the cluster (up to 1024 characters).
 	Description string `json:"description"`
 
-	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+	// Zones is the AWS availability zone IDs the cluster is deployed in. It is omitted when they are not yet known.
 	Zones []string `json:"zones"`
 
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.

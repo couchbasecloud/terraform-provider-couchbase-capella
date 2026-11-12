@@ -334,10 +334,11 @@ func stringSetAttribute(fields ...string) *schema.SetAttribute {
 		case sensitive:
 			attribute.Sensitive = true
 		case requiresReplace:
-			var planModifiers = []planmodifier.Set{
-				setplanmodifier.RequiresReplace(),
-			}
-			attribute.PlanModifiers = planModifiers
+			attribute.PlanModifiers = append(attribute.PlanModifiers, setplanmodifier.RequiresReplace())
+		case requiresReplaceIfConfigured:
+			attribute.PlanModifiers = append(attribute.PlanModifiers, setplanmodifier.RequiresReplaceIfConfigured())
+		case useStateForUnknown:
+			attribute.PlanModifiers = append(attribute.PlanModifiers, setplanmodifier.UseStateForUnknown())
 		}
 	}
 	return &attribute
