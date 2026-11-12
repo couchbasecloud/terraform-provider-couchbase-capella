@@ -1,0 +1,1 @@
+terraform import couchbase-capella_project_alert_configuration.example project_id=<project_id>,organization_id=<organization_id>
