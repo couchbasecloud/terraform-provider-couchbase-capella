@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -57,21 +56,20 @@ func (a *AppServiceMaintenanceSchedule) Create(ctx context.Context, req resource
 		return
 	}
 
-	var (
-		organizationId = plan.OrganizationId.ValueString()
-		projectId      = plan.ProjectId.ValueString()
-		clusterId      = plan.ClusterId.ValueString()
-		appServiceId   = plan.AppServiceId.ValueString()
-		maintenanceId  = plan.MaintenanceId.ValueString()
-	)
-
 	queueAt, diags := plan.QueueAt.ValueRFC3339Time()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	maintenance, err := a.getMaintenance(ctx, organizationId, projectId, clusterId, appServiceId, maintenanceId)
+	IDs, err := plan.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading App Service maintenance", "Could not read maintenance "+plan.MaintenanceId.String()+": "+err.Error())
+		return
+	}
+	maintenanceId, appServiceId := IDs[providerschema.MaintenanceId], IDs[providerschema.AppServiceId]
+
+	current, err := a.readMaintenance(ctx, IDs)
 	if err != nil {
 		if notFound, _ := api.CheckResourceNotFoundError(err); notFound {
 			resp.Diagnostics.AddError(
@@ -88,17 +86,13 @@ func (a *AppServiceMaintenanceSchedule) Create(ctx context.Context, req resource
 		return
 	}
 
-	if maintenance.InitiatedBy == appservice_maintenance.InitiatedBySelfService {
-		resp.Diagnostics.AddError(
-			"App Service maintenance is a self-service upgrade",
-			fmt.Sprintf("Maintenance %s of app service %s was initiated by a self-service upgrade. Its queue time is managed "+
-				"by the couchbase-capella_app_service_self_service_upgrade resource.", maintenanceId, appServiceId),
-		)
+	if rejectSelfService(current.InitiatedBy, maintenanceId, appServiceId, &resp.Diagnostics) {
 		return
 	}
 
-	if maintenance.QueueAt == nil || !maintenance.QueueAt.Equal(queueAt) {
-		if err = a.rescheduleMaintenance(ctx, organizationId, projectId, clusterId, appServiceId, maintenanceId, queueAt); err != nil {
+	currentQueueAt, _ := current.QueueAt.ValueRFC3339Time()
+	if current.QueueAt.IsNull() || !currentQueueAt.Equal(queueAt) {
+		if current, err = a.rescheduleAndRead(ctx, IDs, queueAt); err != nil {
 			resp.Diagnostics.AddError(
 				"Error rescheduling App Service maintenance",
 				"Could not reschedule maintenance "+maintenanceId+" of app service "+appServiceId+": "+api.ParseError(err),
@@ -107,7 +101,7 @@ func (a *AppServiceMaintenanceSchedule) Create(ctx context.Context, req resource
 		}
 	}
 
-	a.refreshState(ctx, plan, &resp.State, &resp.Diagnostics)
+	resp.Diagnostics.Append(resp.State.Set(ctx, current)...)
 }
 
 // Read refreshes the state with the maintenance record from Capella. A 404 means the record no
@@ -128,13 +122,7 @@ func (a *AppServiceMaintenanceSchedule) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	maintenance, err := a.getMaintenance(ctx,
-		IDs[providerschema.OrganizationId],
-		IDs[providerschema.ProjectId],
-		IDs[providerschema.ClusterId],
-		IDs[providerschema.AppServiceId],
-		IDs[providerschema.MaintenanceId],
-	)
+	refreshedState, err := a.readMaintenance(ctx, IDs)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -149,18 +137,19 @@ func (a *AppServiceMaintenanceSchedule) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	refreshedState, diags := mapMaintenanceResponseToState(ctx, maintenance, IDs)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	// Read is the only step of an import, so this is where an imported self-service record is refused.
+	if rejectSelfService(refreshedState.InitiatedBy, IDs[providerschema.MaintenanceId], IDs[providerschema.AppServiceId], &resp.Diagnostics) {
 		return
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshedState)...)
 }
 
 // Update reschedules the maintenance to the planned queue time. Every other attribute requires replace.
 func (a *AppServiceMaintenanceSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan providerschema.AppServiceMaintenanceSchedule
+	var plan, state providerschema.AppServiceMaintenanceSchedule
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -171,15 +160,19 @@ func (a *AppServiceMaintenanceSchedule) Update(ctx context.Context, req resource
 		return
 	}
 
-	var (
-		organizationId = plan.OrganizationId.ValueString()
-		projectId      = plan.ProjectId.ValueString()
-		clusterId      = plan.ClusterId.ValueString()
-		appServiceId   = plan.AppServiceId.ValueString()
-		maintenanceId  = plan.MaintenanceId.ValueString()
-	)
+	IDs, err := plan.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError("Error rescheduling App Service maintenance", "Could not reschedule maintenance "+plan.MaintenanceId.String()+": "+err.Error())
+		return
+	}
+	maintenanceId, appServiceId := IDs[providerschema.MaintenanceId], IDs[providerschema.AppServiceId]
 
-	if err := a.rescheduleMaintenance(ctx, organizationId, projectId, clusterId, appServiceId, maintenanceId, queueAt); err != nil {
+	if rejectSelfService(state.InitiatedBy, maintenanceId, appServiceId, &resp.Diagnostics) {
+		return
+	}
+
+	refreshedState, err := a.rescheduleAndRead(ctx, IDs, queueAt)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error rescheduling App Service maintenance",
 			"Could not reschedule maintenance "+maintenanceId+" of app service "+appServiceId+": "+api.ParseError(err),
@@ -187,7 +180,7 @@ func (a *AppServiceMaintenanceSchedule) Update(ctx context.Context, req resource
 		return
 	}
 
-	a.refreshState(ctx, plan, &resp.State, &resp.Diagnostics)
+	resp.Diagnostics.Append(resp.State.Set(ctx, refreshedState)...)
 }
 
 // Delete only removes the resource from the state. The maintenance keeps its last queue time.
@@ -219,42 +212,29 @@ func (a *AppServiceMaintenanceSchedule) Configure(_ context.Context, req resourc
 	a.Data = data
 }
 
-// refreshState reads the maintenance back and stores it, so the state reflects what Capella accepted.
-func (a *AppServiceMaintenanceSchedule) refreshState(ctx context.Context, plan providerschema.AppServiceMaintenanceSchedule, state *tfsdk.State, diagnostics *diag.Diagnostics) {
-	IDs := map[providerschema.Attr]string{
-		providerschema.OrganizationId: plan.OrganizationId.ValueString(),
-		providerschema.ProjectId:      plan.ProjectId.ValueString(),
-		providerschema.ClusterId:      plan.ClusterId.ValueString(),
-		providerschema.AppServiceId:   plan.AppServiceId.ValueString(),
-		providerschema.MaintenanceId:  plan.MaintenanceId.ValueString(),
+// rejectSelfService adds an error and returns true for a record created by a self-service upgrade,
+// whose queue time is owned by the self-service upgrade resource.
+func rejectSelfService(initiatedBy types.String, maintenanceId, appServiceId string, diagnostics *diag.Diagnostics) bool {
+	if initiatedBy.ValueString() != appservice_maintenance.InitiatedBySelfService {
+		return false
 	}
-
-	maintenance, err := a.getMaintenance(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId],
-		IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.MaintenanceId])
-	if err != nil {
-		diagnostics.AddError(
-			"Error reading App Service maintenance",
-			"Could not read maintenance "+IDs[providerschema.MaintenanceId]+" of app service "+
-				IDs[providerschema.AppServiceId]+": "+api.ParseError(err),
-		)
-		return
-	}
-
-	refreshedState, diags := mapMaintenanceResponseToState(ctx, maintenance, IDs)
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
-		return
-	}
-	diagnostics.Append(state.Set(ctx, refreshedState)...)
+	diagnostics.AddError(
+		"App Service maintenance is a self-service upgrade",
+		fmt.Sprintf("Maintenance %s of app service %s was initiated by a self-service upgrade. Its queue time is managed "+
+			"by the couchbase-capella_app_service_self_service_upgrade resource.", maintenanceId, appServiceId),
+	)
+	return true
 }
 
-func (a *AppServiceMaintenanceSchedule) maintenanceURL(organizationId, projectId, clusterId, appServiceId, maintenanceId string) string {
+func (a *AppServiceMaintenanceSchedule) maintenanceURL(IDs map[providerschema.Attr]string) string {
 	return fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/maintenances/%s",
-		a.HostURL, organizationId, projectId, clusterId, appServiceId, url.PathEscape(maintenanceId))
+		a.HostURL, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId],
+		IDs[providerschema.AppServiceId], url.PathEscape(IDs[providerschema.MaintenanceId]))
 }
 
-func (a *AppServiceMaintenanceSchedule) getMaintenance(ctx context.Context, organizationId, projectId, clusterId, appServiceId, maintenanceId string) (*appservice_maintenance.GetMaintenanceResponse, error) {
-	cfg := api.EndpointCfg{Url: a.maintenanceURL(organizationId, projectId, clusterId, appServiceId, maintenanceId), Method: http.MethodGet, SuccessStatus: http.StatusOK}
+// readMaintenance gets the maintenance record and maps it to the resource state.
+func (a *AppServiceMaintenanceSchedule) readMaintenance(ctx context.Context, IDs map[providerschema.Attr]string) (*providerschema.AppServiceMaintenanceSchedule, error) {
+	cfg := api.EndpointCfg{Url: a.maintenanceURL(IDs), Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
@@ -264,25 +244,12 @@ func (a *AppServiceMaintenanceSchedule) getMaintenance(ctx context.Context, orga
 	if err = json.Unmarshal(response.Body, &maintenance); err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
-	return &maintenance, nil
-}
 
-func (a *AppServiceMaintenanceSchedule) rescheduleMaintenance(ctx context.Context, organizationId, projectId, clusterId, appServiceId, maintenanceId string, queueAt time.Time) error {
-	cfg := api.EndpointCfg{Url: a.maintenanceURL(organizationId, projectId, clusterId, appServiceId, maintenanceId), Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, appservice_maintenance.RescheduleMaintenanceRequest{QueueAt: queueAt}, a.Token, nil)
-	return err
-}
-
-func mapMaintenanceResponseToState(
-	ctx context.Context, resp *appservice_maintenance.GetMaintenanceResponse, IDs map[providerschema.Attr]string,
-) (*providerschema.AppServiceMaintenanceSchedule, diag.Diagnostics) {
-	audit := providerschema.NewCouchbaseAuditData(resp.Audit)
-	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	data, diags := providerschema.NewAppServiceMaintenanceData(ctx, &maintenance)
 	if diags.HasError() {
-		return nil, diags
+		return nil, errors.ErrUnableToConvertAuditData
 	}
 
-	data := providerschema.NewAppServiceMaintenanceData(resp, auditObj)
 	return &providerschema.AppServiceMaintenanceSchedule{
 		OrganizationId: types.StringValue(IDs[providerschema.OrganizationId]),
 		ProjectId:      types.StringValue(IDs[providerschema.ProjectId]),
@@ -297,4 +264,14 @@ func mapMaintenanceResponseToState(
 		CompletedAt:    data.CompletedAt,
 		Audit:          data.Audit,
 	}, nil
+}
+
+// rescheduleAndRead moves the maintenance to queueAt, then reads it back so the state reflects what
+// Capella accepted; the reschedule returns no body.
+func (a *AppServiceMaintenanceSchedule) rescheduleAndRead(ctx context.Context, IDs map[providerschema.Attr]string, queueAt time.Time) (*providerschema.AppServiceMaintenanceSchedule, error) {
+	cfg := api.EndpointCfg{Url: a.maintenanceURL(IDs), Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	if _, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, appservice_maintenance.RescheduleMaintenanceRequest{QueueAt: queueAt}, a.Token, nil); err != nil {
+		return nil, err
+	}
+	return a.readMaintenance(ctx, IDs)
 }

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -75,7 +76,6 @@ func TestAppServiceMaintenanceScheduleImportKeyRegression(t *testing.T) {
 func TestNewAppServiceMaintenanceData(t *testing.T) {
 	queueAt := time.Date(2026, 9, 5, 2, 30, 0, 0, time.UTC)
 	version := "4.0.1"
-	audit := types.ObjectNull(CouchbaseAuditData{}.AttributeTypes())
 
 	tests := []struct {
 		name     string
@@ -120,7 +120,10 @@ func TestNewAppServiceMaintenanceData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.expected(t, NewAppServiceMaintenanceData(&tt.input, audit))
+			got, diags := NewAppServiceMaintenanceData(context.Background(), &tt.input)
+			require.False(t, diags.HasError(), diags)
+			assert.False(t, got.Audit.IsNull())
+			tt.expected(t, got)
 		})
 	}
 }

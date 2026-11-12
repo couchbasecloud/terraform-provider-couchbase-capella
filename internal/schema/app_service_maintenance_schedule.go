@@ -1,9 +1,11 @@
 package schema
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
@@ -82,7 +84,13 @@ type AppServiceMaintenanceData struct {
 
 // NewAppServiceMaintenanceData maps a maintenance record from the V4 API to its Terraform model.
 // Fields the API omits map to null.
-func NewAppServiceMaintenanceData(resp *appservice_maintenance.GetMaintenanceResponse, auditObject types.Object) AppServiceMaintenanceData {
+func NewAppServiceMaintenanceData(ctx context.Context, resp *appservice_maintenance.GetMaintenanceResponse) (AppServiceMaintenanceData, diag.Diagnostics) {
+	audit := NewCouchbaseAuditData(resp.Audit)
+	auditObject, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		return AppServiceMaintenanceData{}, diags
+	}
+
 	return AppServiceMaintenanceData{
 		Id:           types.StringValue(resp.Id),
 		Kind:         types.StringValue(resp.Type),
@@ -92,5 +100,5 @@ func NewAppServiceMaintenanceData(resp *appservice_maintenance.GetMaintenanceRes
 		QueueAt:      timetypes.NewRFC3339TimePointerValue(resp.QueueAt),
 		CompletedAt:  timetypes.NewRFC3339TimePointerValue(resp.CompletedAt),
 		Audit:        auditObject,
-	}
+	}, nil
 }

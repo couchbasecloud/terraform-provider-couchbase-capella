@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice_maintenance"
@@ -71,8 +70,7 @@ func (d *AppServiceMaintenances) Read(ctx context.Context, req datasource.ReadRe
 
 	state.Data = make([]providerschema.AppServiceMaintenanceData, 0, len(response))
 	for i := range response {
-		audit := providerschema.NewCouchbaseAuditData(response[i].Audit)
-		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+		data, diags := providerschema.NewAppServiceMaintenanceData(ctx, &response[i])
 		if diags.HasError() {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella App Service Maintenances",
@@ -80,7 +78,7 @@ func (d *AppServiceMaintenances) Read(ctx context.Context, req datasource.ReadRe
 			)
 			return
 		}
-		state.Data = append(state.Data, providerschema.NewAppServiceMaintenanceData(&response[i], auditObj))
+		state.Data = append(state.Data, data)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
