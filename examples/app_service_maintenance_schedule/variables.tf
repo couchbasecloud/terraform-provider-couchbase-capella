@@ -19,6 +19,10 @@ variable "app_service_id" {
   description = "Capella App Service ID"
 }
 
+variable "maintenance_id" {
+  description = "ID of a pending, Couchbase-initiated App Service maintenance, from the reschedulable_maintenance_ids output"
+}
+
 variable "queue_at" {
   description = "RFC3339 time to queue the maintenance at. It must be in the future and within the maintenance scheduling window."
 }

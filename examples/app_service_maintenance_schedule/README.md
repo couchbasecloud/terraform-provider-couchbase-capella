@@ -2,7 +2,7 @@
 
 This example shows how to reschedule an App Service maintenance in Capella.
 
-It lists the maintenance of an existing App Service with the `couchbase-capella_app_service_maintenances` data source, then sets the queue time of the first pending, Couchbase-initiated maintenance with the `couchbase-capella_app_service_maintenance_schedule` resource. The resource does not create a maintenance; it only changes when an existing one starts. Maintenance initiated by a self-service upgrade is managed with `couchbase-capella_app_service_self_service_upgrade` instead.
+It lists the maintenance of an existing App Service with the `couchbase-capella_app_service_maintenances` data source, then sets the queue time of the pending, Couchbase-initiated maintenance you choose with the `couchbase-capella_app_service_maintenance_schedule` resource. The resource does not create a maintenance; it only changes when an existing one starts. Maintenance initiated by a self-service upgrade is managed with `couchbase-capella_app_service_self_service_upgrade` instead.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -18,13 +18,17 @@ In this example, we are going to do the following.
 
 Copy `terraform.template.tfvars` to `terraform.tfvars` and update the values of the variables for your organization.
 
-## LIST & CREATE
+## LIST
 
-Command: `terraform plan`, then `terraform apply`
+Command: `terraform apply -target=data.couchbase-capella_app_service_maintenances.existing_maintenances`
 
-The data source output lists every maintenance with its `id`, `kind`, `initiated_by`, `current_state` and `queue_at`. The resource adopts the first pending, Couchbase-initiated one and, if its `queue_at` differs from `var.queue_at`, reschedules it. If the App Service has no such maintenance, `terraform plan` fails on the empty `local.reschedulable_maintenance_ids` list.
+The `app_service_maintenances` output lists every maintenance with its `id`, `kind`, `initiated_by`, `current_state` and `queue_at`. The `reschedulable_maintenance_ids` output lists the IDs of the pending, Couchbase-initiated ones, which are the only ones this resource can reschedule. If it is empty, the App Service has nothing to reschedule.
 
-Taking the first ID from the list only suits a one-shot run. Once that maintenance starts, the list changes, and the next plan replaces the resource onto a different maintenance. To keep managing one maintenance, set `maintenance_id` to its ID from the data source output instead.
+## CREATE
+
+Set `maintenance_id` in `terraform.tfvars` to one of the `reschedulable_maintenance_ids`, then run `terraform plan` and `terraform apply`.
+
+The resource adopts that maintenance and, if its `queue_at` differs from `var.queue_at`, reschedules it. The ID is pinned in `terraform.tfvars` so later plans keep managing the same maintenance after it starts or completes.
 
 ## UPDATE
 

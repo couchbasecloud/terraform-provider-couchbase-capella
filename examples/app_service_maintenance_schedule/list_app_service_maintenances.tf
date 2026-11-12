@@ -9,9 +9,10 @@ data "couchbase-capella_app_service_maintenances" "existing_maintenances" {
   app_service_id  = var.app_service_id
 }
 
-locals {
-  # Only pending, Couchbase-initiated maintenance can be rescheduled with this resource.
-  reschedulable_maintenance_ids = [
+# Only pending, Couchbase-initiated maintenance can be rescheduled with this resource. Copy one of
+# these IDs into var.maintenance_id.
+output "reschedulable_maintenance_ids" {
+  value = [
     for m in data.couchbase-capella_app_service_maintenances.existing_maintenances.data : m.id
     if m.current_state == "pending" && m.initiated_by == "couchbase"
   ]
