@@ -295,6 +295,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAppServiceAuditLogExportJob,
 		datasources.NewAppServiceAuditLogStreamingState,
 		datasources.NewAppServiceAuditLoggingState,
+		datasources.NewAppServicePrivateEndpointService,
 		datasources.NewDatabaseRoles,
 		datasources.NewDatabasePrivileges,
 		datasources.NewEventingFunction,
