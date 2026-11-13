@@ -2,13 +2,9 @@ data "couchbase-capella_app_service_private_endpoint_service" "existing_app_serv
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
-  app_service_id  = var.app_service_id
+  app_service_id  = couchbase-capella_app_service_private_endpoint_service.new_app_service_private_endpoint_service.app_service_id
 
-  # Omit the aws block to read only the state and target_state.
-  aws = {
-    vpc_id     = var.vpc_id
-    subnet_ids = var.subnet_ids
-  }
+  # TODO(human)
 }
 
 output "existing_app_service_private_endpoint_service" {
