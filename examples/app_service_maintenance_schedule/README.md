@@ -2,7 +2,7 @@
 
 This example shows how to reschedule an App Service maintenance in Capella.
 
-It lists the maintenance of an existing App Service with the `couchbase-capella_app_service_maintenances` data source, then sets the queue time of the pending, Couchbase-initiated maintenance you choose with the `couchbase-capella_app_service_maintenance_schedule` resource. The resource does not create a maintenance; it only changes when an existing one starts. Maintenance initiated by a self-service upgrade is managed with `couchbase-capella_app_service_self_service_upgrade` instead.
+It lists the maintenance of an existing App Service with the `couchbase-capella_app_service_maintenances` data source, then sets the queue time of the pending maintenance you choose with the `couchbase-capella_app_service_maintenance_schedule` resource. The resource does not create a maintenance; it only changes when an existing one starts.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -22,7 +22,7 @@ Copy `terraform.template.tfvars` to `terraform.tfvars` and update the values of 
 
 Command: `terraform apply -target=data.couchbase-capella_app_service_maintenances.existing_maintenances`
 
-The `app_service_maintenances` output lists every maintenance with its `id`, `kind`, `initiated_by`, `current_state` and `queue_at`. The `reschedulable_maintenance_ids` output lists the IDs of the pending, Couchbase-initiated ones, which are the only ones this resource can reschedule. If it is empty, the App Service has nothing to reschedule.
+The `app_service_maintenances` output lists every maintenance with its `id`, `kind`, `initiated_by`, `current_state`, `queue_at` and `reschedule_by`. The `reschedulable_maintenance_ids` output lists the IDs of the pending ones, which are the only ones that can be rescheduled. If it is empty, the App Service has nothing to reschedule.
 
 ## CREATE
 
@@ -32,7 +32,7 @@ The resource adopts that maintenance and, if its `queue_at` differs from `var.qu
 
 ## UPDATE
 
-Change `queue_at` in `terraform.tfvars` to another time in the future and within the scheduling window, then run `terraform apply`. The maintenance is rescheduled in place. Capella rejects the change if the maintenance is no longer pending or the time is outside the window. Changing any of the IDs replaces the resource.
+Change `queue_at` in `terraform.tfvars` to another time in the future and no later than the maintenance's `reschedule_by`, then run `terraform apply`. The maintenance is rescheduled in place. Capella rejects the change if the maintenance is no longer pending or the time is outside the window. Changing any of the IDs replaces the resource.
 
 ## IMPORT
 

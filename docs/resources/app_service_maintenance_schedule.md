@@ -3,16 +3,13 @@
 page_title: "couchbase-capella_app_service_maintenance_schedule Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages the queue time of an existing, Couchbase-initiated App Service maintenance. This resource does not create a maintenance: it adopts one listed by the couchbase-capella_app_service_maintenances data source and reschedules it to queue_at. Only pending maintenance can be rescheduled, to a time in the future and within its scheduling window.
-  Maintenance initiated by a self-service upgrade is managed with couchbase-capella_app_service_self_service_upgrade instead.
+  Manages the queue time of an existing App Service maintenance. This resource does not create a maintenance: it adopts one listed by the couchbase-capella_app_service_maintenances data source and reschedules it to queue_at. Only pending maintenance can be rescheduled, to a time in the future and no later than reschedule_by.
   Destroying this resource only removes it from the Terraform state; the maintenance keeps its last queue time.
 ---
 
 # couchbase-capella_app_service_maintenance_schedule (Resource)
 
-Manages the queue time of an existing, Couchbase-initiated App Service maintenance. This resource does not create a maintenance: it adopts one listed by the `couchbase-capella_app_service_maintenances` data source and reschedules it to `queue_at`. Only `pending` maintenance can be rescheduled, to a time in the future and within its scheduling window.
-
-Maintenance initiated by a self-service upgrade is managed with `couchbase-capella_app_service_self_service_upgrade` instead.
+Manages the queue time of an existing App Service maintenance. This resource does not create a maintenance: it adopts one listed by the `couchbase-capella_app_service_maintenances` data source and reschedules it to `queue_at`. Only `pending` maintenance can be rescheduled, to a time in the future and no later than `reschedule_by`.
 
 Destroying this resource only removes it from the Terraform state; the maintenance keeps its last queue time.
 
@@ -25,7 +22,7 @@ resource "couchbase-capella_app_service_maintenance_schedule" "new_maintenance_s
   cluster_id      = "aaaaaa-bbbbb-cccc-dddd-eeeeeeeeeeee"
   app_service_id  = "aaaaaa-bbbbb-cccc-dddd-eeeeeeeeeeee"
   maintenance_id  = "<maintenance_id>"
-  queue_at        = "2026-09-05T02:30:00Z"
+  queue_at        = "2027-01-16T02:30:00Z"
 }
 ```
 
@@ -48,6 +45,7 @@ resource "couchbase-capella_app_service_maintenance_schedule" "new_maintenance_s
 - `current_state` (String) - The current state of the maintenance, for example `pending`. Only `pending` maintenance can be rescheduled.
 - `initiated_by` (String) - Who initiated the maintenance: `couchbase` or `selfService`.
 - `kind` (String) - The kind of maintenance, for example `upgrade`.
+- `reschedule_by` (String) - The RFC3339 timestamp of the end of the maintenance scheduling window. `queue_at` cannot be later than this.
 - `version_id` (String) - The ID of the release the maintenance moves the App Service to. Null when no release contains the maintenance image.
 
 <a id="nestedatt--audit"></a>

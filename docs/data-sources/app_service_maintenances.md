@@ -47,6 +47,7 @@ Read-Only:
 - `initiated_by` (String) - Who initiated the maintenance: `couchbase` or `selfService`.
 - `kind` (String) - The kind of maintenance, for example `upgrade`.
 - `queue_at` (String) - The RFC3339 timestamp at which the maintenance is queued to start. It must be in the future and within the maintenance scheduling window.
+- `reschedule_by` (String) - The RFC3339 timestamp of the end of the maintenance scheduling window. `queue_at` cannot be later than this.
 - `version_id` (String) - The ID of the release the maintenance moves the App Service to. Null when no release contains the maintenance image.
 
 <a id="nestedatt--data--audit"></a>

@@ -32,22 +32,22 @@ func TestAccAppServiceMaintenancesDataSource(t *testing.T) {
 	})
 }
 
-// TestAccAppServiceMaintenanceSchedule needs a pending, Couchbase-initiated maintenance on the shared
-// App Service, which the provider cannot create; it skips when there is none.
+// TestAccAppServiceMaintenanceSchedule needs a pending maintenance on the shared App Service, which
+// the provider cannot create; it skips when there is none. It restores the original queue time.
 func TestAccAppServiceMaintenanceSchedule(t *testing.T) {
 	maintenance, err := findReschedulableAppServiceMaintenance(context.Background())
 	if err != nil {
 		t.Skipf("skipping: could not list maintenances of app service %s: %v", globalAppServiceId, err)
 	}
 	if maintenance == nil {
-		t.Skip("no pending, Couchbase-initiated maintenance queued at least 30 minutes ahead on app service " + globalAppServiceId)
+		t.Skip("no pending maintenance queued at least 30 minutes ahead, with room before reschedule_by, on app service " + globalAppServiceId)
 	}
 
 	resourceName := randomStringWithPrefix("tf_acc_app_service_maintenance_schedule_")
 	resourceReference := "couchbase-capella_app_service_maintenance_schedule." + resourceName
 	currentQueueAt := maintenance.QueueAt.UTC().Format(time.RFC3339)
-	// The API exposes no scheduling-window end, so the step stays small to keep the new time inside it.
-	laterQueueAt := maintenance.QueueAt.Add(5 * time.Minute).UTC().Format(time.RFC3339)
+	// Halfway to reschedule_by keeps the new time inside the scheduling window.
+	laterQueueAt := maintenance.QueueAt.Add(maintenance.RescheduleBy.Sub(*maintenance.QueueAt) / 2).UTC().Truncate(time.Second).Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -58,14 +58,20 @@ func TestAccAppServiceMaintenanceSchedule(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "maintenance_id", maintenance.Id),
 					resource.TestCheckResourceAttr(resourceReference, "queue_at", currentQueueAt),
-					resource.TestCheckResourceAttr(resourceReference, "initiated_by", "couchbase"),
+					resource.TestCheckResourceAttr(resourceReference, "initiated_by", maintenance.InitiatedBy),
 					resource.TestCheckResourceAttrSet(resourceReference, "kind"),
+					resource.TestCheckResourceAttrSet(resourceReference, "reschedule_by"),
 					resource.TestCheckResourceAttrSet(resourceReference, "current_state"),
 				),
 			},
 			{
 				Config: globalProviderBlock + testAccAppServiceMaintenanceScheduleConfig(resourceName, maintenance.Id, laterQueueAt),
 				Check:  resource.TestCheckResourceAttr(resourceReference, "queue_at", laterQueueAt),
+			},
+			{
+				// The maintenance is shared, so put it back where the test found it.
+				Config: globalProviderBlock + testAccAppServiceMaintenanceScheduleConfig(resourceName, maintenance.Id, currentQueueAt),
+				Check:  resource.TestCheckResourceAttr(resourceReference, "queue_at", currentQueueAt),
 			},
 			{
 				ResourceName:                         resourceReference,
@@ -118,11 +124,13 @@ func findReschedulableAppServiceMaintenance(ctx context.Context) (*appservice_ma
 	if err != nil {
 		return nil, err
 	}
-	// The queue time must stay in the future while the test runs and after the update step moves it.
+	// The queue time must stay in the future while the test runs, and the window must leave room to
+	// move it later.
 	earliest := time.Now().Add(30 * time.Minute)
 	for i := range maintenances {
 		m := maintenances[i]
-		if m.CurrentState == "pending" && m.InitiatedBy == "couchbase" && m.QueueAt != nil && m.QueueAt.After(earliest) {
+		if m.CurrentState == "pending" && m.QueueAt != nil && m.QueueAt.After(earliest) &&
+			m.RescheduleBy != nil && m.RescheduleBy.Sub(*m.QueueAt) >= 2*time.Minute {
 			return &m, nil
 		}
 	}
