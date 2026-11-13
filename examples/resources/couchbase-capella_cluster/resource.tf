@@ -8,6 +8,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
     region = "us-east-1"
     cidr   = "10.200.250.0/23"
   }
+  # Optional: AWS availability zone IDs. A multi AZ cluster takes exactly 3; omit to let Capella choose.
+  zones = ["use1-az1", "use1-az2", "use1-az4"]
   couchbase_server = {
     version = "7.6"
   }
