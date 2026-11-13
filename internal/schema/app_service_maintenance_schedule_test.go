@@ -86,7 +86,7 @@ func TestNewAppServiceMaintenanceData(t *testing.T) {
 			name: "[POSITIVE] all fields set",
 			input: appservice_maintenance.GetMaintenanceResponse{
 				Id: "req1", Type: "upgrade", InitiatedBy: "couchbase", VersionId: &version,
-				CurrentState: "pending", QueueAt: &queueAt, CompletedAt: &queueAt,
+				CurrentState: "pending", QueueAt: &queueAt, CompletedAt: &queueAt, RescheduleBy: &queueAt,
 			},
 			expected: func(t *testing.T, got AppServiceMaintenanceData) {
 				assert.Equal(t, "req1", got.Id.ValueString())
@@ -98,6 +98,7 @@ func TestNewAppServiceMaintenanceData(t *testing.T) {
 				require.False(t, diags.HasError())
 				assert.True(t, queueAt.Equal(gotQueueAt))
 				assert.False(t, got.CompletedAt.IsNull())
+				assert.False(t, got.RescheduleBy.IsNull())
 			},
 		},
 		{
@@ -106,6 +107,7 @@ func TestNewAppServiceMaintenanceData(t *testing.T) {
 			expected: func(t *testing.T, got AppServiceMaintenanceData) {
 				assert.True(t, got.VersionId.IsNull())
 				assert.True(t, got.CompletedAt.IsNull())
+				assert.True(t, got.RescheduleBy.IsNull())
 			},
 		},
 		{

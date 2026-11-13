@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -23,7 +24,7 @@ const (
 	testMaintenanceID = "req1"
 	// testMaintenanceBody is a pending, Couchbase-initiated record queued at 2026-09-05T02:30:00Z.
 	testMaintenanceBody = `{"id":"req1","type":"upgrade","initiatedBy":"couchbase","currentState":"pending",` +
-		`"queueAt":"2026-09-05T02:30:00.000+00:00"}`
+		`"queueAt":"2026-09-05T02:30:00.000+00:00","rescheduleBy":"2026-09-12T00:00:00Z"}`
 )
 
 // fakeMaintenanceServer answers GET with getStatus and getBody and PUT with 204, and records each
@@ -76,6 +77,7 @@ func testMaintenanceScheduleModel(queueAt string) providerschema.AppServiceMaint
 		VersionId:      types.StringUnknown(),
 		CurrentState:   types.StringUnknown(),
 		CompletedAt:    timetypes.NewRFC3339Unknown(),
+		RescheduleBy:   timetypes.NewRFC3339Unknown(),
 		Audit:          types.ObjectUnknown(providerschema.CouchbaseAuditData{}.AttributeTypes()),
 	}
 }
@@ -85,7 +87,7 @@ func testMaintenanceScheduleState(initiatedBy string) providerschema.AppServiceM
 	model := testMaintenanceScheduleModel("2026-09-05T02:30:00Z")
 	model.Kind, model.VersionId, model.CurrentState = types.StringNull(), types.StringNull(), types.StringNull()
 	model.InitiatedBy = types.StringValue(initiatedBy)
-	model.CompletedAt = timetypes.NewRFC3339Null()
+	model.CompletedAt, model.RescheduleBy = timetypes.NewRFC3339Null(), timetypes.NewRFC3339Null()
 	model.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	return model
 }
@@ -137,13 +139,13 @@ func TestAppServiceMaintenanceScheduleCreate(t *testing.T) {
 			expectedPutBody: `{"queueAt":"2026-09-06T04:00:00Z"}`,
 		},
 		{
-			name:      "self-service record is refused without a PUT",
+			name:      "self-service record is rescheduled like any other",
 			getStatus: http.StatusOK,
 			getBody: `{"id":"req1","type":"upgrade","initiatedBy":"selfService","currentState":"pending",` +
 				`"queueAt":"2026-09-05T02:30:00Z"}`,
-			queueAt:       "2026-09-06T04:00:00Z",
-			expectedCalls: []string{http.MethodGet},
-			expectedError: "couchbase-capella_app_service_self_service_upgrade",
+			queueAt:         "2026-09-06T04:00:00Z",
+			expectedCalls:   []string{http.MethodGet, http.MethodPut, http.MethodGet},
+			expectedPutBody: `{"queueAt":"2026-09-06T04:00:00Z"}`,
 		},
 		{
 			name:          "missing record is a hard error",
@@ -197,7 +199,6 @@ func TestAppServiceMaintenanceScheduleRead(t *testing.T) {
 		getStatus     int
 		getBody       string
 		expectRemoved bool
-		expectError   string
 		expected      func(*testing.T, providerschema.AppServiceMaintenanceSchedule)
 	}{
 		{
@@ -209,6 +210,9 @@ func TestAppServiceMaintenanceScheduleRead(t *testing.T) {
 				assert.Equal(t, "couchbase", got.InitiatedBy.ValueString())
 				assert.True(t, got.VersionId.IsNull())
 				assert.True(t, got.CompletedAt.IsNull())
+				rescheduleBy, diags := got.RescheduleBy.ValueRFC3339Time()
+				require.False(t, diags.HasError())
+				assert.Equal(t, "2026-09-12T00:00:00Z", rescheduleBy.UTC().Format(time.RFC3339))
 				assert.Equal(t, testMaintenanceID, got.MaintenanceId.ValueString())
 			},
 		},
@@ -219,12 +223,6 @@ func TestAppServiceMaintenanceScheduleRead(t *testing.T) {
 			expected: func(t *testing.T, got providerschema.AppServiceMaintenanceSchedule) {
 				assert.Equal(t, "paused", got.CurrentState.ValueString())
 			},
-		},
-		{
-			name:        "self-service record is refused, which also blocks its import",
-			getStatus:   http.StatusOK,
-			getBody:     `{"id":"req1","type":"upgrade","initiatedBy":"selfService","currentState":"pending","queueAt":"2026-09-05T02:30:00Z"}`,
-			expectError: "couchbase-capella_app_service_self_service_upgrade",
 		},
 		{
 			name:          "404 removes the resource from state",
@@ -245,11 +243,6 @@ func TestAppServiceMaintenanceScheduleRead(t *testing.T) {
 
 			r.Read(ctx, resource.ReadRequest{State: state}, resp)
 
-			if tt.expectError != "" {
-				require.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), tt.expectError)
-				return
-			}
 			require.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
 			if tt.expectRemoved {
 				assert.True(t, resp.State.Raw.IsNull())
@@ -273,46 +266,19 @@ func TestAppServiceMaintenanceScheduleDeleteMakesNoCall(t *testing.T) {
 }
 
 func TestAppServiceMaintenanceScheduleUpdate(t *testing.T) {
-	tests := []struct {
-		name          string
-		initiatedBy   string
-		expectedCalls []string
-		expectedError string
-	}{
-		{
-			name:          "reschedules then reads back",
-			initiatedBy:   "couchbase",
-			expectedCalls: []string{http.MethodPut, http.MethodGet},
-		},
-		{
-			name:          "self-service record is refused without a PUT",
-			initiatedBy:   "selfService",
-			expectedError: "couchbase-capella_app_service_self_service_upgrade",
-		},
-	}
+	ctx := context.Background()
+	r, fake := newTestMaintenanceSchedule(t, http.StatusOK, testMaintenanceBody)
+	s := AppServiceMaintenanceScheduleSchema()
+	plan := tfsdk.Plan{Schema: s}
+	require.False(t, plan.Set(ctx, testMaintenanceScheduleModel("2026-09-06T04:00:00Z")).HasError())
+	state := tfsdk.State{Schema: s}
+	require.False(t, state.Set(ctx, testMaintenanceScheduleState("couchbase")).HasError())
+	resp := &resource.UpdateResponse{State: state}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-			r, fake := newTestMaintenanceSchedule(t, http.StatusOK, testMaintenanceBody)
-			s := AppServiceMaintenanceScheduleSchema()
-			plan := tfsdk.Plan{Schema: s}
-			require.False(t, plan.Set(ctx, testMaintenanceScheduleModel("2026-09-06T04:00:00Z")).HasError())
-			state := tfsdk.State{Schema: s}
-			require.False(t, state.Set(ctx, testMaintenanceScheduleState(tt.initiatedBy)).HasError())
-			resp := &resource.UpdateResponse{State: state}
+	r.Update(ctx, resource.UpdateRequest{Plan: plan, State: state}, resp)
 
-			r.Update(ctx, resource.UpdateRequest{Plan: plan, State: state}, resp)
-
-			assert.Equal(t, tt.expectedCalls, fake.calls())
-			if tt.expectedError != "" {
-				require.True(t, resp.Diagnostics.HasError())
-				assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), tt.expectedError)
-				return
-			}
-			require.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
-			require.Len(t, fake.putBodies, 1)
-			assert.JSONEq(t, `{"queueAt":"2026-09-06T04:00:00Z"}`, fake.putBodies[0])
-		})
-	}
+	require.False(t, resp.Diagnostics.HasError(), resp.Diagnostics)
+	assert.Equal(t, []string{http.MethodPut, http.MethodGet}, fake.calls())
+	require.Len(t, fake.putBodies, 1)
+	assert.JSONEq(t, `{"queueAt":"2026-09-06T04:00:00Z"}`, fake.putBodies[0])
 }

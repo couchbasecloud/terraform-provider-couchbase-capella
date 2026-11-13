@@ -42,13 +42,16 @@ func AppServiceMaintenanceScheduleSchema() schema.Schema {
 	completedAt.MarkdownDescription = capellaschema.MaintenanceCompletedAtDescription
 	capellaschema.AddAttr(attrs, "completed_at", appServiceMaintenanceScheduleBuilder, completedAt)
 
+	rescheduleBy := rfc3339Attribute(computed)
+	rescheduleBy.MarkdownDescription = capellaschema.MaintenanceRescheduleByDescription
+	capellaschema.AddAttr(attrs, "reschedule_by", appServiceMaintenanceScheduleBuilder, rescheduleBy)
+
 	capellaschema.AddAttr(attrs, "audit", appServiceMaintenanceScheduleBuilder, computedAuditAttribute())
 
 	return schema.Schema{
-		MarkdownDescription: "Manages the queue time of an existing, Couchbase-initiated App Service maintenance. " +
+		MarkdownDescription: "Manages the queue time of an existing App Service maintenance. " +
 			"This resource does not create a maintenance: it adopts one listed by the `couchbase-capella_app_service_maintenances` data source " +
-			"and reschedules it to `queue_at`. Only `pending` maintenance can be rescheduled, to a time in the future and within its scheduling window.\n\n" +
-			"Maintenance initiated by a self-service upgrade is managed with `couchbase-capella_app_service_self_service_upgrade` instead.\n\n" +
+			"and reschedules it to `queue_at`. Only `pending` maintenance can be rescheduled, to a time in the future and no later than `reschedule_by`.\n\n" +
 			"Destroying this resource only removes it from the Terraform state; the maintenance keeps its last queue time.",
 		Attributes: attrs,
 	}

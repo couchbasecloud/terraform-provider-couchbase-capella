@@ -6,15 +6,14 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
-// InitiatedBySelfService marks a maintenance record created by a self-service upgrade. Its queue
-// time is owned by the self-service upgrade resource, not by the maintenance schedule resource.
-const InitiatedBySelfService = "selfService"
-
 // GetMaintenanceResponse is a customer-visible App Service maintenance record, as returned by the
 // Capella V4 Public API list and get maintenance endpoints.
 type GetMaintenanceResponse struct {
 	// QueueAt is when the maintenance is queued to start.
 	QueueAt *time.Time `json:"queueAt"`
+
+	// RescheduleBy is the latest time the maintenance can be queued at: the end of its scheduling window.
+	RescheduleBy *time.Time `json:"rescheduleBy"`
 
 	// CompletedAt is when the maintenance finished; nil until then.
 	CompletedAt *time.Time `json:"completedAt"`

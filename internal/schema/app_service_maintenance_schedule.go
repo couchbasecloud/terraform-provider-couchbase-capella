@@ -23,6 +23,7 @@ const (
 	MaintenanceVersionIdDescription    = "\n - The ID of the release the maintenance moves the App Service to. Null when no release contains the maintenance image."
 	MaintenanceCurrentStateDescription = "\n - The current state of the maintenance, for example `pending`. Only `pending` maintenance can be rescheduled."
 	MaintenanceQueueAtDescription      = "\n - The RFC3339 timestamp at which the maintenance is queued to start. It must be in the future and within the maintenance scheduling window."
+	MaintenanceRescheduleByDescription = "\n - The RFC3339 timestamp of the end of the maintenance scheduling window. `queue_at` cannot be later than this."
 	MaintenanceCompletedAtDescription  = "\n - The RFC3339 timestamp at which the maintenance completed. Null until it completes."
 )
 
@@ -40,6 +41,7 @@ type AppServiceMaintenanceSchedule struct {
 	VersionId      types.String      `tfsdk:"version_id"`
 	CurrentState   types.String      `tfsdk:"current_state"`
 	CompletedAt    timetypes.RFC3339 `tfsdk:"completed_at"`
+	RescheduleBy   timetypes.RFC3339 `tfsdk:"reschedule_by"`
 	Audit          types.Object      `tfsdk:"audit"`
 }
 
@@ -79,6 +81,7 @@ type AppServiceMaintenanceData struct {
 	CurrentState types.String      `tfsdk:"current_state"`
 	QueueAt      timetypes.RFC3339 `tfsdk:"queue_at"`
 	CompletedAt  timetypes.RFC3339 `tfsdk:"completed_at"`
+	RescheduleBy timetypes.RFC3339 `tfsdk:"reschedule_by"`
 	Audit        types.Object      `tfsdk:"audit"`
 }
 
@@ -99,6 +102,7 @@ func NewAppServiceMaintenanceData(ctx context.Context, resp *appservice_maintena
 		CurrentState: types.StringValue(resp.CurrentState),
 		QueueAt:      timetypes.NewRFC3339TimePointerValue(resp.QueueAt),
 		CompletedAt:  timetypes.NewRFC3339TimePointerValue(resp.CompletedAt),
+		RescheduleBy: timetypes.NewRFC3339TimePointerValue(resp.RescheduleBy),
 		Audit:        auditObject,
 	}, nil
 }
