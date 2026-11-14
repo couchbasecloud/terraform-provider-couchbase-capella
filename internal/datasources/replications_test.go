@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	replicationapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/replication"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -138,4 +139,23 @@ func TestReplicationsRead(t *testing.T) {
 
 		assert.Empty(t, replicationIds(t, resp))
 	})
+}
+
+func TestUniqueReplicationSummaries(t *testing.T) {
+	// Two oneWay replications from different source clusters into the same target bucket share an ID.
+	summaries := []replicationapi.ReplicationSummary{
+		{Id: "repl-1", SourceCluster: "src-b"},
+		{Id: "repl-2", SourceCluster: "src-a"},
+		{Id: "repl-1", SourceCluster: "src-a"},
+		{Id: "repl-1", SourceCluster: "src-b"},
+		{Id: "repl-2", SourceCluster: "src-a"},
+		{Id: "repl-1", SourceCluster: "src-a"},
+	}
+
+	want := []replicationapi.ReplicationSummary{
+		{Id: "repl-1", SourceCluster: "src-a"},
+		{Id: "repl-1", SourceCluster: "src-b"},
+		{Id: "repl-2", SourceCluster: "src-a"},
+	}
+	assert.Equal(t, want, uniqueReplicationSummaries(summaries))
 }

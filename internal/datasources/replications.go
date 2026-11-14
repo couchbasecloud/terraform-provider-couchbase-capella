@@ -105,20 +105,26 @@ func (d *Replications) Read(ctx context.Context, req datasource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// uniqueReplicationSummaries removes duplicate entries and sorts the entries by ID.
+// uniqueReplicationSummaries removes duplicate entries and sorts the entries by ID, then by source cluster.
+// Two replications can have the same ID when they come from different source clusters, so the
+// source cluster is part of the key.
 func uniqueReplicationSummaries(summaries []replicationapi.ReplicationSummary) []replicationapi.ReplicationSummary {
-	seen := make(map[string]bool, len(summaries))
+	seen := make(map[[2]string]bool, len(summaries))
 	unique := make([]replicationapi.ReplicationSummary, 0, len(summaries))
 	for _, summary := range summaries {
-		if seen[summary.Id] {
+		key := [2]string{summary.SourceCluster, summary.Id}
+		if seen[key] {
 			continue
 		}
-		seen[summary.Id] = true
+		seen[key] = true
 		unique = append(unique, summary)
 	}
 
 	slices.SortFunc(unique, func(a, b replicationapi.ReplicationSummary) int {
-		return strings.Compare(a.Id, b.Id)
+		if order := strings.Compare(a.Id, b.Id); order != 0 {
+			return order
+		}
+		return strings.Compare(a.SourceCluster, b.SourceCluster)
 	})
 	return unique
 }
