@@ -99,7 +99,7 @@ resource "couchbase-capella_replication" "mobile_replication" {
 - `filter` (Attributes) - Filter contains the replication settings which are passed to the Couchbase server API while creating a replication. (see [below for nested schema](#nestedatt--filter))
 - `mappings` (Attributes Set) - Defines mappings from source to target scopes and collections. This field is only required if you are replicating specific scopes and collections. Note: If the collections array is empty or omitted, it implies all collections under that scope would be replicated. (see [below for nested schema](#nestedatt--mappings))
 - `mobile_sync_mode` (String) - Set to `active` so that App Services can run on both the source and the target. `active` needs cross cluster versioning on both buckets. A create with `active` turns on cross cluster versioning, which cannot be turned off. An update does not.
-- `network_usage_limit` (Number) - Network usage limit in MiB per second. 0 means unlimited.
+- `network_usage_limit` (Number) - Network usage limit in MiB per second. 0 means unlimited. The maximum is 1000000.
  - **Default**: `0`
 - `priority` (String) - Priority represents the resource allocation to the replication. low: Resource constraints are applied when competing with high priority replications medium: Resource constraints are applied during initial processing when competing with high priority replications, then operates as high priority high: No resource constraints are applied (default priority)
  - **Valid Values**: `low`, `medium`, `high`
