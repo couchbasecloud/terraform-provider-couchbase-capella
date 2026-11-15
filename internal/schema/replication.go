@@ -53,9 +53,12 @@ const ReplicationResourceDescription = "This resource allows you to manage an XD
 	"**Two-way replications and App Services.** To create an App Service on either cluster of a `twoWay` " +
 	"replication, `mobile_sync_mode` must be `active`. Otherwise, Capella does not allow the App Service to be created."
 
-// Fallback descriptions for attributes that the published OpenAPI spec does not describe, or
-// describes for a different object.
+// Descriptions for attributes that the published OpenAPI spec does not describe, describes for a
+// different object, or describes for API callers rather than Terraform users.
 const (
+	ReplicationTargetBucketDescription = "\n - The target bucket identifier. For Capella buckets, use bucket ID. " +
+		"For external clusters, use bucket name."
+
 	ReplicationSourceScopeDescription      = "\n - The name of the scope in the source bucket."
 	ReplicationTargetScopeDescription      = "\n - The name of the scope in the target bucket."
 	ReplicationCollectionsDescription      = "\n - The collections to replicate from the source scope. When omitted, all collections in the scope are replicated."
