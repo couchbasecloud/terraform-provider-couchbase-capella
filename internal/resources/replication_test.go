@@ -537,6 +537,23 @@ func TestReplicationRead(t *testing.T) {
 		assert.True(t, resp.Diagnostics.HasError())
 	})
 
+	t.Run("an import while the source cluster is unhealthy is an error", func(t *testing.T) {
+		backend := newReplicationBackend(t)
+		backend.getStatuses = []int{http.StatusUnprocessableEntity}
+		backend.getErrorMessage = testClusterNotHealthyMessage
+		r := &Replication{Data: newTestProviderData(t, backend.handler)}
+
+		importModel := emptyReplicationModel()
+		importModel.Id = types.StringValue(fmt.Sprintf("id=%s,cluster_id=%s,project_id=%s,organization_id=%s",
+			testReplicationID, testClusterID, testProjectID, testOrgID))
+		prior := replicationStateFrom(t, ctx, importModel)
+
+		resp := resource.ReadResponse{State: prior}
+		r.Read(ctx, resource.ReadRequest{State: prior}, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError())
+	})
+
 	t.Run("import resolves the IDs and has no reverse replication ID", func(t *testing.T) {
 		backend := newReplicationBackend(t)
 		r := &Replication{Data: newTestProviderData(t, backend.handler)}

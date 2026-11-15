@@ -434,8 +434,9 @@ func (r *Replication) Read(ctx context.Context, req resource.ReadRequest, resp *
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		// Keep the prior state, so that a plan is not blocked while the cluster is busy.
-		if isClusterNotHealthyError(err) {
+		// Keep the prior state, so that a plan is not blocked while the cluster is busy. An import has
+		// no prior state to keep, so it still fails.
+		if isClusterNotHealthyError(err) && !state.OrganizationId.IsNull() {
 			resp.Diagnostics.AddWarning("Replication not refreshed", warningMessageClusterNotHealthyOnRead+errString)
 			return
 		}

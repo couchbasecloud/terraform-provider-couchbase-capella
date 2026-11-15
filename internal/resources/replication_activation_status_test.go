@@ -322,6 +322,25 @@ func TestReplicationActivationStatusRead(t *testing.T) {
 		assert.True(t, resp.State.Raw.Equal(prior.Raw))
 	})
 
+	t.Run("an import while the source cluster is unhealthy is an error", func(t *testing.T) {
+		backend := newActivationStatusBackend(t)
+		backend.getCodes = []int{http.StatusUnprocessableEntity}
+		r := &ReplicationActivationStatus{Data: newTestProviderData(t, backend.handler)}
+
+		prior := activationStatusStateFrom(t, ctx, providerschema.ReplicationActivationStatus{
+			OrganizationId: types.StringNull(),
+			ProjectId:      types.StringNull(),
+			ClusterId:      types.StringNull(),
+			ReplicationId: types.StringValue(fmt.Sprintf("replication_id=%s,cluster_id=%s,project_id=%s,organization_id=%s",
+				testReplicationID, testClusterID, testProjectID, testOrgID)),
+			State: types.StringNull(),
+		})
+		resp := resource.ReadResponse{State: prior}
+		r.Read(ctx, resource.ReadRequest{State: prior}, &resp)
+
+		assert.True(t, resp.Diagnostics.HasError())
+	})
+
 	t.Run("import resolves the IDs from the import string", func(t *testing.T) {
 		backend := newActivationStatusBackend(t, "paused")
 		r := &ReplicationActivationStatus{Data: newTestProviderData(t, backend.handler)}
