@@ -427,6 +427,16 @@ func TestAccReplicationResourceInvalidConfig(t *testing.T) {
 				// Terraform wraps long error messages, so the pattern allows any white space between the words.
 				ExpectError: regexp.MustCompile(`must\s+set\s+both\s+bucket\s+and\s+collection,\s+or\s+neither`),
 			},
+			{
+				Config:      testAccReplicationPlanOnlyConfig(replicationNetworkUsageLimitAboveMax),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must\s+be\s+between\s+0\s+and\s+1000000,\s+got:\s+1000001`),
+			},
+			{
+				Config:      testAccReplicationPlanOnlyConfig(replicationNetworkUsageLimitNegative),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must\s+be\s+between\s+0\s+and\s+1000000,\s+got:\s+-1`),
+			},
 		},
 	})
 }
@@ -795,6 +805,24 @@ const (
     cluster = "ffffffff-aaaa-1414-eeee-000000000000"
     bucket  = "dGFyZ2V0"
   }
+`
+
+	replicationNetworkUsageLimitAboveMax = `
+  source_bucket = "c291cmNl"
+  target = {
+    cluster = "ffffffff-aaaa-1414-eeee-000000000000"
+    bucket  = "dGFyZ2V0"
+  }
+  network_usage_limit = 1000001
+`
+
+	replicationNetworkUsageLimitNegative = `
+  source_bucket = "c291cmNl"
+  target = {
+    cluster = "ffffffff-aaaa-1414-eeee-000000000000"
+    bucket  = "dGFyZ2V0"
+  }
+  network_usage_limit = -1
 `
 
 	replicationMobileActive = `
