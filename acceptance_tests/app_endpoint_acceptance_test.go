@@ -46,6 +46,15 @@ func TestAccAppEndpoint(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "syncFnXattr"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "64"),
+				),
+			},
+			{
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateAppEndpointImportId(resourceReference),
 				ImportState:       true,
@@ -99,7 +108,13 @@ func TestAccAppEndpointInexistentCollection(t *testing.T) {
 	})
 }
 
+// testAccAppEndpointResourceConfig leaves import_partitions out of the config when importPartitions is 0.
 func testAccAppEndpointResourceConfig(resourceName, endpointName, collectionName, userXattr string, deltaSync bool, importPartitions int) string {
+	partitions := ""
+	if importPartitions != 0 {
+		partitions = fmt.Sprintf("import_partitions  = %d", importPartitions)
+	}
+
 	return fmt.Sprintf(`
 %[1]s
 
@@ -112,7 +127,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	name               = "%[8]s"
 	user_xattr_key     = "%[9]s"
 	delta_sync_enabled = %[10]t
-	import_partitions  = %[11]d
+	%[11]s
 	cors = {
 		origin = ["*"]
 	}
@@ -142,7 +157,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		endpointName,
 		userXattr,
 		deltaSync,
-		importPartitions,
+		partitions,
 	)
 }
 
