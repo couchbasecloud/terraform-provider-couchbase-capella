@@ -345,6 +345,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewSnapshotBackupSchedule,
 		resources.NewAppServiceLogStreaming,
 		resources.NewAppServiceLogStreamingActivationStatus,
+		resources.NewAppServicePublicAccess,
 		resources.NewAppEndpointLoggingConfig,
 		resources.NewAppEndpointResync,
 		resources.NewClusterDeletionProtection,
