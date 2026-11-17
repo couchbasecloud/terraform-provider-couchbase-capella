@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -73,8 +74,9 @@ func (a *AppServiceMaintenanceSchedule) Create(ctx context.Context, req resource
 		if notFound, _ := api.CheckResourceNotFoundError(err); notFound {
 			resp.Diagnostics.AddError(
 				"App Service maintenance not found",
-				fmt.Sprintf("Maintenance %s does not exist on app service %s. List the maintenance of the app service with the "+
-					"couchbase-capella_app_service_maintenances data source: %s", maintenanceId, appServiceId, api.ParseError(err)),
+				fmt.Sprintf("Maintenance %s does not exist on app service %s; it may have been invalidated or replaced by a newer one. "+
+					"Set maintenance_id to a pending maintenance listed by the couchbase-capella_app_service_maintenances data source, "+
+					"or remove this resource from the configuration: %s", maintenanceId, appServiceId, api.ParseError(err)),
 			)
 			return
 		}
@@ -233,7 +235,7 @@ func (a *AppServiceMaintenanceSchedule) readMaintenance(ctx context.Context, IDs
 		VersionId:      data.VersionId,
 		CurrentState:   data.CurrentState,
 		CompletedAt:    data.CompletedAt,
-		RescheduleBy:   data.RescheduleBy,
+		RescheduleBy:   timetypes.NewRFC3339TimePointerValue(maintenance.RescheduleBy),
 		Audit:          data.Audit,
 	}, nil
 }

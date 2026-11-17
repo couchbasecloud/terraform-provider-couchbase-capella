@@ -2,8 +2,10 @@ package acceptance_tests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -79,6 +81,8 @@ func TestAccAppServiceMaintenanceSchedule(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateId:                        appServiceMaintenanceScheduleImportId(maintenance.Id),
 				ImportStateVerifyIdentifierAttribute: "maintenance_id",
+				// A self-service maintenance moves reschedule_by on every read.
+				ImportStateVerifyIgnore: []string{"reschedule_by"},
 			},
 		},
 	})
@@ -125,12 +129,22 @@ func findReschedulableAppServiceMaintenance(ctx context.Context) (*appservice_ma
 		return nil, err
 	}
 	// The queue time must stay in the future while the test runs, and the window must leave room to
-	// move it later.
+	// move it later. Only the get endpoint returns rescheduleBy, so each candidate is read on its own.
 	earliest := time.Now().Add(30 * time.Minute)
-	for i := range maintenances {
-		m := maintenances[i]
-		if m.CurrentState == "pending" && m.QueueAt != nil && m.QueueAt.After(earliest) &&
-			m.RescheduleBy != nil && m.RescheduleBy.Sub(*m.QueueAt) >= 2*time.Minute {
+	for _, listed := range maintenances {
+		if listed.CurrentState != "pending" || listed.QueueAt == nil || !listed.QueueAt.After(earliest) {
+			continue
+		}
+		cfg := api.EndpointCfg{Url: appServiceMaintenancesURL() + "/" + url.PathEscape(listed.Id), Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		response, err := globalClient.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+		if err != nil {
+			return nil, err
+		}
+		var m appservice_maintenance.GetMaintenanceResponse
+		if err = json.Unmarshal(response.Body, &m); err != nil {
+			return nil, err
+		}
+		if m.RescheduleBy != nil && m.QueueAt != nil && m.RescheduleBy.Sub(*m.QueueAt) >= 2*time.Minute {
 			return &m, nil
 		}
 	}

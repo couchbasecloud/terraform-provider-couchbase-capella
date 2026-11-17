@@ -22,7 +22,7 @@ Copy `terraform.template.tfvars` to `terraform.tfvars` and update the values of 
 
 Command: `terraform apply -target=data.couchbase-capella_app_service_maintenances.existing_maintenances`
 
-The `app_service_maintenances` output lists every maintenance with its `id`, `kind`, `initiated_by`, `current_state`, `queue_at` and `reschedule_by`. The `reschedulable_maintenance_ids` output lists the IDs of the pending ones, which are the only ones that can be rescheduled. If it is empty, the App Service has nothing to reschedule.
+The `app_service_maintenances` output lists every maintenance with its `id`, `kind`, `initiated_by`, `current_state` and `queue_at`. The `reschedulable_maintenance_ids` output lists the IDs of the pending ones, which are the only ones that can be rescheduled. If it is empty, the App Service has nothing to reschedule.
 
 ## CREATE
 
@@ -32,7 +32,11 @@ The resource adopts that maintenance and, if its `queue_at` differs from `var.qu
 
 ## UPDATE
 
-Change `queue_at` in `terraform.tfvars` to another time in the future and no later than the maintenance's `reschedule_by`, then run `terraform apply`. The maintenance is rescheduled in place. Capella rejects the change if the maintenance is no longer pending or the time is outside the window. Changing any of the IDs replaces the resource.
+Change `queue_at` in `terraform.tfvars` to another time in the future and no later than `reschedule_by` in the `new_app_service_maintenance_schedule` output, then run `terraform apply`. The maintenance is rescheduled in place. Capella rejects the change if the maintenance is no longer pending or the time is outside the window. Changing any of the IDs replaces the resource.
+
+## ACROSS UPGRADE CYCLES
+
+Each resource manages one maintenance. When that maintenance completes, the resource keeps reading it and has nothing more to reschedule. If Capella invalidates it or replaces it with a newer one, the next refresh drops the resource from the state, and `terraform apply` fails until the configuration changes. For the next cycle, either set `maintenance_id` to a new ID from `reschedulable_maintenance_ids` (this replaces the resource and only adopts the new maintenance; the old one is not touched), or remove the resource from the configuration.
 
 ## IMPORT
 

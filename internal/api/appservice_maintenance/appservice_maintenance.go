@@ -13,6 +13,7 @@ type GetMaintenanceResponse struct {
 	QueueAt *time.Time `json:"queueAt"`
 
 	// RescheduleBy is the latest time the maintenance can be queued at: the end of its scheduling window.
+	// Only the get endpoint returns it; the list leaves it nil.
 	RescheduleBy *time.Time `json:"rescheduleBy"`
 
 	// CompletedAt is when the maintenance finished; nil until then.

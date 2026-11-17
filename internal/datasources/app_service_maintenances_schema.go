@@ -32,9 +32,8 @@ func AppServiceMaintenancesSchema() schema.Schema {
 		capellaschema.AddAttr(dataAttrs, name, appServiceMaintenancesBuilder, attr)
 	}
 	for name, description := range map[string]string{
-		"queue_at":      capellaschema.MaintenanceQueueAtDescription,
-		"completed_at":  capellaschema.MaintenanceCompletedAtDescription,
-		"reschedule_by": capellaschema.MaintenanceRescheduleByDescription,
+		"queue_at":     capellaschema.MaintenanceQueueAtDescription,
+		"completed_at": capellaschema.MaintenanceCompletedAtDescription,
 	} {
 		attr := computedRFC3339()
 		attr.MarkdownDescription = description
