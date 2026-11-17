@@ -266,6 +266,13 @@ var (
 
 	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
 
+	// ErrAppServicePublicAccessChangeFailed is returned when the last public access change of an App Service failed.
+	// This is not retried by polling.
+	ErrAppServicePublicAccessChangeFailed = errors.New("app service public access change failed, please contact Couchbase Capella Support")
+
+	// ErrAppServicePublicAccessNotAvailable is returned when the App Service response does not include public access.
+	ErrAppServicePublicAccessNotAvailable = errors.New("app service public access is not available for this organization")
+
 	// ErrAppServiceFailedState is returned when the App Service reports that it is in a terminal failed state (e.g. deployment failed).
 	ErrAppServiceFailedState = errors.New("app service operation failed")
 

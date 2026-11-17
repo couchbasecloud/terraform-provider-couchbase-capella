@@ -109,6 +109,9 @@ type GetAppServiceResponse struct {
 	// LoadBalancerCidr is the CIDR block reserved for the app service load balancer subnet,
 	// when one was requested (Azure only). Omitted otherwise.
 	LoadBalancerCidr *string `json:"loadBalancerCidr,omitempty"`
+
+	// PublicAccess is the public access mode of the app service
+	PublicAccess *PublicAccess `json:"publicAccess,omitempty"`
 }
 
 type UpdateAppServiceRequest struct {
