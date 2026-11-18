@@ -157,8 +157,8 @@ func mergeAccessEntry(apiEntry, stateEntry providerschema.Access) providerschema
 	case stateEntry.Resources != nil && apiEntry.Resources != nil:
 		merged.Resources = &providerschema.Resources{
 			Buckets:     reconcileBuckets(apiEntry.Resources.Buckets, stateEntry.Resources.Buckets),
-			Catalogs:    reconcileStrings(apiEntry.Resources.Catalogs, stateEntry.Resources.Catalogs),
-			Credentials: reconcileStrings(apiEntry.Resources.Credentials, stateEntry.Resources.Credentials),
+			Catalogs:    reconcileOptionalStrings(apiEntry.Resources.Catalogs, stateEntry.Resources.Catalogs),
+			Credentials: reconcileOptionalStrings(apiEntry.Resources.Credentials, stateEntry.Resources.Credentials),
 		}
 	}
 
@@ -185,6 +185,16 @@ func reconcileScopes(apiScopes, stateScopes []providerschema.ScopeResource) []pr
 
 func reconcileCollections(apiCollections, stateCollections []types.String) []types.String {
 	return reconcileStrings(apiCollections, stateCollections)
+}
+
+// reconcileOptionalStrings is reconcileStrings for lists the API omits when empty.
+// An explicitly empty list in state is kept, so `catalogs = []` does not read back
+// as null and produce a diff on every refresh.
+func reconcileOptionalStrings(apiValues, stateValues []types.String) []types.String {
+	if len(apiValues) == 0 && stateValues != nil && len(stateValues) == 0 {
+		return stateValues
+	}
+	return reconcileStrings(apiValues, stateValues)
 }
 
 // reconcileStrings returns the API strings in prior state order.

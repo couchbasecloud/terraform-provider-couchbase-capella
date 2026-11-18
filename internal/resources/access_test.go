@@ -303,3 +303,21 @@ func TestIsWildcardOnlyResourcesSchemaIgnoresCatalogs(t *testing.T) {
 	}
 	assert.False(t, isWildcardOnlyResourcesSchema(res))
 }
+
+func TestReconcileAccessKeepsExplicitlyEmptyCatalogsAndCredentials(t *testing.T) {
+	apiAccess := []providerschema.Access{newAccess("dataRead", newBucket("b"))}
+	state := []providerschema.Access{newAccess("dataRead", newBucket("b"))}
+	state[0].Resources.Catalogs = []types.String{}
+	state[0].Resources.Credentials = []types.String{}
+
+	got := reconcileAccess(apiAccess, state)
+
+	assert.NotNil(t, got[0].Resources.Catalogs)
+	assert.Empty(t, got[0].Resources.Catalogs)
+	assert.NotNil(t, got[0].Resources.Credentials)
+	assert.Empty(t, got[0].Resources.Credentials)
+
+	state[0].Resources.Catalogs = nil
+	got = reconcileAccess(apiAccess, state)
+	assert.Nil(t, got[0].Resources.Catalogs, "an omitted list stays null")
+}
