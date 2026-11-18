@@ -1,7 +1,10 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
@@ -30,6 +33,8 @@ type AppServiceCIDR struct {
 	Audit types.Object `tfsdk:"audit"`
 	// Id is the ID is the unique UUID generated when an allowed cidr is created.
 	Id types.String `tfsdk:"id"`
+	// AccessMode is the App Service API that the allowed CIDR applies to: admin or public.
+	AccessMode types.String `tfsdk:"access_mode"`
 }
 
 // AppServiceCIDRData defines the schema for individual App service allowed CIDRs returned by the list endpoint.
@@ -44,6 +49,8 @@ type AppServiceCIDRData struct {
 	ExpiresAt types.String `tfsdk:"expires_at"`
 	// Audit contains the audit information for the App service CIDR. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
+	// AccessMode is the App Service API that the allowed CIDR applies to: admin or public.
+	AccessMode types.String `tfsdk:"access_mode"`
 }
 
 // AppServiceCIDRs defines the attributes as received from the
@@ -60,6 +67,9 @@ type AppServiceCIDRs struct {
 
 	// AppServiceId is the GUID4 identifier for the App Service.
 	AppServiceId types.String `tfsdk:"app_service_id"`
+
+	// AccessMode filters the allowed CIDRs by access mode. When it is null, the API lists admin allowed CIDRs only.
+	AccessMode types.Set `tfsdk:"access_mode"`
 
 	// Data contains the list of resources.
 	Data []AppServiceCIDRData `tfsdk:"data"`
@@ -86,20 +96,18 @@ func (a *AppServiceCIDRs) Validate() (organizationId, projectId, clusterId, apps
 // Validate is used to verify that all the fields in the datasource
 // have been populated.
 func (a *AppServiceCIDR) Validate() (organizationId, projectId, clusterId, appserviceId, allowedCIDRId string, err error) {
-	if a.OrganizationId.IsNull() {
-		return "", "", "", "", "", errors.ErrOrganizationIdMissing
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		ProjectId:      a.ProjectId,
+		ClusterId:      a.ClusterId,
+		AppServiceId:   a.AppServiceId,
+		Id:             a.Id,
 	}
-	if a.ProjectId.IsNull() {
-		return "", "", "", "", "", errors.ErrProjectIdMissing
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("%w: %w", errors.ErrValidatingResource, err)
 	}
-	if a.ClusterId.IsNull() {
-		return "", "", "", "", "", errors.ErrClusterIdMissing
-	}
-	if a.AppServiceId.IsNull() {
-		return "", "", "", "", "", errors.ErrAppServiceIdMissing
-	}
-	if a.Id.IsNull() {
-		return "", "", "", "", "", errors.ErrAllowListIdMissing
-	}
-	return a.OrganizationId.ValueString(), a.ProjectId.ValueString(), a.ClusterId.ValueString(), a.AppServiceId.ValueString(), a.Id.ValueString(), nil
+
+	return IDs[OrganizationId], IDs[ProjectId], IDs[ClusterId], IDs[AppServiceId], IDs[Id], nil
 }

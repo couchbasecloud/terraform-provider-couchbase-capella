@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 
@@ -70,10 +71,17 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	cidrReq := api.CreateAllowedCIDRRequest{
-		Cidr:      plan.Cidr.ValueString(),
-		Comment:   plan.Comment.ValueString(),
-		ExpiresAt: plan.ExpiresAt.ValueString(),
+		Cidr:       plan.Cidr.ValueString(),
+		Comment:    plan.Comment.ValueString(),
+		ExpiresAt:  plan.ExpiresAt.ValueString(),
+		AccessMode: plan.AccessMode.ValueString(),
 	}
+
+	var accessModes []string
+	if !plan.AccessMode.IsNull() {
+		accessModes = []string{cidrReq.AccessMode}
+	}
+
 	var (
 		organizationId = plan.OrganizationId.ValueString()
 		projectId      = plan.ProjectId.ValueString()
@@ -121,7 +129,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	refreshedState, err := a.refreshAllowedCIDR(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), plan.AppServiceId.ValueString(), cidrResp.Id)
+	refreshedState, err := a.refreshAllowedCIDR(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), plan.AppServiceId.ValueString(), cidrResp.Id, accessModes)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error reading App Service Allowed CIDR after creation",
@@ -135,6 +143,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 	if plan.ExpiresAt != refreshedState.ExpiresAt {
 		refreshedState.ExpiresAt = plan.ExpiresAt
 	}
+	refreshedState.AccessMode = plan.AccessMode
 
 	// Set state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
@@ -157,35 +166,24 @@ func initializeAllowedCIDRWithPlanAndId(plan providerschema.AppServiceCIDR, id s
 	return plan
 }
 
-// getAllowedCIDR is used to retrieve an existing allow list.
-func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string) (*api.AppServiceAllowedCIDRResponse, error) {
+// getAllowedCIDR is used to retrieve an existing allow list from the allowed CIDRs with the given access modes.
+func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string, accessModes []string) (*api.AppServiceAllowedCIDRResponse, error) {
 	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs%s",
 		a.HostURL,
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
+		api.AllowedCIDRsAccessModeQuery(accessModes),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
+	allowedCIDRs, err := api.GetPaginated[[]api.AppServiceAllowedCIDRResponse](ctx, a.ClientV1, a.Token, cfg, api.SortById)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+		return nil, err
 	}
 
-	allowListResp := api.ListAppServiceAllowedCIDRResponse{}
-	err = json.Unmarshal(response.Body, &allowListResp)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
-	}
-
-	for _, allowlist := range allowListResp.Data {
+	for _, allowlist := range allowedCIDRs {
 		if allowlist.Id == allowListId {
 			// Found the allow list with the matching ID
 			return &allowlist, nil
@@ -196,8 +194,8 @@ func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, pro
 }
 
 // refreshAllowedCIDR is used to pass an existing Allowed CIDR to the refreshed state.
-func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowedCIDRId string) (*providerschema.AppServiceCIDR, error) {
-	allowListResp, err := r.getAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
+func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowedCIDRId string, accessModes []string) (*providerschema.AppServiceCIDR, error) {
+	allowListResp, err := r.getAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId, accessModes)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
@@ -217,6 +215,7 @@ func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId,
 		AppServiceId:   types.StringValue(appServiceId),
 		Cidr:           types.StringValue(allowListResp.Cidr),
 		Audit:          auditObj,
+		AccessMode:     types.StringValue(allowListResp.AccessMode),
 	}
 
 	// Set optional fields
@@ -251,9 +250,20 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
+	// With no access mode, the API lists admin allowed CIDRs. This also covers a state written before access modes
+	// existed, which can only hold an admin allowed CIDR.
+	var accessModes []string
+	switch {
+	// An imported state has only the import ID, so the access mode of the allowed CIDR is not known yet.
+	case state.Cidr.IsNull():
+		accessModes = []string{api.AllowedCIDRAccessModeAdmin, api.AllowedCIDRAccessModePublic}
+	case state.AccessMode.ValueString() == api.AllowedCIDRAccessModePublic:
+		accessModes = []string{api.AllowedCIDRAccessModePublic}
+	}
+
 	// refresh the existing allow list
-	refreshedState, err := a.refreshAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
-	if err == errors.ErrNotFound {
+	refreshedState, err := a.refreshAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId, accessModes)
+	if stderrors.Is(err, errors.ErrNotFound) {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
 		return
@@ -265,8 +275,13 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	if state.ExpiresAt.ValueString() != refreshedState.ExpiresAt.ValueString() {
+	if !state.ExpiresAt.IsNull() && state.ExpiresAt.ValueString() != refreshedState.ExpiresAt.ValueString() {
 		refreshedState.ExpiresAt = state.ExpiresAt
+	}
+
+	// An omitted access mode stays null unless the allowed CIDR is public.
+	if state.AccessMode.IsNull() && refreshedState.AccessMode.ValueString() != api.AllowedCIDRAccessModePublic {
+		refreshedState.AccessMode = types.StringNull()
 	}
 
 	// Set refreshed state
@@ -277,15 +292,22 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 }
 
-// Update is not supported for App services allowed cidrs.
+// Update only changes access_mode between null and admin in the state, which the API treats the same.
 func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for App Services Allowed CIDRs.
 	// App Services Allowed CIDRs can only be created, read and deleted.
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Allowed-CIDRs-(App-Services)
 	//
-	// Note: In this situation, terraform apply will default to deleting and executing a new create.
-	// The update implementation should simply be left empty.
-	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
+	// Every other change replaces the allowed CIDR, so no API call is needed.
+	var plan, state providerschema.AppServiceCIDR
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state.AccessMode = plan.AccessMode
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 // Delete is used to delete an existing App Service Allowed CIDR.

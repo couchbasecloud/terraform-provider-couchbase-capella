@@ -31,6 +31,7 @@ func TestAccAppServicesCIDRDataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "cidr", allowedCIDR),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckNoResourceAttr(resourceReference, "access_mode"),
 
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
@@ -38,8 +39,9 @@ func TestAccAppServicesCIDRDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "data.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceReference, "data.*", map[string]string{
-						"cidr":    allowedCIDR,
-						"comment": comment,
+						"cidr":        allowedCIDR,
+						"comment":     comment,
+						"access_mode": "admin",
 					}),
 				),
 			},
