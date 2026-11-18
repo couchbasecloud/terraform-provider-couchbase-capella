@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"testing"
 
@@ -125,10 +126,16 @@ func TestAccDatabaseRoleResourceWithScopedAccess(t *testing.T) {
 	})
 }
 
-// TestAccDatabaseRoleResourceWithCatalogAndCredentialAccess_AV_147941 tests a role granting external
-// catalog and credential privileges. It needs a Couchbase Server 8.5 cluster.
-func TestAccDatabaseRoleResourceWithCatalogAndCredentialAccess_AV_147941(t *testing.T) {
-	t.Skip("AV-147941: catalogs and credentials are internal API fields; unskip once they are public")
+// TestAccDatabaseRoleResourceWithCatalogAndCredentialAccess_AV_151816 tests create, update, revoke and
+// import of a role granting external catalog and credential privileges. It needs a Couchbase Server 8.5
+// cluster and an existing external credential whose ID is set in ACC_EXTERNAL_CREDENTIAL_ID.
+func TestAccDatabaseRoleResourceWithCatalogAndCredentialAccess_AV_151816(t *testing.T) {
+	t.Skip("AV-151816: catalogs and credentials are internal API fields; unskip once they are public")
+
+	credentialID := os.Getenv("ACC_EXTERNAL_CREDENTIAL_ID")
+	if credentialID == "" {
+		t.Skip("ACC_EXTERNAL_CREDENTIAL_ID is not set")
+	}
 
 	resourceName := randomStringWithPrefix("tf_acc_db_role_")
 	resourceReference := "couchbase-capella_database_role." + resourceName
@@ -138,18 +145,29 @@ func TestAccDatabaseRoleResourceWithCatalogAndCredentialAccess_AV_147941(t *test
 		CheckDestroy:             testAccCheckDatabaseRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName),
+				Config: testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName, `["*"]`, credentialID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsDatabaseRoleResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "access.#", "2"),
 					resource.TestCheckResourceAttr(resourceReference, "access.0.resources.catalogs.0", "*"),
-					resource.TestCheckResourceAttr(resourceReference, "access.1.resources.credentials.0", "cred-1"),
+					resource.TestCheckResourceAttr(resourceReference, "access.1.resources.credentials.0", credentialID),
 				),
 			},
 			{
 				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateDatabaseRoleImportId(resourceReference),
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			// Update: change the catalogs and revoke the credential grant.
+			{
+				Config: testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName, `["catalog-1"]`, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsDatabaseRoleResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "access.#", "1"),
+					resource.TestCheckResourceAttr(resourceReference, "access.0.resources.catalogs.0", "catalog-1"),
+					resource.TestCheckNoResourceAttr(resourceReference, "access.0.resources.credentials"),
+				),
 			},
 		},
 	})
@@ -269,7 +287,19 @@ func testAccDatabaseRoleResourceConfigWithScopedAccess(resourceName string) stri
 		globalBucketName, globalScopeName, globalCollectionName)
 }
 
-func testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName string) string {
+// testAccDatabaseRoleResourceConfigWithCatalogAccess grants externalCatalogRead on catalogs, and
+// credentialConsumer on credentialID when it is not empty.
+func testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName, catalogs, credentialID string) string {
+	credentialAccess := ""
+	if credentialID != "" {
+		credentialAccess = fmt.Sprintf(`,
+			{
+				privileges = ["credentialConsumer"]
+				resources = {
+					credentials = ["%s"]
+				}
+			}`, credentialID)
+	}
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -282,18 +312,12 @@ func testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName string) str
 			{
 				privileges = ["externalCatalogRead"]
 				resources = {
-					catalogs = ["*"]
+					catalogs = %[6]s
 				}
-			},
-			{
-				privileges = ["credentialConsumer"]
-				resources = {
-					credentials = ["cred-1"]
-				}
-			},
+			}%[7]s
 		]
 	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
+	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, catalogs, credentialAccess)
 }
 
 func testAccDatabaseRolesDatasourceConfig(resourceName, dsName string) string {

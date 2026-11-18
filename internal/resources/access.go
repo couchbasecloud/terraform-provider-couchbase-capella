@@ -155,8 +155,14 @@ func mergeAccessEntry(apiEntry, stateEntry providerschema.Access) providerschema
 		// even when the user omitted resources. Keep nil to suppress the diff.
 		merged.Resources = nil
 	case stateEntry.Resources != nil && apiEntry.Resources != nil:
+		buckets := reconcileBuckets(apiEntry.Resources.Buckets, stateEntry.Resources.Buckets)
+		if stateEntry.Resources.Buckets == nil && len(buckets) == 0 {
+			// The API returns an empty bucket list for catalog and credential grants.
+			// Keep the configured null so refresh does not report a diff.
+			buckets = nil
+		}
 		merged.Resources = &providerschema.Resources{
-			Buckets:     reconcileBuckets(apiEntry.Resources.Buckets, stateEntry.Resources.Buckets),
+			Buckets:     buckets,
 			Catalogs:    reconcileOptionalStrings(apiEntry.Resources.Catalogs, stateEntry.Resources.Catalogs),
 			Credentials: reconcileOptionalStrings(apiEntry.Resources.Credentials, stateEntry.Resources.Credentials),
 		}

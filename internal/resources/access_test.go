@@ -321,3 +321,21 @@ func TestReconcileAccessKeepsExplicitlyEmptyCatalogsAndCredentials(t *testing.T)
 	got = reconcileAccess(apiAccess, state)
 	assert.Nil(t, got[0].Resources.Catalogs, "an omitted list stays null")
 }
+
+func TestReconcileAccessKeepsNullBucketsForNonBucketGrants(t *testing.T) {
+	apiAccess := []providerschema.Access{{
+		Privileges: newStrings("externalCatalogRead"),
+		Resources: &providerschema.Resources{
+			Buckets:  []providerschema.BucketResource{},
+			Catalogs: newStrings("*"),
+		},
+	}}
+	state := []providerschema.Access{newResourcesAccess("externalCatalogRead", []string{"*"}, nil)}
+
+	got := reconcileAccess(apiAccess, state)
+	assert.Nil(t, got[0].Resources.Buckets)
+
+	// Import has no prior state, so the API value is kept as is.
+	got = reconcileAccess(apiAccess, nil)
+	assert.NotNil(t, got[0].Resources.Buckets)
+}
