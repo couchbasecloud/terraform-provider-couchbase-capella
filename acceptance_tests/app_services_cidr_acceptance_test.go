@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -15,7 +16,7 @@ func TestAccAppServicesCIDRUpgrade(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_app_services_cidr_")
 	resourceReference := "couchbase-capella_app_services_cidr." + resourceName
 	cidr := fmt.Sprintf("172.16.%d.%d/32", rand.Intn(256), rand.Intn(256)) // #nosec G404
-	config := testAccAppServicesCIDRConfig(resourceName, cidr)
+	config := testAccAppServicesCIDRConfig(resourceName, cidr, "")
 
 	resource.ParallelTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
@@ -39,27 +40,73 @@ func TestAccAppServicesCIDRUpgrade(t *testing.T) {
 	})
 }
 
+// TestAccAppServicesCIDRAdminAccessMode changes access_mode between omitted and admin. The API treats both the same, so
+// the allowed CIDR updates in place.
+func TestAccAppServicesCIDRAdminAccessMode(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_services_cidr_")
+	resourceReference := "couchbase-capella_app_services_cidr." + resourceName
+	cidr := fmt.Sprintf("172.16.%d.%d/32", rand.Intn(256), rand.Intn(256)) // #nosec G404
+	expectUpdate := resource.ConfigPlanChecks{
+		PreApply: []plancheck.PlanCheck{
+			plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppServicesCIDRConfig(resourceName, cidr, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckNoResourceAttr(resourceReference, "access_mode"),
+				),
+			},
+			{
+				Config:           testAccAppServicesCIDRConfig(resourceName, cidr, "admin"),
+				ConfigPlanChecks: expectUpdate,
+				Check:            resource.TestCheckResourceAttr(resourceReference, "access_mode", "admin"),
+			},
+			{
+				Config:           testAccAppServicesCIDRConfig(resourceName, cidr, ""),
+				ConfigPlanChecks: expectUpdate,
+				Check:            resource.TestCheckNoResourceAttr(resourceReference, "access_mode"),
+			},
+		},
+	})
+}
+
 // TestAccAppServicesCIDRPublicAccessMode restricts public access of the shared app service, adds a public allowed CIDR
-// and imports it, then removes the public allowed CIDR and the restriction in the same change. It does not run in
-// parallel, because it changes public access of the shared app service. Cleanup restores the public access that the
-// app service had before.
+// and imports it, changes its access mode to admin and back to public, then removes the public allowed CIDR and the
+// restriction in the same change. It does not run in parallel, because it changes public access of the shared app
+// service. Cleanup restores the public access that the app service had before.
 func TestAccAppServicesCIDRPublicAccessMode(t *testing.T) {
 	restoreAppServicePublicAccess(t)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_services_cidr_")
 	resourceReference := "couchbase-capella_app_services_cidr." + resourceName
 	dataSourceReference := "data.couchbase-capella_app_services_cidr." + resourceName
+	allDataSourceReference := dataSourceReference + "_all"
 	cidr := fmt.Sprintf("198.51.100.%d/32", rand.Intn(256)) // #nosec G404
+	expectReplace := resource.ConfigPlanChecks{
+		PreApply: []plancheck.PlanCheck{
+			plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionReplace),
+		},
+	}
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppServicesCIDRPublicAccessModeConfig(resourceName, "restricted", cidr),
+				Config: testAccAppServicesCIDRPublicAccessModeConfig(resourceName, "restricted", cidr, "public"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "access_mode", "public"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceReference, "data.*", map[string]string{
+						"cidr":        cidr,
+						"access_mode": "public",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(allDataSourceReference, "data.*", map[string]string{
 						"cidr":        cidr,
 						"access_mode": "public",
 					}),
@@ -72,14 +119,36 @@ func TestAccAppServicesCIDRPublicAccessMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppServicesCIDRPublicAccessModeConfig(resourceName, "unrestricted", ""),
+				Config:           testAccAppServicesCIDRPublicAccessModeConfig(resourceName, "restricted", cidr, "admin"),
+				ConfigPlanChecks: expectReplace,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "access_mode", "admin"),
+					resource.TestCheckTypeSetElemNestedAttrs(allDataSourceReference, "data.*", map[string]string{
+						"cidr":        cidr,
+						"access_mode": "admin",
+					}),
+				),
+			},
+			{
+				Config:           testAccAppServicesCIDRPublicAccessModeConfig(resourceName, "restricted", cidr, "public"),
+				ConfigPlanChecks: expectReplace,
+				Check:            resource.TestCheckResourceAttr(resourceReference, "access_mode", "public"),
+			},
+			{
+				Config: testAccAppServicesCIDRPublicAccessModeConfig(resourceName, "unrestricted", "", ""),
 				Check:  resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
 			},
 		},
 	})
 }
 
-func testAccAppServicesCIDRConfig(resourceName, cidr string) string {
+// testAccAppServicesCIDRConfig adds an allowed CIDR. An empty accessMode omits access_mode.
+func testAccAppServicesCIDRConfig(resourceName, cidr, accessMode string) string {
+	accessModeAttr := ""
+	if accessMode != "" {
+		accessModeAttr = fmt.Sprintf("access_mode     = %q", accessMode)
+	}
+
 	return fmt.Sprintf(`
 %[1]s
 
@@ -89,6 +158,7 @@ resource "couchbase-capella_app_services_cidr" "%[2]s" {
   cluster_id      = "%[5]s"
   app_service_id  = "%[6]s"
   cidr            = "%[7]s"
+  %[8]s
 }
 `,
 		globalProviderBlock,
@@ -98,12 +168,13 @@ resource "couchbase-capella_app_services_cidr" "%[2]s" {
 		globalClusterId,
 		globalAppServiceId,
 		cidr,
+		accessModeAttr,
 	)
 }
 
-// testAccAppServicesCIDRPublicAccessModeConfig sets public access and lists the public allowed CIDRs. A non-empty cidr
-// adds it as a public allowed CIDR.
-func testAccAppServicesCIDRPublicAccessModeConfig(resourceName, publicAccess, cidr string) string {
+// testAccAppServicesCIDRPublicAccessModeConfig sets public access and lists the public allowed CIDRs, and the admin and
+// public allowed CIDRs. A non-empty cidr adds it as an allowed CIDR with the access mode.
+func testAccAppServicesCIDRPublicAccessModeConfig(resourceName, publicAccess, cidr, accessMode string) string {
 	cidrResource := ""
 	dataSourceDependsOn := "couchbase-capella_app_service_public_access." + resourceName
 	if cidr != "" {
@@ -114,11 +185,11 @@ resource "couchbase-capella_app_services_cidr" "%[1]s" {
   cluster_id      = "%[4]s"
   app_service_id  = "%[5]s"
   cidr            = "%[6]s"
-  access_mode     = "public"
+  access_mode     = "%[7]s"
 
   depends_on = [couchbase-capella_app_service_public_access.%[1]s]
 }
-`, resourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, cidr)
+`, resourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, cidr, accessMode)
 		dataSourceDependsOn = "couchbase-capella_app_services_cidr." + resourceName
 	}
 
@@ -139,6 +210,16 @@ data "couchbase-capella_app_services_cidr" "%[2]s" {
   cluster_id      = "%[5]s"
   app_service_id  = "%[6]s"
   access_mode     = ["public"]
+
+  depends_on = [%[9]s]
+}
+
+data "couchbase-capella_app_services_cidr" "%[2]s_all" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  app_service_id  = "%[6]s"
+  access_mode     = ["admin", "public"]
 
   depends_on = [%[9]s]
 }
