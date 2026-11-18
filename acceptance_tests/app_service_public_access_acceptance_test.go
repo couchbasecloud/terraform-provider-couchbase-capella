@@ -23,6 +23,7 @@ func TestAccAppServicePublicAccess(t *testing.T) {
 
 	resourceName := randomStringWithPrefix("tf_acc_app_service_public_access_")
 	resourceReference := "couchbase-capella_app_service_public_access." + resourceName
+	dataSourceReference := "data.couchbase-capella_app_services." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -37,6 +38,7 @@ func TestAccAppServicePublicAccess(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "public_access", "restricted"),
 					resource.TestCheckResourceAttr(resourceReference, "public_access_status", "restricted"),
+					testAccCheckAppServicesDataSourcePublicAccess(dataSourceReference, "restricted"),
 				),
 			},
 			{
@@ -51,6 +53,7 @@ func TestAccAppServicePublicAccess(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "public_access", "unrestricted"),
 					resource.TestCheckResourceAttr(resourceReference, "public_access_status", "unrestricted"),
+					testAccCheckAppServicesDataSourcePublicAccess(dataSourceReference, "unrestricted"),
 				),
 			},
 			{
@@ -58,6 +61,7 @@ func TestAccAppServicePublicAccess(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "public_access", "restricted"),
 					resource.TestCheckResourceAttr(resourceReference, "public_access_status", "restricted"),
+					testAccCheckAppServicesDataSourcePublicAccess(dataSourceReference, "restricted"),
 				),
 			},
 			{
@@ -181,6 +185,15 @@ func testAccCheckAppServicePublicAccess(publicAccess appservice.PublicAccess) re
 // 	})
 // }
 
+// testAccCheckAppServicesDataSourcePublicAccess verifies that the app services data source reads publicAccess for the
+// shared app service.
+func testAccCheckAppServicesDataSourcePublicAccess(dataSourceReference, publicAccess string) resource.TestCheckFunc {
+	return resource.TestCheckTypeSetElemNestedAttrs(dataSourceReference, "data.*", map[string]string{
+		"id":            globalAppServiceId,
+		"public_access": publicAccess,
+	})
+}
+
 func testAccAppServicePublicAccessConfig(resourceName, publicAccess string) string {
 	return fmt.Sprintf(`
 	%[1]s
@@ -191,6 +204,12 @@ func testAccAppServicePublicAccessConfig(resourceName, publicAccess string) stri
 	  cluster_id      = "%[5]s"
 	  app_service_id  = "%[6]s"
 	  public_access   = "%[7]s"
+	}
+
+	data "couchbase-capella_app_services" "%[2]s" {
+	  organization_id = "%[3]s"
+
+	  depends_on = [couchbase-capella_app_service_public_access.%[2]s]
 	}
 	`,
 		globalProviderBlock,

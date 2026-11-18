@@ -66,6 +66,9 @@ type AppService struct {
 
 	// Nodes is the number of nodes configured for the app service.
 	Nodes types.Int64 `tfsdk:"nodes"`
+
+	// PublicAccess is the public access mode of the app service, including transitional and failed values.
+	PublicAccess types.String `tfsdk:"public_access"`
 }
 
 // AppServiceCompute depicts the couchbase compute, following are the supported compute combinations
@@ -106,6 +109,7 @@ func NewAppService(
 		Audit:            auditObject,
 		Etag:             types.StringValue(appService.Etag),
 		LoadBalancerCidr: types.StringPointerValue(appService.LoadBalancerCidr),
+		PublicAccess:     types.StringPointerValue((*string)(appService.PublicAccess)),
 	}
 	return &newAppService
 }
@@ -186,6 +190,9 @@ type AppServiceData struct {
 
 	// Nodes is the number of nodes configured for the app service.
 	Nodes types.Int64 `tfsdk:"nodes"`
+
+	// PublicAccess is the public access mode of the app service, including transitional and failed values.
+	PublicAccess types.String `tfsdk:"public_access"`
 }
 
 // NewAppServiceData creates a new cluster data object.
@@ -210,6 +217,7 @@ func NewAppServiceData(
 		Version:          types.StringValue(appService.Version),
 		Audit:            auditObject,
 		LoadBalancerCidr: types.StringPointerValue(appService.LoadBalancerCidr),
+		PublicAccess:     types.StringPointerValue((*string)(appService.PublicAccess)),
 	}
 	return &newAppService
 }
