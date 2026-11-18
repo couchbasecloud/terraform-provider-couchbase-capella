@@ -125,6 +125,36 @@ func TestAccDatabaseRoleResourceWithScopedAccess(t *testing.T) {
 	})
 }
 
+// TestAccDatabaseRoleResourceWithCatalogAndCredentialAccess_AV_147941 tests a role granting external
+// catalog and credential privileges. It needs a Couchbase Server 8.5 cluster.
+func TestAccDatabaseRoleResourceWithCatalogAndCredentialAccess_AV_147941(t *testing.T) {
+	t.Skip("AV-147941: catalogs and credentials are internal API fields; unskip once they are public")
+
+	resourceName := randomStringWithPrefix("tf_acc_db_role_")
+	resourceReference := "couchbase-capella_database_role." + resourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		CheckDestroy:             testAccCheckDatabaseRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsDatabaseRoleResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "access.#", "2"),
+					resource.TestCheckResourceAttr(resourceReference, "access.0.resources.catalogs.0", "*"),
+					resource.TestCheckResourceAttr(resourceReference, "access.1.resources.credentials.0", "cred-1"),
+				),
+			},
+			{
+				ResourceName:      resourceReference,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // TestAccDatabaseRoleResourceInvalidName tests that a name with leading/trailing spaces is rejected.
 func TestAccDatabaseRoleResourceInvalidName(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_db_role_")
@@ -237,6 +267,33 @@ func testAccDatabaseRoleResourceConfigWithScopedAccess(resourceName string) stri
 	}
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
 		globalBucketName, globalScopeName, globalCollectionName)
+}
+
+func testAccDatabaseRoleResourceConfigWithCatalogAccess(resourceName string) string {
+	return fmt.Sprintf(`
+	%[1]s
+
+	resource "couchbase-capella_database_role" "%[2]s" {
+		organization_id = "%[3]s"
+		project_id      = "%[4]s"
+		cluster_id      = "%[5]s"
+		name            = "%[2]s"
+		access = [
+			{
+				privileges = ["externalCatalogRead"]
+				resources = {
+					catalogs = ["*"]
+				}
+			},
+			{
+				privileges = ["credentialConsumer"]
+				resources = {
+					credentials = ["cred-1"]
+				}
+			},
+		]
+	}
+	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
 }
 
 func testAccDatabaseRolesDatasourceConfig(resourceName, dsName string) string {

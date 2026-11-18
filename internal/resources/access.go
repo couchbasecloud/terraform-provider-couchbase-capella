@@ -24,6 +24,17 @@ func convertScopes(scopes []providerschema.ScopeResource) []api.Scope {
 	return result
 }
 
+func convertStrings(values []types.String) []string {
+	if values == nil {
+		return nil
+	}
+	result := make([]string, len(values))
+	for i, v := range values {
+		result[i] = v.ValueString()
+	}
+	return result
+}
+
 func convertBuckets(buckets []providerschema.BucketResource) []api.Bucket {
 	result := make([]api.Bucket, len(buckets))
 	for k, bucket := range buckets {
@@ -50,9 +61,20 @@ func createAccessFromSlice(access []providerschema.Access) []api.Access {
 			result[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, 0)}
 			continue
 		}
-		if acc.Resources.Buckets != nil {
-			result[i].Resources = &api.AccessibleResources{Buckets: convertBuckets(acc.Resources.Buckets)}
+		resources := &api.AccessibleResources{
+			Catalogs:    convertStrings(acc.Resources.Catalogs),
+			Credentials: convertStrings(acc.Resources.Credentials),
 		}
+		switch {
+		case acc.Resources.Buckets != nil:
+			resources.Buckets = convertBuckets(acc.Resources.Buckets)
+		case resources.Catalogs != nil || resources.Credentials != nil:
+			// Catalog and credential privileges carry no bucket scope.
+			resources.Buckets = make([]api.Bucket, 0)
+		default:
+			continue
+		}
+		result[i].Resources = resources
 	}
 	return result
 }
@@ -66,6 +88,15 @@ func copyScopeResources(scopes []providerschema.ScopeResource) []providerschema.
 			copy(result[s].Collections, scope.Collections)
 		}
 	}
+	return result
+}
+
+func copyStrings(values []types.String) []types.String {
+	if values == nil {
+		return nil
+	}
+	result := make([]types.String, len(values))
+	copy(result, values)
 	return result
 }
 
@@ -88,9 +119,7 @@ func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
 		for j, permission := range acc.Privileges {
 			access[i].Privileges[j] = types.StringValue(permission)
 		}
-		if acc.Resources != nil && acc.Resources.Buckets != nil {
-			access[i].Resources = &providerschema.Resources{Buckets: providerschema.MapBucketsFromAPI(acc.Resources.Buckets)}
-		}
+		access[i].Resources = providerschema.MapResourcesFromAPI(acc.Resources)
 	}
 	return access
 }
@@ -127,7 +156,9 @@ func mergeAccessEntry(apiEntry, stateEntry providerschema.Access) providerschema
 		merged.Resources = nil
 	case stateEntry.Resources != nil && apiEntry.Resources != nil:
 		merged.Resources = &providerschema.Resources{
-			Buckets: reconcileBuckets(apiEntry.Resources.Buckets, stateEntry.Resources.Buckets),
+			Buckets:     reconcileBuckets(apiEntry.Resources.Buckets, stateEntry.Resources.Buckets),
+			Catalogs:    reconcileStrings(apiEntry.Resources.Catalogs, stateEntry.Resources.Catalogs),
+			Credentials: reconcileStrings(apiEntry.Resources.Credentials, stateEntry.Resources.Credentials),
 		}
 	}
 
@@ -153,9 +184,14 @@ func reconcileScopes(apiScopes, stateScopes []providerschema.ScopeResource) []pr
 }
 
 func reconcileCollections(apiCollections, stateCollections []types.String) []types.String {
-	return reorderToState(apiCollections, stateCollections,
+	return reconcileStrings(apiCollections, stateCollections)
+}
+
+// reconcileStrings returns the API strings in prior state order.
+func reconcileStrings(apiValues, stateValues []types.String) []types.String {
+	return reorderToState(apiValues, stateValues,
 		types.String.ValueString,
-		func(apiCollection, _ types.String) types.String { return apiCollection })
+		func(apiValue, _ types.String) types.String { return apiValue })
 }
 
 // reorderToState returns the API elements in prior state order, pairing them by
@@ -204,7 +240,7 @@ func reorderToState[T any](apiItems, stateItems []T, key func(T) string, merge f
 // isWildcardOnlyResourcesSchema returns true when the resources contain only
 // a single wildcard ("*") bucket with no scopes.
 func isWildcardOnlyResourcesSchema(res *providerschema.Resources) bool {
-	if res == nil || len(res.Buckets) != 1 {
+	if res == nil || len(res.Buckets) != 1 || len(res.Catalogs) > 0 || len(res.Credentials) > 0 {
 		return false
 	}
 	b := res.Buckets[0]
@@ -232,9 +268,14 @@ func mapAccessFromSlice(access []providerschema.Access) []providerschema.Access 
 		if acc.Resources == nil {
 			continue
 		}
-		if acc.Resources.Buckets != nil {
-			result[i].Resources = &providerschema.Resources{Buckets: copyBucketResources(acc.Resources.Buckets)}
+		resources := &providerschema.Resources{
+			Catalogs:    copyStrings(acc.Resources.Catalogs),
+			Credentials: copyStrings(acc.Resources.Credentials),
 		}
+		if acc.Resources.Buckets != nil {
+			resources.Buckets = copyBucketResources(acc.Resources.Buckets)
+		}
+		result[i].Resources = resources
 	}
 	return result
 }

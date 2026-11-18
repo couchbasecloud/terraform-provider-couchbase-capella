@@ -73,6 +73,14 @@ type Access struct {
 type Resources struct {
 	// Buckets contains the details of all buckets with scope and collection level information to which the access applies.
 	Buckets []BucketResource `tfsdk:"buckets"`
+
+	// Catalogs is the list of external catalogs the catalog privileges are granted on.
+	// "*" grants every catalog. Supported on database roles only.
+	Catalogs []types.String `tfsdk:"catalogs"`
+
+	// Credentials is the list of external credential IDs the credential privileges are granted on.
+	// Supported on database roles only.
+	Credentials []types.String `tfsdk:"credentials"`
 }
 
 // BucketResource contains the details of a single bucket with scope and collection level information.

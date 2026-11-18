@@ -62,6 +62,16 @@ func DatabaseCredentialSchema() schema.Schema {
 		},
 	})
 
+	// Catalog and credential access is granted through a database role. The attributes
+	// exist because the shared Access model carries them; the API rejects any value.
+	catalogs := stringListAttribute(optional)
+	catalogs.MarkdownDescription = "Not supported for database credentials. Grant catalog access through a `couchbase-capella_database_role` instead."
+	resourcesAttrs["catalogs"] = catalogs
+
+	credentials := stringListAttribute(optional)
+	credentials.MarkdownDescription = "Not supported for database credentials. Grant credential access through a `couchbase-capella_database_role` instead."
+	resourcesAttrs["credentials"] = credentials
+
 	accessAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(accessAttrs, "privileges", databaseCredentialBuilder, stringSetAttribute(required))
 	capellaschema.AddAttr(accessAttrs, "resources", databaseCredentialBuilder, &schema.SingleNestedAttribute{
