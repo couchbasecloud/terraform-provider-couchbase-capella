@@ -114,6 +114,12 @@ func (r *ReplicationActivationStatus) Read(ctx context.Context, req resource.Rea
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		// Keep the prior state, so that a plan is not blocked while the cluster is busy. An import has
+		// no prior state to keep, so it still fails.
+		if isClusterNotHealthyError(err) && !state.OrganizationId.IsNull() {
+			resp.Diagnostics.AddWarning("Replication activation status not refreshed", warningMessageClusterNotHealthyOnRead+errString)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading replication activation status",
 			"Could not read the activation status of replication "+replicationId+": "+errString,
