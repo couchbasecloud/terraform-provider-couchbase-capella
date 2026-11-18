@@ -211,6 +211,19 @@ func (a *AppServiceSelfServiceUpgrade) Update(ctx context.Context, req resource.
 		return
 	}
 
+	// Save what was submitted before the read, so that a failed read does not leave the old version in
+	// state. Read keeps the stored version_id when the API omits it, so it would otherwise never recover.
+	submitted := plan
+	submitted.Id = types.StringValue(upgradeId)
+	submitted.QueueAt = queueAtValue
+	submitted.CurrentState = state.CurrentState
+	submitted.CompletedAt = state.CompletedAt
+	submitted.Audit = state.Audit
+	resp.Diagnostics.Append(resp.State.Set(ctx, submitted)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// The update returns no body, so read the upgrade back.
 	upgrade, err := a.getUpgrade(ctx, IDs)
 	if err != nil {

@@ -373,23 +373,39 @@ func TestAppServiceSelfServiceUpgradeRead(t *testing.T) {
 }
 
 func TestAppServiceSelfServiceUpgradeUpdate(t *testing.T) {
+	updated := scriptedResponse{http.StatusOK, strings.Replace(testUpgradeBody("pending"), "3.1.8", "3.2.0", 1)}
+
 	tests := []struct {
-		name          string
-		put           scriptedResponse
-		expectedCalls []string
-		expectError   bool
+		name            string
+		put             scriptedResponse
+		get             scriptedResponse
+		expectedCalls   []string
+		expectError     bool
+		expectedVersion string
 	}{
 		{
-			name:          "replaces version and queue time then reads back",
-			put:           scriptedResponse{http.StatusNoContent, ""},
-			expectedCalls: []string{http.MethodPut, http.MethodGet},
+			name:            "replaces version and queue time then reads back",
+			put:             scriptedResponse{http.StatusNoContent, ""},
+			get:             updated,
+			expectedCalls:   []string{http.MethodPut, http.MethodGet},
+			expectedVersion: "3.2.0",
 		},
 		{
 			name: "rejection of a started upgrade is returned without retry",
 			put: scriptedResponse{http.StatusBadRequest, `{"code":11077,"message":"Only pending self-service upgrades can be updated or cancelled.",` +
 				`"httpStatusCode":400}`},
-			expectedCalls: []string{http.MethodPut},
-			expectError:   true,
+			get:             updated,
+			expectedCalls:   []string{http.MethodPut},
+			expectError:     true,
+			expectedVersion: "3.1.8",
+		},
+		{
+			name:            "failed read after the update keeps the submitted version",
+			put:             scriptedResponse{http.StatusNoContent, ""},
+			get:             scriptedResponse{http.StatusInternalServerError, `{"code":500,"message":"boom","httpStatusCode":500}`},
+			expectedCalls:   []string{http.MethodPut, http.MethodGet},
+			expectError:     true,
+			expectedVersion: "3.2.0",
 		},
 	}
 
@@ -398,7 +414,7 @@ func TestAppServiceSelfServiceUpgradeUpdate(t *testing.T) {
 			ctx := context.Background()
 			r, fake := newTestSelfServiceUpgrade(t, map[string][]scriptedResponse{
 				http.MethodPut: {tt.put},
-				http.MethodGet: {{http.StatusOK, strings.Replace(testUpgradeBody("pending"), "3.1.8", "3.2.0", 1)}},
+				http.MethodGet: {tt.get},
 			})
 			s := AppServiceSelfServiceUpgradeSchema()
 			planModel := testSelfServiceUpgradeState()
@@ -415,12 +431,10 @@ func TestAppServiceSelfServiceUpgradeUpdate(t *testing.T) {
 			require.Len(t, fake.bodies[http.MethodPut], 1)
 			assert.JSONEq(t, `{"versionId":"3.2.0","queueAt":"2026-08-24T02:30:00Z"}`, fake.bodies[http.MethodPut][0])
 			require.Equal(t, tt.expectError, resp.Diagnostics.HasError(), resp.Diagnostics)
-			if tt.expectError {
-				return
-			}
 			var got providerschema.AppServiceSelfServiceUpgrade
 			require.False(t, resp.State.Get(ctx, &got).HasError())
-			assert.Equal(t, "3.2.0", got.VersionId.ValueString())
+			assert.Equal(t, tt.expectedVersion, got.VersionId.ValueString())
+			assert.Equal(t, "2026-08-24T02:30:00Z", got.QueueAt.ValueString())
 		})
 	}
 }

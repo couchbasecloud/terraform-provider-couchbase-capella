@@ -21,16 +21,39 @@ func TestAccDatasourceAppServiceSelfServiceUpgradeAvailableVersions(t *testing.T
 	dataSourceName := randomStringWithPrefix("tf_acc_app_service_self_service_upgrade_available_versions_")
 	dataSourceReference := "data.couchbase-capella_app_service_self_service_upgrade_available_versions." + dataSourceName
 
+	versions, err := listAvailableSelfServiceUpgradeVersions(context.Background())
+	if err != nil {
+		t.Fatalf("could not list the available versions of app service %s: %v", globalAppServiceId, err)
+	}
+
+	checks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+		resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+		resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+		resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
+		resource.TestCheckResourceAttr(dataSourceReference, "data.#", fmt.Sprint(len(versions))),
+	}
+	// The data source must expose every field of each version as the API returns it.
+	for i, v := range versions {
+		item := fmt.Sprintf("data.%d.", i)
+		checks = append(checks,
+			resource.TestCheckResourceAttr(dataSourceReference, item+"id", v.Id),
+			resource.TestCheckResourceAttr(dataSourceReference, item+"title", v.Title),
+			resource.TestCheckResourceAttr(dataSourceReference, item+"description", v.Description),
+			resource.TestCheckResourceAttr(dataSourceReference, item+"priority", v.Priority),
+			resource.TestCheckResourceAttr(dataSourceReference, item+"release_notes.#", fmt.Sprint(len(v.ReleaseNotes))),
+		)
+		for j, note := range v.ReleaseNotes {
+			checks = append(checks, resource.TestCheckResourceAttr(dataSourceReference, fmt.Sprintf("%srelease_notes.%d", item, j), note))
+		}
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppServiceSelfServiceUpgradeAvailableVersionsConfig(dataSourceName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttrSet(dataSourceReference, "data.#"),
-				),
+				Check:  resource.ComposeAggregateTestCheckFunc(checks...),
 			},
 		},
 	})
@@ -47,6 +70,8 @@ func TestAccDatasourceAppServiceSelfServiceUpgrades(t *testing.T) {
 				Config: testAccAppServiceSelfServiceUpgradesConfig(dataSourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "data.#"),
 				),
@@ -60,13 +85,14 @@ func TestAccDatasourceAppServiceSelfServiceUpgrades(t *testing.T) {
 // parallel, because TestAccAppServiceMaintenanceSchedule reschedules any pending maintenance of the
 // same App Service, which would include this upgrade.
 func TestAccAppServiceSelfServiceUpgradeResource(t *testing.T) {
-	versionId, err := firstAvailableSelfServiceUpgradeVersion(context.Background())
+	versions, err := listAvailableSelfServiceUpgradeVersions(context.Background())
 	if err != nil {
-		t.Skipf("skipping: could not list the available versions of app service %s: %v", globalAppServiceId, err)
+		t.Fatalf("could not list the available versions of app service %s: %v", globalAppServiceId, err)
 	}
-	if versionId == "" {
+	if len(versions) == 0 {
 		t.Skip("no self-service upgrade version is available for app service " + globalAppServiceId)
 	}
+	versionId := versions[0].Id
 
 	resourceName := randomStringWithPrefix("tf_acc_app_service_self_service_upgrade_")
 	resourceReference := "couchbase-capella_app_service_self_service_upgrade." + resourceName
@@ -227,20 +253,17 @@ func getAppServiceSelfServiceUpgrade(ctx context.Context, upgradeId string) (*ap
 	return &upgrade, nil
 }
 
-func firstAvailableSelfServiceUpgradeVersion(ctx context.Context) (string, error) {
+func listAvailableSelfServiceUpgradeVersions(ctx context.Context) ([]appservice_self_service_upgrade.AvailableVersion, error) {
 	cfg := api.EndpointCfg{Url: appServiceSelfServiceUpgradesURL() + "/availableVersions", Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := globalClient.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	var versions appservice_self_service_upgrade.ListAvailableVersionsResponse
 	if err = json.Unmarshal(response.Body, &versions); err != nil {
-		return "", err
+		return nil, err
 	}
-	if len(versions.Data) == 0 {
-		return "", nil
-	}
-	return versions.Data[0].Id, nil
+	return versions.Data, nil
 }
 
 func testAccExistsAppServiceSelfServiceUpgradeResource(resourceReference string) resource.TestCheckFunc {
@@ -270,12 +293,50 @@ func testAccCheckSelfServiceUpgradesListContains(dataSourceReference, resourceRe
 			return fmt.Errorf("%s has no data: %w", dataSourceReference, err)
 		}
 		for i := 0; i < count; i++ {
-			if list[fmt.Sprintf("data.%d.id", i)] == upgrade["id"] {
-				return nil
+			item := fmt.Sprintf("data.%d.", i)
+			if list[item+"id"] == upgrade["id"] {
+				return checkSelfServiceUpgradeListItem(list, item, upgrade)
 			}
 		}
 		return fmt.Errorf("%s does not list upgrade %s", dataSourceReference, upgrade["id"])
 	}
+}
+
+// checkSelfServiceUpgradeListItem asserts a list item maps the same pending upgrade the resource holds.
+func checkSelfServiceUpgradeListItem(list map[string]string, item string, upgrade map[string]string) error {
+	expected := map[string]string{
+		"kind":          "upgrade",
+		"initiated_by":  "selfService",
+		"version_id":    upgrade["version_id"],
+		"current_state": upgrade["current_state"],
+	}
+	for field, want := range expected {
+		if got := list[item+field]; got != want {
+			return fmt.Errorf("%s%s is %q, expected %q", item, field, got, want)
+		}
+	}
+
+	listQueueAt, err := time.Parse(time.RFC3339, list[item+"queue_at"])
+	if err != nil {
+		return fmt.Errorf("%squeue_at: %w", item, err)
+	}
+	resourceQueueAt, err := time.Parse(time.RFC3339, upgrade["queue_at"])
+	if err != nil {
+		return fmt.Errorf("resource queue_at: %w", err)
+	}
+	if !listQueueAt.Equal(resourceQueueAt) {
+		return fmt.Errorf("%squeue_at is %s, expected %s", item, listQueueAt, resourceQueueAt)
+	}
+
+	if completedAt := list[item+"completed_at"]; completedAt != "" {
+		return fmt.Errorf("%scompleted_at is %q, expected null for a pending upgrade", item, completedAt)
+	}
+	for _, field := range []string{"audit.created_at", "audit.created_by", "audit.modified_at", "audit.modified_by", "audit.version"} {
+		if list[item+field] == "" {
+			return fmt.Errorf("%s%s is not set", item, field)
+		}
+	}
+	return nil
 }
 
 // testAccCheckAppServiceSelfServiceUpgradeCancelled asserts destroy cancelled the upgrade, so the
