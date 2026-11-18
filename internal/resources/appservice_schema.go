@@ -31,6 +31,7 @@ func AppServiceSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "audit", appServiceBuilder, computedAuditAttribute())
 	capellaschema.AddAttr(attrs, "if_match", appServiceBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(attrs, "etag", appServiceBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "public_access", appServiceBuilder, stringAttribute([]string{computed}))
 
 	// load_balancer_cidr is an Azure only attribute. Will remain null for other CSPs.
 	capellaschema.AddAttr(attrs, "load_balancer_cidr", appServiceBuilder, stringAttribute([]string{optional, computed, useStateForUnknown, requiresReplaceIfConfigured}))
