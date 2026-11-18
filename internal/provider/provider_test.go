@@ -109,6 +109,7 @@ func TestCapellaProvider_UniqueTypeNames(t *testing.T) {
 			seen[resp.TypeName] = true
 		}
 		assert.True(t, seen[providerName+"_app_service_maintenance_window"])
+		assert.True(t, seen[providerName+"_app_service_self_service_upgrade"])
 	})
 
 	t.Run("data sources", func(t *testing.T) {
@@ -120,5 +121,7 @@ func TestCapellaProvider_UniqueTypeNames(t *testing.T) {
 			seen[resp.TypeName] = true
 		}
 		assert.True(t, seen[providerName+"_app_service_maintenance_window"])
+		assert.True(t, seen[providerName+"_app_service_self_service_upgrade_available_versions"])
+		assert.True(t, seen[providerName+"_app_service_self_service_upgrades"])
 	})
 }

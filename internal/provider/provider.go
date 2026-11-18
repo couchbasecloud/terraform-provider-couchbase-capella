@@ -300,6 +300,8 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewDataApi,
 		datasources.NewAppServiceMaintenanceWindow,
 		datasources.NewAppServiceMaintenances,
+		datasources.NewAppServiceSelfServiceUpgradeAvailableVersions,
+		datasources.NewAppServiceSelfServiceUpgrades,
 	}
 }
 
@@ -357,5 +359,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewDataApi,
 		resources.NewAppServiceMaintenanceWindow,
 		resources.NewAppServiceMaintenanceSchedule,
+		resources.NewAppServiceSelfServiceUpgrade,
 	}
 }
