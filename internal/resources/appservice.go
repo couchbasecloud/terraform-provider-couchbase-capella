@@ -643,5 +643,6 @@ func initializePendingAppServiceWithPlanAndId(plan providerschema.AppService, id
 	}
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.Etag = types.StringNull()
+	plan.PublicAccess = types.StringNull()
 	return plan
 }
