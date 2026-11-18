@@ -308,6 +308,7 @@ func (f *FreeTierBucket) retrieveFreeTierBucket(ctx context.Context, organizatio
 			DiskUsedInMiB:   types.Int64Value(bucketResp.Stats.DiskUsedInMib),
 			MemoryUsedInMiB: types.Int64Value(bucketResp.Stats.MemoryUsedInMib),
 		},
+		EnableCrossClusterVersioning: types.BoolValue(bucketResp.EnableCrossClusterVersioning),
 	}
 
 	return &refreshedState, nil

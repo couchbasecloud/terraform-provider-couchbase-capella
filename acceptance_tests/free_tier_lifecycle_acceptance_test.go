@@ -143,6 +143,7 @@ func TestAccFreeTierClusterLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttrSet(bucketRef, "type"),
 					resource.TestCheckResourceAttrSet(bucketRef, "storage_backend"),
 					resource.TestCheckResourceAttrSet(bucketRef, "vbuckets"),
+					resource.TestCheckResourceAttr(bucketRef, "enable_cross_cluster_versioning", "false"),
 				),
 			},
 			// 9. Import the bucket.
