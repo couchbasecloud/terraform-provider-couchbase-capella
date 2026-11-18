@@ -1,1 +1,1 @@
-terraform import couchbase-capella_app_services_cidr.new_app_services_cidr id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>,appservice_id=<appservice_id>
+terraform import couchbase-capella_app_services_cidr.new_app_services_cidr id=<allowed_cidr_id>,app_service_id=<app_service_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>

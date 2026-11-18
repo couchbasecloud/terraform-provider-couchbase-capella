@@ -41,14 +41,15 @@ func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, 
 
 // listAllowedCIDRs executes calls to the list app service allowed cidrs endpoint. It handles pagination and
 // returns a slice of individual allowed cidr responses retrieved from multiple pages.
-func (a *AppServiceCidrs) listAllowedCIDRs(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) ([]api.AppServiceAllowedCIDRResponse, error) {
+func (a *AppServiceCidrs) listAllowedCIDRs(ctx context.Context, organizationId, projectId, clusterId, appServiceId string, accessModes []string) ([]api.AppServiceAllowedCIDRResponse, error) {
 	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs%s",
 		a.HostURL,
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
+		api.AllowedCIDRsAccessModeQuery(accessModes),
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -74,7 +75,14 @@ func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	response, err := a.listAllowedCIDRs(ctx, organizationId, projectId, clusterId, appServiceId)
+	// A null access_mode lists no access mode, so the API lists admin allowed CIDRs only.
+	var accessModes []string
+	resp.Diagnostics.Append(state.AccessMode.ElementsAs(ctx, &accessModes, true)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	response, err := a.listAllowedCIDRs(ctx, organizationId, projectId, clusterId, appServiceId, accessModes)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Listing App Service allowed CIDRs",
@@ -111,6 +119,7 @@ func (a *AppServiceCidrs) mapResponseBody(
 		ProjectId:      types.StringValue(state.ProjectId.ValueString()),
 		ClusterId:      types.StringValue(state.ClusterId.ValueString()),
 		AppServiceId:   types.StringValue(state.AppServiceId.ValueString()),
+		AccessMode:     state.AccessMode,
 	}
 	for _, allowList := range allowLists {
 		// Create audit data object
@@ -122,9 +131,10 @@ func (a *AppServiceCidrs) mapResponseBody(
 		}
 
 		allowListState := providerschema.AppServiceCIDRData{
-			Id:    types.StringValue(allowList.Id),
-			Cidr:  types.StringValue(allowList.Cidr),
-			Audit: auditObj,
+			Id:         types.StringValue(allowList.Id),
+			Cidr:       types.StringValue(allowList.Cidr),
+			Audit:      auditObj,
+			AccessMode: types.StringValue(allowList.AccessMode),
 		}
 		if allowList.Comment != "" {
 			allowListState.Comment = types.StringValue(allowList.Comment)

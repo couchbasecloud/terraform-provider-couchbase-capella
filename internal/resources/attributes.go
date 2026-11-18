@@ -96,19 +96,22 @@ func stringDefaultAttributeReplaceOnChange(defaultValue string, fields ...string
 }
 
 // requiresReplaceOnKnownChange requires replacement when the planned value differs from the
-// prior one, treating an absent prior value as implicitPriorValue. Plain RequiresReplace
+// prior one, treating an absent prior or planned value as implicitValue. Plain RequiresReplace
 // instead reads the Default backfilling a state file written before the attribute existed as
 // a change, and destroys every existing resource on the first plan after an upgrade (AV-139981).
-func requiresReplaceOnKnownChange(implicitPriorValue string) planmodifier.String {
-	const description = "Replaces the resource when the value changes, treating an absent prior value as the default."
+func requiresReplaceOnKnownChange(implicitValue string) planmodifier.String {
+	const description = "Replaces the resource when the value changes, treating an absent value as the default."
 
 	return stringplanmodifier.RequiresReplaceIf(
 		func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-			priorValue := req.StateValue
+			priorValue, planValue := req.StateValue, req.PlanValue
 			if priorValue.IsNull() {
-				priorValue = types.StringValue(implicitPriorValue)
+				priorValue = types.StringValue(implicitValue)
 			}
-			resp.RequiresReplace = !req.PlanValue.Equal(priorValue)
+			if planValue.IsNull() {
+				planValue = types.StringValue(implicitValue)
+			}
+			resp.RequiresReplace = !planValue.Equal(priorValue)
 		},
 		description,
 		description,
