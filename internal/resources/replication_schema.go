@@ -32,7 +32,9 @@ func ReplicationSchema() schema.Schema {
 
 	targetAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(targetAttrs, "cluster", replicationBuilder, requiredStringAttributeNoReplace())
-	capellaschema.AddAttr(targetAttrs, "bucket", replicationBuilder, requiredStringAttributeNoReplace())
+	targetBucket := requiredStringAttributeNoReplace()
+	capellaschema.AddAttr(targetAttrs, "bucket", replicationBuilder, targetBucket)
+	targetBucket.MarkdownDescription = capellaschema.ReplicationTargetBucketDescription
 	targetType := stringDefaultAttribute(capellaschema.ReplicationTargetTypeCapella, optional, computed)
 	targetType.Validators = append(targetType.Validators,
 		stringvalidator.OneOf(capellaschema.ReplicationTargetTypeCapella, capellaschema.ReplicationTargetTypeExternal))
@@ -136,10 +138,12 @@ func ReplicationSchema() schema.Schema {
 	mobileSyncMode := stringDefaultAttribute(capellaschema.ReplicationMobileSyncModeOff, optional, computed)
 	mobileSyncMode.Validators = append(mobileSyncMode.Validators,
 		stringvalidator.OneOf(capellaschema.ReplicationMobileSyncModeOff, capellaschema.ReplicationMobileSyncModeActive))
-	mobileSyncMode.MarkdownDescription = capellaschema.ReplicationMobileSyncModeDescription
 	capellaschema.AddAttr(attrs, "mobile_sync_mode", replicationBuilder, mobileSyncMode)
+	mobileSyncMode.MarkdownDescription = capellaschema.ReplicationMobileSyncModeDescription
 
-	capellaschema.AddAttr(attrs, "conflict_logging", replicationBuilder, conflictLoggingAttribute())
+	conflictLogging := conflictLoggingAttribute()
+	capellaschema.AddAttr(attrs, "conflict_logging", replicationBuilder, conflictLogging)
+	conflictLogging.MarkdownDescription = capellaschema.ReplicationConflictLoggingDescription
 
 	capellaschema.AddAttr(attrs, "reverse_replication_id", replicationBuilder,
 		stringAttribute([]string{computed, useStateForUnknown}), "CreateReplicationJSONResponse")
@@ -152,7 +156,7 @@ func ReplicationSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "audit", replicationBuilder, computedReplicationAuditAttribute())
 
 	return schema.Schema{
-		MarkdownDescription: "This resource allows you to manage an XDCR replication from a bucket in an operational cluster to a bucket in another cluster.",
+		MarkdownDescription: capellaschema.ReplicationResourceDescription,
 		Attributes:          attrs,
 	}
 }
@@ -190,15 +194,13 @@ func conflictLoggingAttribute() *schema.SingleNestedAttribute {
 			mapvalidator.SizeAtLeast(1),
 		},
 	}
-	loggingRules.MarkdownDescription = capellaschema.ReplicationLoggingRulesDescription
 	capellaschema.AddAttr(conflictLoggingAttrs, "logging_rules", replicationBuilder, loggingRules)
+	loggingRules.MarkdownDescription = capellaschema.ReplicationLoggingRulesDescription
 
-	conflictLogging := &schema.SingleNestedAttribute{
+	return &schema.SingleNestedAttribute{
 		Optional:   true,
 		Attributes: conflictLoggingAttrs,
 	}
-	conflictLogging.MarkdownDescription = capellaschema.ReplicationConflictLoggingDescription
-	return conflictLogging
 }
 
 // computedReplicationDetailsAttribute returns the computed source details, or the target details

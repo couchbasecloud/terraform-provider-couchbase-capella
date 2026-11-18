@@ -20,7 +20,9 @@ func ReplicationSchema() schema.Schema {
 
 	targetAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(targetAttrs, "cluster", replicationBuilder, computedString())
-	capellaschema.AddAttr(targetAttrs, "bucket", replicationBuilder, computedString())
+	targetBucket := computedString()
+	capellaschema.AddAttr(targetAttrs, "bucket", replicationBuilder, targetBucket)
+	targetBucket.MarkdownDescription = capellaschema.ReplicationTargetBucketDescription
 	capellaschema.AddAttr(targetAttrs, "type", replicationBuilder, computedString())
 	capellaschema.AddAttr(attrs, "target", replicationBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
@@ -34,10 +36,12 @@ func ReplicationSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "filter", replicationBuilder, computedReplicationFilterAttribute())
 
 	mobileSyncMode := computedString()
-	mobileSyncMode.MarkdownDescription = capellaschema.ReplicationDataMobileSyncModeDescription
 	capellaschema.AddAttr(attrs, "mobile_sync_mode", replicationBuilder, mobileSyncMode)
+	mobileSyncMode.MarkdownDescription = capellaschema.ReplicationDataMobileSyncModeDescription
 
-	capellaschema.AddAttr(attrs, "conflict_logging", replicationBuilder, computedConflictLoggingAttribute())
+	conflictLogging := computedConflictLoggingAttribute()
+	capellaschema.AddAttr(attrs, "conflict_logging", replicationBuilder, conflictLogging)
+	conflictLogging.MarkdownDescription = capellaschema.ReplicationDataConflictLoggingDescription
 
 	capellaschema.AddAttr(attrs, "status", replicationBuilder, computedString())
 	capellaschema.AddAttr(attrs, "changes_left", replicationBuilder, computedInt64())
@@ -138,8 +142,8 @@ func computedConflictLoggingAttribute() *schema.SingleNestedAttribute {
 		"collection": collection,
 	}
 	disabled := computedBool()
-	disabled.MarkdownDescription = capellaschema.ReplicationDataDisabledDescription
 	capellaschema.AddAttr(conflictLoggingAttrs, "disabled", replicationBuilder, disabled)
+	disabled.MarkdownDescription = capellaschema.ReplicationDataDisabledDescription
 
 	loggingRules := &schema.MapNestedAttribute{
 		Computed: true,
@@ -147,15 +151,13 @@ func computedConflictLoggingAttribute() *schema.SingleNestedAttribute {
 			Attributes: ruleAttrs,
 		},
 	}
-	loggingRules.MarkdownDescription = capellaschema.ReplicationLoggingRulesDescription
 	capellaschema.AddAttr(conflictLoggingAttrs, "logging_rules", replicationBuilder, loggingRules)
+	loggingRules.MarkdownDescription = capellaschema.ReplicationLoggingRulesDescription
 
-	conflictLogging := &schema.SingleNestedAttribute{
+	return &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: conflictLoggingAttrs,
 	}
-	conflictLogging.MarkdownDescription = capellaschema.ReplicationDataConflictLoggingDescription
-	return conflictLogging
 }
 
 // computedReplicationDetailsAttribute returns the source details, or the target details when isTarget

@@ -4,11 +4,20 @@ page_title: "couchbase-capella_replication Resource - terraform-provider-couchba
 subcategory: ""
 description: |-
   This resource allows you to manage an XDCR replication from a bucket in an operational cluster to a bucket in another cluster.
+  Some changes replace the replication. A change to source_bucket, target (including target.type) or direction cannot be applied in place, so Terraform deletes the replication and creates a new one.
+  Turning off a cluster removes its replications. When the source or target cluster is turned off, Capella deletes the replication on both clusters. The next terraform plan then shows the replication as a new resource to create.
+  Two-way replications and App Services. To create an App Service on either cluster of a twoWay replication, mobile_sync_mode must be active. Otherwise, Capella does not allow the App Service to be created.
 ---
 
 # couchbase-capella_replication (Resource)
 
 This resource allows you to manage an XDCR replication from a bucket in an operational cluster to a bucket in another cluster.
+
+**Some changes replace the replication.** A change to `source_bucket`, `target` (including `target.type`) or `direction` cannot be applied in place, so Terraform deletes the replication and creates a new one.
+
+**Turning off a cluster removes its replications.** When the source or target cluster is turned off, Capella deletes the replication on both clusters. The next `terraform plan` then shows the replication as a new resource to create.
+
+**Two-way replications and App Services.** To create an App Service on either cluster of a `twoWay` replication, `mobile_sync_mode` must be `active`. Otherwise, Capella does not allow the App Service to be created.
 
 ## Example Usage
 
@@ -101,7 +110,7 @@ resource "couchbase-capella_replication" "mobile_replication" {
 - `mobile_sync_mode` (String) - Set to `active` so that App Services can run on both the source and the target. `active` needs cross cluster versioning on both buckets. A create with `active` turns on cross cluster versioning, which cannot be turned off. An update does not.
 - `network_usage_limit` (Number) - Network usage limit in MiB per second. 0 means unlimited. The maximum is 1000000.
  - **Default**: `0`
-- `priority` (String) - Priority represents the resource allocation to the replication. low: Resource constraints are applied when competing with high priority replications medium: Resource constraints are applied during initial processing when competing with high priority replications, then operates as high priority high: No resource constraints are applied (default priority)
+- `priority` (String) - Priority represents the resource allocation to the replication. low: Resource constraints are applied when competing with high priority replications. medium: Resource constraints are applied during initial processing when competing with high priority replications, then operates as high priority. high: No resource constraints are applied (default priority).
  - **Valid Values**: `low`, `medium`, `high`
  - **Default**: `high`
 
@@ -122,8 +131,8 @@ resource "couchbase-capella_replication" "mobile_replication" {
 
 Required:
 
-- `bucket` (String) - The target bucket identifier. For Capella buckets, use bucket ID For external clusters, use bucket name
-- `cluster` (String) - The target cluster identifier. For Capella clusters, use cluster ID For external clusters, use cluster reference name
+- `bucket` (String) - The target bucket identifier. For Capella buckets, use bucket ID. For external clusters, use bucket name.
+- `cluster` (String) - The target cluster identifier. For Capella clusters, use cluster ID. For external clusters, use cluster reference name.
 
 Optional:
 
@@ -139,7 +148,7 @@ Required:
 
 - `bucket` (String) - The ID of the log bucket. It can be empty only when `disabled` is true.
 - `collection` (String) - The default log collection, as `scope.collection`. It can be empty only when `disabled` is true.
-- `disabled` (Boolean) - Set to true to keep the configuration without logging conflicts.
+- `disabled` (Boolean) - Whether conflict logging is currently turned off. Set to false to log conflicts.
 
 Optional:
 
