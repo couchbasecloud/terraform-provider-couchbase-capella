@@ -1,0 +1,1 @@
+terraform import couchbase-capella_app_service_maintenance_schedule.new_maintenance_schedule organization_id=<organization_id>,project_id=<project_id>,cluster_id=<cluster_id>,app_service_id=<app_service_id>,maintenance_id=<maintenance_id>

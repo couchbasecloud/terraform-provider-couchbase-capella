@@ -26,6 +26,7 @@ var (
 		"endpoint_id":       EndpointId,
 		"provider_id":       ProviderId,
 		"function_name":     FunctionName,
+		"maintenance_id":    MaintenanceId,
 	}
 )
 
