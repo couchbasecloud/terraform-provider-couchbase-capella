@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -443,6 +444,36 @@ func TestReplicationSchemaKeepsUnchangedComputedObjects(t *testing.T) {
 	}
 }
 
+func TestReplicationSchemaRegExRejectsBlank(t *testing.T) {
+	replicationSchema := ReplicationSchema()
+	filter, ok := replicationSchema.Attributes["filter"].(*schema.SingleNestedAttribute)
+	require.True(t, ok, "filter is %T, want *schema.SingleNestedAttribute", replicationSchema.Attributes["filter"])
+	expressions, ok := filter.Attributes["expressions"].(*schema.SingleNestedAttribute)
+	require.True(t, ok, "expressions is %T, want *schema.SingleNestedAttribute", filter.Attributes["expressions"])
+	regEx, ok := expressions.Attributes["reg_ex"].(*schema.StringAttribute)
+	require.True(t, ok, "reg_ex is %T, want *schema.StringAttribute", expressions.Attributes["reg_ex"])
+
+	tests := []struct {
+		value   string
+		wantErr bool
+	}{
+		{value: "   ", wantErr: true},
+		{value: "\t\n", wantErr: true},
+		{value: "^a", wantErr: false},
+		{value: " ^a ", wantErr: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%q", tt.value), func(t *testing.T) {
+			resp := &validator.StringResponse{}
+			for _, v := range regEx.Validators {
+				v.ValidateString(t.Context(), validator.StringRequest{ConfigValue: types.StringValue(tt.value)}, resp)
+			}
+			assert.Equal(t, tt.wantErr, resp.Diagnostics.HasError(), resp.Diagnostics)
+		})
+	}
+}
+
 func TestReplicationRead(t *testing.T) {
 	ctx := context.Background()
 
@@ -822,6 +853,44 @@ func TestReplicationValidateConfigConflictLogging(t *testing.T) {
 				"inventory": rule(types.StringValue("conflict_logs"), types.StringValue("logs.inv")),
 			}),
 			wantErr: `conflict_logging.logging_rules["inventory"].bucket must be a bucket ID`,
+		},
+		{
+			name:            "a log collection without a collection name is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.", nil),
+			wantErr:         `conflict_logging.collection "logs." must be in the format "scope.collection"`,
+		},
+		{
+			name:            "a log collection with three names is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "a.b.c", nil),
+			wantErr:         `conflict_logging.collection "a.b.c" must be in the format "scope.collection"`,
+		},
+		{
+			name: "a rule collection without a scope is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"inventory": rule(types.StringValue("bG9ncw=="), types.StringValue("nodot")),
+			}),
+			wantErr: `conflict_logging.logging_rules["inventory"].collection "nodot" must be in the format "scope.collection"`,
+		},
+		{
+			name: "an empty rule key is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"": rule(types.StringNull(), types.StringNull()),
+			}),
+			wantErr: `The logging rule key "" must be in the format "scope" or "scope.collection"`,
+		},
+		{
+			name: "a rule key with three names is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"a.b.c": rule(types.StringNull(), types.StringNull()),
+			}),
+			wantErr: `The logging rule key "a.b.c" must be in the format "scope" or "scope.collection"`,
+		},
+		{
+			name: "a rule key without a collection name is rejected",
+			conflictLogging: conflictLogging(false, "bG9ncw==", "logs.default", map[string]attr.Value{
+				"inventory.": types.ObjectNull(ruleType.AttrTypes),
+			}),
+			wantErr: `The logging rule key "inventory." must be in the format "scope" or "scope.collection"`,
 		},
 		{
 			name: "unknown values are checked later",

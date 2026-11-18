@@ -266,10 +266,22 @@ func validateConflictLoggingConfig(ctx context.Context, value types.Object, diag
 		diags.AddAttributeError(root.AtName("bucket"), "Invalid Bucket ID", bucketIdErrorMessage("conflict_logging.bucket"))
 	}
 
+	if isKnown(conflictLogging.Collection) && conflictLogging.Collection.ValueString() != "" &&
+		!isScopeCollection(conflictLogging.Collection.ValueString()) {
+		diags.AddAttributeError(root.AtName("collection"), "Invalid Conflict Logging Configuration",
+			fmt.Sprintf("conflict_logging.collection %q must be in the format \"scope.collection\".", conflictLogging.Collection.ValueString()))
+	}
+
 	if conflictLogging.LoggingRules.IsNull() || conflictLogging.LoggingRules.IsUnknown() {
 		return
 	}
 	for namespace, element := range conflictLogging.LoggingRules.Elements() {
+		rulePath := root.AtName("logging_rules").AtMapKey(namespace)
+		if !isScope(namespace) && !isScopeCollection(namespace) {
+			diags.AddAttributeError(rulePath, "Invalid Conflict Logging Rule",
+				fmt.Sprintf("The logging rule key %q must be in the format \"scope\" or \"scope.collection\".", namespace))
+		}
+
 		ruleObject, ok := element.(types.Object)
 		if !ok || ruleObject.IsNull() || ruleObject.IsUnknown() {
 			continue
@@ -282,7 +294,6 @@ func validateConflictLoggingConfig(ctx context.Context, value types.Object, diag
 			return
 		}
 
-		rulePath := root.AtName("logging_rules").AtMapKey(namespace)
 		if rule.Bucket.IsNull() != rule.Collection.IsNull() {
 			diags.AddAttributeError(rulePath, "Invalid Conflict Logging Rule",
 				fmt.Sprintf("The logging rule for %q must set both bucket and collection, or neither. "+
@@ -292,7 +303,23 @@ func validateConflictLoggingConfig(ctx context.Context, value types.Object, diag
 			diags.AddAttributeError(rulePath.AtName("bucket"), "Invalid Bucket ID",
 				bucketIdErrorMessage(fmt.Sprintf("conflict_logging.logging_rules[%q].bucket", namespace)))
 		}
+		if isKnown(rule.Collection) && !isScopeCollection(rule.Collection.ValueString()) {
+			diags.AddAttributeError(rulePath.AtName("collection"), "Invalid Conflict Logging Rule",
+				fmt.Sprintf("conflict_logging.logging_rules[%q].collection %q must be in the format \"scope.collection\".",
+					namespace, rule.Collection.ValueString()))
+		}
 	}
+}
+
+// isScope reports whether value is a single non-empty name with no dot.
+func isScope(value string) bool {
+	return value != "" && !strings.Contains(value, ".")
+}
+
+// isScopeCollection reports whether value is "scope.collection" with two non-empty names.
+func isScopeCollection(value string) bool {
+	parts := strings.Split(value, ".")
+	return len(parts) == 2 && parts[0] != "" && parts[1] != ""
 }
 
 // Create creates a replication. The create call is async: it returns a job ID, and the

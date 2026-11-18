@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -14,6 +16,9 @@ import (
 )
 
 var replicationBuilder = capellaschema.NewSchemaBuilder("replication")
+
+// nonBlankPattern matches a value with at least one character that is not a space.
+var nonBlankPattern = regexp.MustCompile(`\S`)
 
 // ReplicationSchema defines the Terraform schema for the replication resource.
 func ReplicationSchema() schema.Schema {
@@ -103,7 +108,9 @@ func ReplicationSchema() schema.Schema {
 	// Without it, a config like `expressions = { skip_restream = true }` reads back as null and
 	// shows a diff on every plan. skip_restream also has no effect without an expression.
 	expressionAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(expressionAttrs, "reg_ex", replicationBuilder, requiredStringAttributeNoReplace())
+	regEx := requiredStringAttributeNoReplace()
+	regEx.Validators = append(regEx.Validators, stringvalidator.RegexMatches(nonBlankPattern, "must not be only spaces"))
+	capellaschema.AddAttr(expressionAttrs, "reg_ex", replicationBuilder, regEx)
 	capellaschema.AddAttr(expressionAttrs, "skip_restream", replicationBuilder, boolDefaultAttribute(false, optional, computed))
 
 	filterAttrs := make(map[string]schema.Attribute)
