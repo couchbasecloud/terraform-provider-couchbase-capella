@@ -472,7 +472,7 @@ func (f *FreeTierAppService) checkFreeTierAppServiceStatus(ctx context.Context, 
 		case <-timer.C:
 			appServiceResp, err = f.getFreeTierAppService(ctx, organizationId, projectId, clusterId, appServiceId)
 			if err != nil {
-				return err
+				return api.PollError(ctx, err, errors.ErrAppServiceCreationStatusTimeout)
 			}
 
 			if !appservice.IsFinalState(appServiceResp.CurrentState) {
