@@ -121,6 +121,7 @@ func TestClusterCreateExpressScaling(t *testing.T) {
 			plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 			plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 			plan.ExpressScaling = tt.plan
+			plan.Zones = types.SetNull(types.StringType)
 
 			s := ClusterSchema()
 			req := resource.CreateRequest{Plan: tfsdk.Plan{Schema: s}}
