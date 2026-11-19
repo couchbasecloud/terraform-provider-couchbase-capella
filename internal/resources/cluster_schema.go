@@ -22,7 +22,13 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}), "CreateClusterRequest")
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
-	capellaschema.AddAttr(attrs, "zones", clusterBuilder, stringSetAttribute(optional, requiresReplace))
+	zones := stringSetAttribute(optional, computed, useStateForUnknown, requiresReplaceIfConfigured)
+	capellaschema.AddAttr(attrs, "zones", clusterBuilder, zones)
+	// Set after AddAttr: the published OpenAPI description still says only single AZ is supported.
+	zones.MarkdownDescription = "The AWS availability zone IDs (for example `use1-az1`) to deploy the cluster in. " +
+		"Only supported for AWS clusters: at most 1 zone for a single AZ cluster, and exactly 3 unique zones in the cluster's region for a multi AZ cluster. " +
+		"If omitted, Capella chooses the zones and they are read back into state; an empty list also lets Capella choose, but keeps zones empty in state. " +
+		"Changing this forces a new cluster to be created."
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "deletion_protection", clusterBuilder, boolAttribute(computed))
 
@@ -60,8 +66,14 @@ func ClusterSchema() schema.Schema {
 
 	diskAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(diskAttrs, "type", clusterBuilder, stringAttribute([]string{required}, stringvalidator.OneOf("gp3", "io2", "P6", "P10", "P15", "P20", "P30", "P40", "P50", "P60", "Ultra", "pd-ssd")))
-	capellaschema.AddAttr(diskAttrs, "storage", clusterBuilder, int64Attribute(optional, computed))
-	capellaschema.AddAttr(diskAttrs, "iops", clusterBuilder, int64Attribute(optional, computed))
+	// useStateForUnknown: service_groups is a set, and Terraform correlates set elements by
+	// value, so changing anything inside an element (node count, cpu/ram, services) leaves it
+	// with no prior element to correlate against and its Optional+Computed attributes plan as
+	// unknown. The update path reads these straight into the request body, where an unknown
+	// unwraps to 0, so an ordinary scale-up of a cluster whose config omits them would send
+	// "storage": 0. Resolving back to prior state keeps the values the cluster already has.
+	capellaschema.AddAttr(diskAttrs, "storage", clusterBuilder, int64Attribute(optional, computed, useStateForUnknown))
+	capellaschema.AddAttr(diskAttrs, "iops", clusterBuilder, int64Attribute(optional, computed, useStateForUnknown))
 	capellaschema.AddAttr(diskAttrs, "autoexpansion", clusterBuilder, boolAttribute(optional, computed))
 
 	nodeAttrs := make(map[string]schema.Attribute)

@@ -49,9 +49,6 @@ TestAccClusterResourceAzureDiskAutoExpansion
 #
 # Note the runner anchors the pattern as ^(...)$, so naming a test here does not pull in
 # others that share its prefix; each one has to be listed on its own.
-#
-# The AWS equivalents are deliberately absent: they are skipped pending AV-145015, and a
-# skipped test on the gate guards nothing. Add them here when that ticket is fixed.
 
 # Tests that an omitted iops on an Azure Ultra disk is omitted from the request rather
 # than sent as 0
@@ -59,6 +56,37 @@ TestAccClusterResourceAzureUltraDiskIopsOmitted_AV_143042
 
 # Control for the test above: proves a configured iops really reaches Capella
 TestAccClusterResourceAzureUltraDiskIopsInvalid_AV_143042
+
+# Tests that an AWS disk config omitting iops or storage is rejected by the provider,
+# naming the attribute, instead of being sent to Capella as 0. Both are rejected before
+# anything is provisioned, so they cost under two seconds each.
+TestAccClusterResourceAwsDiskIopsOmitted_AV_145015
+TestAccClusterResourceAwsDiskStorageOmitted_AV_145015
+
+# Zones are validated at plan time, so no cluster is provisioned (AV-147905)
+TestAccClusterResourceMultiAZTwoZonesInvalid
+TestAccClusterResourceGCPWithZonesInvalid
+
+# The remaining zones rejections, also plan time only: the single AZ count branch, the
+# Azure arm, and a duplicate that the Set collapses before counting
+TestAccClusterZonesSingleAZTooMany
+TestAccClusterZonesAzureRejected
+TestAccClusterZonesDuplicatesCollapse
+
+# Capella rejects an AWS zone name where a zone ID is required, so the create never starts
+# and no cluster is provisioned (AV-149540)
+TestAccClusterZonesNameRejected
+
+# The remaining identifier cases, all rejected before a cluster is built: an empty string
+# that the Set collapses, a blank zone the count rule cannot catch, and a well-formed but
+# nonexistent zone ID (AV-149540)
+TestAccClusterZonesEmptyStringsCollapse
+TestAccClusterZonesEmptyStringRejected
+TestAccClusterZonesNonexistentIdRejected
+
+# Reads the shared cluster to prove zones are mapped out of the API response rather than
+# echoed from config; provisions nothing of its own (AV-147905)
+TestAccClusterZonesReadBackFromDatasource
 
 # Tests reading a single cluster via data source
 TestAccReadClusterDatasource

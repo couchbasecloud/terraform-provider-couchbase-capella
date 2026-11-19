@@ -27,8 +27,8 @@ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) - The name of the sample dataset to be loaded. The name has to be one of the following sample datasets. travel-sample gamesim-sample beer-sample
- - **Valid Values**: `travel-sample`, `gamesim-sample`, `beer-sample`
+- `name` (String) - The name of the sample dataset to be loaded. The name has to be one of the following sample datasets. travel-sample gamesim-sample beer-sample inventory-sample
+ - **Valid Values**: `travel-sample`, `gamesim-sample`, `beer-sample`, `inventory-sample`
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
