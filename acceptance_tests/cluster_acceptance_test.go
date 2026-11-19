@@ -8,9 +8,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
@@ -21,6 +25,8 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := generateRandomCIDR()
+	// Zones are not configured, so Capella picks them; they must be read back and kept across the update.
+	sameZones := statecheck.CompareValue(compare.ValuesSame())
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -33,6 +39,10 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: testAccClusterResourceConfigWithOnlyReqField(resourceName, cidr),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceReference, tfjsonpath.New("zones"), knownvalue.SetSizeExact(3)),
+					sameZones.AddStateValue(resourceReference, tfjsonpath.New("zones")),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -68,6 +78,9 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 			{
 				Config:             testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
 				ExpectNonEmptyPlan: true,
+				ConfigStateChecks: []statecheck.StateCheck{
+					sameZones.AddStateValue(resourceReference, tfjsonpath.New("zones")),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
@@ -411,7 +424,8 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "single"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
-					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az1"),
 				),
 			},
 			// ImportState testing
@@ -1354,4 +1368,177 @@ func testAccExistsClusterResource(t *testing.T, resourceReference string) resour
 		}
 		return nil
 	}
+}
+
+// TestAccClusterResourceMultiAZWithZonesAWS creates a multi AZ AWS cluster in three chosen
+// availability zones and verifies the zones are read back, including on import and through the
+// cluster and clusters data sources, and that an in-place update keeps the cluster and its zones.
+//
+// use1-az3 is avoided because some compute types are not offered there.
+func TestAccClusterResourceMultiAZWithZonesAWS(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceReference := "couchbase-capella_cluster." + resourceName
+	dataSourceReference := "data.couchbase-capella_cluster." + resourceName
+	cidr := generateRandomCIDR()
+	zones := `["use1-az4", "use1-az1", "use1-az2"]`
+	// The data sources return zones as a list sorted by zone ID, whatever the configured order.
+	sortedZones := knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.StringExact("use1-az1"),
+		knownvalue.StringExact("use1-az2"),
+		knownvalue.StringExact("use1-az4"),
+	})
+	sameId := statecheck.CompareValue(compare.ValuesSame())
+	sameZones := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterResourceConfigMultiAZWithZonesAndDataSources(resourceName, cidr, zones, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az1"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az2"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "zones.*", "use1-az4"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					sameId.AddStateValue(resourceReference, tfjsonpath.New("id")),
+					sameZones.AddStateValue(resourceReference, tfjsonpath.New("zones")),
+					statecheck.ExpectKnownValue(dataSourceReference, tfjsonpath.New("zones"), sortedZones),
+					// Indexing fails with "Invalid index" unless the data source zones is a list.
+					statecheck.ExpectKnownOutputValue("data_source_first_zone", knownvalue.StringExact("use1-az1")),
+					statecheck.ExpectKnownOutputValue("clusters_data_source_zones", sortedZones),
+				},
+			},
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterResourceConfigMultiAZWithZonesAndDataSources(resourceName, cidr, zones, "updated in place"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceReference, tfjsonpath.New("description"), knownvalue.StringExact("updated in place")),
+					sameId.AddStateValue(resourceReference, tfjsonpath.New("id")),
+					sameZones.AddStateValue(resourceReference, tfjsonpath.New("zones")),
+					statecheck.ExpectKnownValue(dataSourceReference, tfjsonpath.New("zones"), sortedZones),
+				},
+			},
+		},
+	})
+}
+
+// TestAccClusterResourceMultiAZTwoZonesInvalid verifies a multi AZ cluster with other than 3
+// zones is rejected at plan time.
+func TestAccClusterResourceMultiAZTwoZonesInvalid(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceConfigMultiAZWithZones(resourceName, generateRandomCIDR(), "aws", "us-east-1", `["use1-az1", "use1-az2"]`, ""),
+				ExpectError: regexp.MustCompile(`(?s)Invalid zones.*got 2 zones for a multi AZ cluster`),
+			},
+		},
+	})
+}
+
+// TestAccClusterResourceGCPWithZonesInvalid verifies zones are rejected for a non-AWS cluster,
+// because the API silently ignores them.
+func TestAccClusterResourceGCPWithZonesInvalid(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceConfigMultiAZWithZones(resourceName, generateRandomCIDR(), "gcp", "us-east1", `["us-east1-b", "us-east1-c", "us-east1-d"]`, ""),
+				ExpectError: regexp.MustCompile(`(?s)Invalid zones.*got zones for a gcp cluster`),
+			},
+		},
+	})
+}
+
+func testAccClusterResourceConfigMultiAZWithZonesAndDataSources(resourceName, cidr, zones, description string) string {
+	return testAccClusterResourceConfigMultiAZWithZones(resourceName, cidr, "aws", "us-east-1", zones, description) + fmt.Sprintf(`
+data "couchbase-capella_cluster" "%[3]s" {
+  organization_id = "%[1]s"
+  project_id      = "%[2]s"
+  id              = couchbase-capella_cluster.%[3]s.id
+}
+
+data "couchbase-capella_clusters" "%[3]s" {
+  organization_id = "%[1]s"
+  project_id      = "%[2]s"
+  depends_on      = [couchbase-capella_cluster.%[3]s]
+}
+
+output "data_source_first_zone" {
+  value = data.couchbase-capella_cluster.%[3]s.zones[0]
+}
+
+output "clusters_data_source_zones" {
+  value = [for c in data.couchbase-capella_clusters.%[3]s.data : c.zones if c.id == couchbase-capella_cluster.%[3]s.id][0]
+}
+`, globalOrgId, globalProjectId, resourceName)
+}
+
+func testAccClusterResourceConfigMultiAZWithZones(resourceName, cidr, cloudProvider, region, zones, description string) string {
+	// iops is set for AWS because an omitted iops is sent as 0 (AV-145015); GCP rejects iops.
+	disk := `type = "gp3"
+          iops = 3000`
+	if cloudProvider == "gcp" {
+		disk = `type = "pd-ssd"`
+	}
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[4]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  name            = "%[4]s"
+  description     = "%[10]s"
+  couchbase_server = {
+    version = var.server_version
+  }
+  cloud_provider = {
+    type   = "%[6]s"
+    region = "%[7]s"
+    cidr   = "%[5]s"
+  }
+  zones = %[8]s
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 4
+          ram = 16
+        }
+        disk = {
+          storage = 50
+          %[9]s
+        }
+      }
+      num_of_nodes = 3
+      services     = ["data", "index", "query"]
+    }
+  ]
+  availability = {
+    "type" : "multi"
+  }
+  support = {
+    plan     = "enterprise"
+    timezone = "PT"
+  }
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr, cloudProvider, region, zones, disk, description)
 }

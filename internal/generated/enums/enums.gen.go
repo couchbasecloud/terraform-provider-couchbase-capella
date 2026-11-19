@@ -79,7 +79,7 @@ var enumTable = map[string]map[string]EnumDef{
 		"bucketConflictResolution": {Type: "string", Values: []string{"seqno", "lww"}},
 		"durabilityLevel":          {Type: "string", Values: []string{"none", "majority", "majorityAndPersistActive", "persistToMajority"}},
 		"evictionPolicy":           {Type: "string", Values: []string{"fullEviction", "noEviction", "nruEviction"}},
-		"replicas":                 {Type: "integer", Values: []string{"1", "2", "3"}},
+		"replicas":                 {Type: "integer", Values: []string{"0", "1", "2", "3"}},
 		"storageBackend":           {Type: "string", Values: []string{"couchstore", "magma"}},
 		"type":                     {Type: "string", Values: []string{"couchbase", "ephemeral"}},
 		"vbuckets":                 {Type: "integer", Values: []string{"128", "1024"}},
@@ -320,7 +320,7 @@ var enumTable = map[string]map[string]EnumDef{
 	},
 	"UpdateBucketRequest": {
 		"durabilityLevel": {Type: "string", Values: []string{"none", "majority", "majorityAndPersistActive", "persistToMajority"}},
-		"replicas":        {Type: "integer", Values: []string{"1", "2", "3"}},
+		"replicas":        {Type: "integer", Values: []string{"0", "1", "2", "3"}},
 	},
 	"UpdateClusterResponse": {
 		"currentState": {Type: "string", Values: []string{"draft", "deploying", "scaling", "upgrading", "rebalancing", "peering", "destroying", "healthy", "degraded", "turnedOff", "turningOff", "turningOn", "deploymentFailed", "scaleFailed", "upgradeFailed", "rebalanceFailed", "peeringFailed", "destroyFailed", "offline", "turningOffFailed", "turningOnFailed"}},

@@ -56,8 +56,8 @@ resource "couchbase-capella_bucket" "new_bucket" {
  - **Default**: `false`
  - **Deprecated**: This field is deprecated and will be removed in a future release.
 - `memory_allocation_in_mb` (Number) - The amount of memory to allocate for the bucket memory in MiB. This is the maximum limit is dependent on the allocation of the KV service. For example, 80% of the allocation. For Couchbase buckets, the default and minimum memory allocation changes according to the Storage Backend type as follows: For Couchstore, the default and minimum memory allocation is 100 MiB. For Magma, the default and minimum memory allocation is 1024 MiB with 1024 buckets for Couchbase server below 8.0. The default and minimum memory allocation is 100 MiB with 128 vbuckets for Couchbase server version 8.0 and above. For Ephemeral buckets, the default and minimum memory allocation is 100 MiB.
-- `replicas` (Number) - The number of replicas for the bucket. To learn more, see [Create a Bucket](https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket).
- - **Valid Values**: `1`, `2`, `3`
+- `replicas` (Number) - The number of replicas for the bucket. Single-node clusters need 0. To learn more, see [Create a Bucket](https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket).
+ - **Valid Values**: `0`, `1`, `2`, `3`
  - **Default**: `1`
 - `storage_backend` (String) - The storage engine to be assigned to and used by the bucket. Ephemeral buckets do not support StorageBackend, hence not applicable for Ephemeral buckets and throws an error if this field is added. This field is only applicable for a Couchbase bucket. The default value before Couchbase Server 8.0 is `couchstore`. The default value for Couchbase Server 8.0 and above is `magma` with 128 vbuckets. This field cannot be changed later. To learn more, see [Storage Engines](https://docs.couchbase.com/cloud/clusters/data-service/storage-engines.html).
  - **Valid Values**: `couchstore`, `magma`

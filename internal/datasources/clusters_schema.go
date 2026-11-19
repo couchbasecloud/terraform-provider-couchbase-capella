@@ -81,6 +81,14 @@ func ClusterSchema() schema.Schema {
 	expressScalingState.MarkdownDescription = capellaschema.ExpressScalingStateDescription
 	capellaschema.AddAttr(dataAttrs, "express_scaling_state", clusterBuilder, expressScalingState)
 	capellaschema.AddAttr(dataAttrs, "connection_string", clusterBuilder, computedString())
+	zones := &schema.ListAttribute{
+		Computed:    true,
+		ElementType: types.StringType,
+	}
+	capellaschema.AddAttr(dataAttrs, "zones", clusterBuilder, zones)
+	// Set after AddAttr: the published OpenAPI description still says only single AZ is supported.
+	zones.MarkdownDescription = "The AWS availability zone IDs (for example `use1-az1`) the cluster is deployed in. " +
+		"Null when the zone IDs are not known, for example for GCP and Azure clusters."
 	capellaschema.AddAttr(dataAttrs, "cloud_provider", clusterBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: cloudProviderAttrs,
