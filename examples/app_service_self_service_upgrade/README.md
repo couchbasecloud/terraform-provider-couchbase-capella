@@ -33,7 +33,7 @@ Leaving `queue_at` unset upgrades the App Service now, and `queue_at` is then re
 
 ## UPDATE
 
-Change `version_id` or `queue_at` in `terraform.tfvars`, then run `terraform apply`. The upgrade is changed in place. Capella rejects the change once the upgrade is no longer pending. Changing any of the other IDs replaces the resource.
+Change `version_id` or `queue_at` in `terraform.tfvars`, then run `terraform apply`. The upgrade is changed in place while it is pending. Once it has completed, failed or been cancelled, a new `version_id` replaces the resource with a new upgrade. Capella rejects any other change once the upgrade is no longer pending. Changing any of the other IDs replaces the resource.
 
 ## LIST UPGRADES
 

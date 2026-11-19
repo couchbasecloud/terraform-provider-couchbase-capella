@@ -11,10 +11,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -156,13 +159,69 @@ func TestAppServiceSelfServiceUpgradeSchema(t *testing.T) {
 	versionId, ok := attrs["version_id"].(*schema.StringAttribute)
 	require.True(t, ok)
 	assert.True(t, versionId.Required)
-	for _, m := range versionId.PlanModifiers {
-		assert.NotContains(t, m.Description(context.Background()), "replace", "version_id must change in place")
-	}
 
 	audit, ok := attrs["audit"].(*schema.SingleNestedAttribute)
 	require.True(t, ok)
 	assert.True(t, audit.Computed)
+}
+
+func TestAppServiceSelfServiceUpgradeVersionIdReplace(t *testing.T) {
+	ctx := context.Background()
+	s := AppServiceSelfServiceUpgradeSchema()
+	versionId, ok := s.Attributes["version_id"].(*schema.StringAttribute)
+	require.True(t, ok)
+
+	tests := []struct {
+		name         string
+		create       bool
+		currentState string
+		plannedVer   string
+		wantReplace  bool
+	}{
+		{name: "pending changes in place", currentState: "pending", plannedVer: "3.2.0"},
+		{name: "queued changes in place", currentState: "queued", plannedVer: "3.2.0"},
+		{name: "completed replaces", currentState: "completed", plannedVer: "3.2.0", wantReplace: true},
+		{name: "failed replaces", currentState: "failed", plannedVer: "3.2.0", wantReplace: true},
+		{name: "cancelled replaces", currentState: "cancelled", plannedVer: "3.2.0", wantReplace: true},
+		{name: "unchanged version does not replace", currentState: "completed", plannedVer: "3.1.8"},
+		{name: "create does not replace", create: true, plannedVer: "3.2.0"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			prior := testSelfServiceUpgradeState()
+			prior.CurrentState = types.StringValue(tc.currentState)
+			planned := prior
+			planned.VersionId = types.StringValue(tc.plannedVer)
+
+			state := tfsdk.State{Schema: s}
+			require.False(t, state.Set(ctx, prior).HasError())
+			stateValue := prior.VersionId
+			if tc.create {
+				state.Raw = tftypes.NewValue(s.Type().TerraformType(ctx), nil)
+				stateValue = types.StringNull()
+			}
+			plan := tfsdk.Plan{Schema: s}
+			require.False(t, plan.Set(ctx, planned).HasError())
+
+			req := planmodifier.StringRequest{
+				Path:        path.Root("version_id"),
+				State:       state,
+				StateValue:  stateValue,
+				Plan:        plan,
+				PlanValue:   planned.VersionId,
+				ConfigValue: planned.VersionId,
+			}
+			var gotReplace bool
+			for _, modifier := range versionId.PlanModifiers {
+				resp := planmodifier.StringResponse{PlanValue: req.PlanValue}
+				modifier.PlanModifyString(ctx, req, &resp)
+				require.False(t, resp.Diagnostics.HasError())
+				gotReplace = gotReplace || resp.RequiresReplace
+			}
+
+			assert.Equal(t, tc.wantReplace, gotReplace)
+		})
+	}
 }
 
 func TestAppServiceSelfServiceUpgradeCreateRequestBody(t *testing.T) {

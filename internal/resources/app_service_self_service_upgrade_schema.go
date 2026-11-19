@@ -1,7 +1,13 @@
 package resources
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -23,8 +29,10 @@ func AppServiceSelfServiceUpgradeSchema() schema.Schema {
 	id.MarkdownDescription = capellaschema.SelfServiceUpgradeIdDescription
 	capellaschema.AddAttr(attrs, "id", appServiceSelfServiceUpgradeBuilder, id)
 
-	// PUT replaces the version in place, so a new version does not require replace.
+	// PUT replaces the version of a pending upgrade in place. Once the upgrade has finished the API
+	// refuses the PUT, so a new version replaces the resource instead.
 	versionId := requiredStringAttributeNoReplace()
+	versionId.PlanModifiers = append(versionId.PlanModifiers, requiresReplaceOnceFinished())
 	versionId.MarkdownDescription = capellaschema.SelfServiceUpgradeVersionIdDescription
 	capellaschema.AddAttr(attrs, "version_id", appServiceSelfServiceUpgradeBuilder, versionId, "CreateSelfServiceUpgradeRequest")
 
@@ -46,9 +54,30 @@ func AppServiceSelfServiceUpgradeSchema() schema.Schema {
 		MarkdownDescription: "Manages a self-service upgrade of an App Service, either now or at `queue_at`. " +
 			"Pick `version_id` from the `couchbase-capella_app_service_self_service_upgrade_available_versions` data source.\n\n" +
 			"`version_id` and `queue_at` can be changed in place while the upgrade is `pending`. " +
+			"Changing `version_id` after the upgrade has finished replaces the resource with a new upgrade. " +
 			"Destroying this resource cancels a `pending` upgrade; an upgrade that has finished (`completed`, `failed` or `cancelled`) is only removed from the Terraform state. " +
 			"An upgrade that has already started cannot be cancelled.\n\n" +
 			"The self-service upgrade endpoints are only available to organizations enabled for self-service upgrades.",
 		Attributes: attrs,
 	}
+}
+
+// requiresReplaceOnceFinished replaces the resource when the value changes after the upgrade has
+// finished. The API only updates a pending upgrade, and Delete only removes a finished one from
+// state, so the replacement creates a new upgrade instead of failing the update.
+func requiresReplaceOnceFinished() planmodifier.String {
+	const description = "Replaces the resource when the value changes after the upgrade has completed, failed or been cancelled."
+
+	return stringplanmodifier.RequiresReplaceIf(
+		func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+			var currentState types.String
+			resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("current_state"), &currentState)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			resp.RequiresReplace = isTerminalSelfServiceUpgradeState(currentState.ValueString())
+		},
+		description,
+		description,
+	)
 }
