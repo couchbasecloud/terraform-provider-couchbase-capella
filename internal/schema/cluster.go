@@ -19,8 +19,12 @@ import (
 // carries them. The leading "\n - " matches the bullet format buildEnhancedDescription emits, so the
 // generated docs do not change once the spec takes over.
 const (
-	ExpressScalingDescription      = "\n - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy."
-	ExpressScalingStateDescription = "\n - The express scaling status of the cluster: `enabled`, `enabling`, `disabled` or `disabling`."
+	ExpressScalingDescription = "\n - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy."
+	// ExpressScalingResourceDescription is the cluster resource description. It adds the handoff
+	// to the dedicated resource: a configured value that no longer matches the cluster is
+	// rejected by validateClusterUpdate on every apply.
+	ExpressScalingResourceDescription = ExpressScalingDescription + " If the `couchbase-capella_cluster_express_scaling` resource manages express scaling for this cluster, remove `express_scaling` from the cluster configuration, or list it in `lifecycle.ignore_changes`. Otherwise, once the two values differ, every later apply of the cluster fails."
+	ExpressScalingStateDescription    = "\n - The express scaling status of the cluster: `enabled`, `enabling`, `disabled` or `disabling`."
 )
 
 // Availability defines the type of Availability Zone configuration for a cluster resource.

@@ -35,11 +35,11 @@ func ClusterSchema() schema.Schema {
 	// express_scaling is only sent on create. Changes after that belong to the
 	// couchbase-capella_cluster_express_scaling resource, so two resources never write it.
 	expressScaling := boolAttribute(optional, computed, useStateForUnknown)
-	expressScaling.MarkdownDescription = capellaschema.ExpressScalingDescription
+	expressScaling.MarkdownDescription = capellaschema.ExpressScalingResourceDescription
 	capellaschema.AddAttr(attrs, "express_scaling", clusterBuilder, expressScaling, "CreateClusterRequest")
 	// The published expressScaling field is the state enum, which describes express_scaling_state
 	// rather than this bool, so the fallback is reapplied after the spec lookup.
-	expressScaling.MarkdownDescription = capellaschema.ExpressScalingDescription
+	expressScaling.MarkdownDescription = capellaschema.ExpressScalingResourceDescription
 
 	expressScalingState := stringAttribute([]string{computed})
 	expressScalingState.MarkdownDescription = capellaschema.ExpressScalingStateDescription

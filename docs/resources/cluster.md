@@ -19,7 +19,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
   name            = "Terraform Test Cluster"
   description     = "Test cluster created with Terraform"
   # Enables express scaling at create time. Requires the Enterprise support plan.
-  # To change it later, use the couchbase-capella_cluster_express_scaling resource.
+  # To change it later, use the couchbase-capella_cluster_express_scaling resource,
+  # and remove express_scaling from this block (or add it to lifecycle.ignore_changes).
   # express_scaling = true
   cloud_provider = {
     type   = "aws"
@@ -82,7 +83,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `description` (String) - Description of the cluster (up to 1024 characters).
  - **Constraints**: Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean)
-- `express_scaling` (Boolean) - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy.
+- `express_scaling` (Boolean) - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy. If the `couchbase-capella_cluster_express_scaling` resource manages express scaling for this cluster, remove `express_scaling` from the cluster configuration, or list it in `lifecycle.ignore_changes`. Otherwise, once the two values differ, every later apply of the cluster fails.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 - `zones` (Set of String) The AWS availability zone IDs (for example `use1-az1`) to deploy the cluster in. Only supported for AWS clusters: at most 1 zone for a single AZ cluster, and exactly 3 unique zones in the cluster's region for a multi AZ cluster. If omitted, Capella chooses the zones and they are read back into state; an empty list also lets Capella choose, but keeps zones empty in state. Changing this forces a new cluster to be created.
 
