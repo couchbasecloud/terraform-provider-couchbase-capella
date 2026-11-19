@@ -88,7 +88,7 @@ var (
 	ErrUnableToUpdateCloudProvider = errors.New("unable to update cloud provider")
 
 	// ErrUnableToUpdateExpressScaling is returned when express_scaling is changed on an existing cluster.
-	ErrUnableToUpdateExpressScaling = errors.New("unable to update express scaling on the cluster resource, use the couchbase-capella_cluster_express_scaling resource instead")
+	ErrUnableToUpdateExpressScaling = errors.New("unable to update express scaling on the cluster resource, use the couchbase-capella_cluster_express_scaling resource instead, and remove express_scaling from the cluster configuration or add it to lifecycle.ignore_changes")
 
 	// ErrNotAString is returned when a payload is not a string.
 	ErrNotAString = errors.New("payload is not a string")
@@ -162,6 +162,9 @@ var (
 
 	// ErrConvertingZone is returned when terraform fails to convert a Zone.
 	ErrConvertingZone = errors.New("failed to convert Zones, please contact Couchbase Capella Support")
+
+	// ErrInvalidZones is returned when zones are set for a non-AWS cluster or with the wrong count for the availability type.
+	ErrInvalidZones = errors.New("invalid zones provided. Zones can only be provided for AWS clusters: at most 1 zone for single AZ, exactly 3 for multi AZ. Omit zones to let Capella choose them")
 
 	// ErrReadingAWSDisk is returned when an AWS disk read fails.
 	ErrReadingAWSDisk = errors.New("failed to read AWS disk, please contact Couchbase Capella Support")

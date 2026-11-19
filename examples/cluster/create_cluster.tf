@@ -14,7 +14,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
   enable_private_dns_resolution = true
   zones                         = var.cluster.zones
   # Enables express scaling at create time. Requires the Enterprise support plan.
-  # To change it later, use the couchbase-capella_cluster_express_scaling resource.
+  # To change it later, use the couchbase-capella_cluster_express_scaling resource,
+  # and remove express_scaling from this block (or add it to lifecycle.ignore_changes).
   # express_scaling = true
   cloud_provider = {
     type   = var.cloud_provider.name

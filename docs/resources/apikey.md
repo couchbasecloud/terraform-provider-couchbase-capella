@@ -32,7 +32,7 @@ resource "couchbase-capella_apikey" "new_apikey" {
 - `name` (String) - Name of the API key.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (Set of String) - Organization roles assigned to the API key. To learn more, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
- - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`
+ - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`, `organizationBillingAdmin`, `organizationBillingViewer`, `organizationReadOnly`
 
 ### Optional
 

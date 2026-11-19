@@ -4,6 +4,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -22,7 +23,8 @@ func DatabaseRoleSchema() schema.Schema {
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
-	capellaschema.AddAttr(attrs, "name", databaseRoleBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "name", databaseRoleBuilder, stringAttribute([]string{required, requiresReplace},
+		stringvalidator.LengthBetween(2, 32)))
 	capellaschema.AddAttr(attrs, "description", databaseRoleBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "organization_id", databaseRoleBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", databaseRoleBuilder, requiredUUIDStringAttribute())
