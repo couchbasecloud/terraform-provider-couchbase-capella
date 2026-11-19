@@ -3,16 +3,18 @@
 page_title: "couchbase-capella_cluster_express_scaling Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages express scaling on an existing Couchbase Capella cluster. Express scaling requires the Enterprise support plan. Enabling or disabling it starts a rebalance that can run for many hours on large clusters, so create and update wait for the change to finish, up to the configured timeouts. If a timeout is reached, the change carries on in Capella and the resource is saved with a warning. Destroying this resource only removes it from the Terraform state and leaves express scaling on the cluster unchanged.
+  Manages express scaling on an existing Couchbase Capella cluster. Express scaling requires the Enterprise support plan. Enabling or disabling it starts a rebalance that can run for many hours on large clusters, so create and update wait for the change to finish, up to the configured timeouts. If a timeout is reached, the change carries on in Capella and the resource is saved with a warning. Destroying this resource only removes it from the Terraform state and leaves express scaling on the cluster unchanged. If the same configuration also manages the cluster with couchbase-capella_cluster, remove express_scaling from that resource, or list it in its lifecycle.ignore_changes. Otherwise, once this resource changes the setting, the value on the cluster resource no longer matches and every later apply of the cluster fails.
 ---
 
 # couchbase-capella_cluster_express_scaling (Resource)
 
-Manages express scaling on an existing Couchbase Capella cluster. Express scaling requires the Enterprise support plan. Enabling or disabling it starts a rebalance that can run for many hours on large clusters, so create and update wait for the change to finish, up to the configured timeouts. If a timeout is reached, the change carries on in Capella and the resource is saved with a warning. Destroying this resource only removes it from the Terraform state and leaves express scaling on the cluster unchanged.
+Manages express scaling on an existing Couchbase Capella cluster. Express scaling requires the Enterprise support plan. Enabling or disabling it starts a rebalance that can run for many hours on large clusters, so create and update wait for the change to finish, up to the configured timeouts. If a timeout is reached, the change carries on in Capella and the resource is saved with a warning. Destroying this resource only removes it from the Terraform state and leaves express scaling on the cluster unchanged. If the same configuration also manages the cluster with `couchbase-capella_cluster`, remove `express_scaling` from that resource, or list it in its `lifecycle.ignore_changes`. Otherwise, once this resource changes the setting, the value on the cluster resource no longer matches and every later apply of the cluster fails.
 
 ## Example Usage
 
 ```terraform
+# If this configuration also manages the cluster with couchbase-capella_cluster, remove
+# express_scaling from that resource, or add it to its lifecycle.ignore_changes.
 resource "couchbase-capella_cluster_express_scaling" "example" {
   organization_id = "<organization_id>"
   project_id      = "<project_id>"
