@@ -344,10 +344,18 @@ func testAccCheckClusterExpressScalingState(clusterReference string, want cluste
 // requireExpressScalingDisabled skips the test unless the cluster reports express scaling as
 // disabled. A cluster with express scaling on or changing would be disabled by the test, and one
 // that reports no value would fail the assertions, which expect the value Capella returns as is.
+//
+// A cluster that cannot be read fails the test instead. Skipping there would report a run with
+// a wrong cluster ID, an expired token or a failed request as passing, with this coverage
+// never executed.
 func requireExpressScalingDisabled(t *testing.T, clusterID string) {
 	t.Helper()
-	if err := checkExpressScalingState(clusterID, clusterapi.ExpressScalingDisabled); err != nil {
-		t.Skipf("skipping: %v", err)
+	got, err := getClusterExpressScalingState(clusterID)
+	if err != nil {
+		t.Fatalf("could not check express scaling before the test: %v", err)
+	}
+	if got != clusterapi.ExpressScalingDisabled {
+		t.Skipf("skipping: cluster %s reports express scaling %q, want %q", clusterID, got, clusterapi.ExpressScalingDisabled)
 	}
 }
 
