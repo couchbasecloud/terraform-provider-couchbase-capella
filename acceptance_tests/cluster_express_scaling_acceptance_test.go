@@ -119,6 +119,10 @@ func TestAccClusterExpressScalingInvalidClusterId(t *testing.T) {
 // timeout and waits for the cluster to finish. Whether the cluster is still enabling at that point
 // depends on Capella, so the in-progress path is pinned down by the resource's unit tests.
 //
+// While the cluster is enabled, the cluster and clusters data sources are read against it. The
+// default run only reads them against a disabled cluster, which a data source that always
+// reported false would also pass.
+//
 // The resource is then removed from the configuration, which must leave express scaling enabled.
 // Recreating it with express_scaling = true sends nothing, since the cluster is already enabled,
 // and changing it to false disables express scaling through Update.
@@ -129,6 +133,9 @@ func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_express_scaling_")
 	clusterReference := "couchbase-capella_cluster." + clusterResourceName
 	resourceReference := "couchbase-capella_cluster_express_scaling." + resourceName
+	clusterDataReference := "data.couchbase-capella_cluster." + resourceName
+	clustersDataReference := "data.couchbase-capella_clusters." + resourceName
+	enabledState := string(clusterapi.ExpressScalingEnabled)
 	cidr := generateRandomCIDR()
 
 	config := func(enabled bool, timeout string) string {
@@ -164,6 +171,15 @@ func TestAccClusterExpressScalingEnableDisable(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
+			},
+			{
+				Config: config(true, "4h") + testAccClusterExpressScalingDatasourcesConfig(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(clusterDataReference, "id", clusterReference, "id"),
+					resource.TestCheckResourceAttr(clusterDataReference, "express_scaling", "true"),
+					resource.TestCheckResourceAttr(clusterDataReference, "express_scaling_state", enabledState),
+					testAccCheckClustersDatasourceExpressScaling(clustersDataReference, clusterReference, "true", enabledState),
+				),
 			},
 			{
 				ResourceName:                         resourceReference,
@@ -505,6 +521,62 @@ resource "couchbase-capella_cluster_express_scaling" "%[5]s" {
 }
 `, globalProviderBlock, testAccClusterExpressScalingClusterBlock(clusterResourceName, cidr, plan, ""),
 		globalOrgId, globalProjectId, resourceName, clusterResourceName, enabled, timeout)
+}
+
+// testAccClusterExpressScalingDatasourcesConfig reads the cluster and clusters data sources for
+// the cluster the express scaling resource manages. Both take the cluster through that resource,
+// so they are read after it has been applied.
+func testAccClusterExpressScalingDatasourcesConfig(resourceName string) string {
+	return fmt.Sprintf(`
+data "couchbase-capella_cluster" "%[1]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	id              = couchbase-capella_cluster_express_scaling.%[1]s.cluster_id
+}
+
+data "couchbase-capella_clusters" "%[1]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+
+	depends_on = [couchbase-capella_cluster_express_scaling.%[1]s]
+}
+`, resourceName, globalOrgId, globalProjectId)
+}
+
+// testAccCheckClustersDatasourceExpressScaling finds the cluster in state among the entries of
+// the clusters data source and checks what that entry reports for express scaling.
+func testAccCheckClustersDatasourceExpressScaling(clustersReference, clusterReference, wantExpressScaling, wantState string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		clusterResource, ok := state.RootModule().Resources[clusterReference]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", clusterReference)
+		}
+		clusters, ok := state.RootModule().Resources[clustersReference]
+		if !ok {
+			return fmt.Errorf("data source %s not found in state", clustersReference)
+		}
+		clusterID := clusterResource.Primary.Attributes["id"]
+		attributes := clusters.Primary.Attributes
+
+		count, err := strconv.Atoi(attributes["data.#"])
+		if err != nil {
+			return fmt.Errorf("%s has no data entries: %w", clustersReference, err)
+		}
+		for i := range count {
+			prefix := fmt.Sprintf("data.%d.", i)
+			if attributes[prefix+"id"] != clusterID {
+				continue
+			}
+			if got := attributes[prefix+"express_scaling"]; got != wantExpressScaling {
+				return fmt.Errorf("%s reports express_scaling %q for cluster %s, want %q", clustersReference, got, clusterID, wantExpressScaling)
+			}
+			if got := attributes[prefix+"express_scaling_state"]; got != wantState {
+				return fmt.Errorf("%s reports express_scaling_state %q for cluster %s, want %q", clustersReference, got, clusterID, wantState)
+			}
+			return nil
+		}
+		return fmt.Errorf("%s does not list cluster %s", clustersReference, clusterID)
+	}
 }
 
 func testAccClusterResourceExpressScalingConfig(clusterResourceName, cidr string, enabled bool) string {
