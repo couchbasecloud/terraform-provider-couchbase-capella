@@ -253,12 +253,18 @@ func TestAccClusterExpressScalingRejected(t *testing.T) {
 // cluster resource attribute and checks that the next plan is empty. Enabling starts after the
 // cluster is healthy, so create can save a state that still reads disabled. The test waits for
 // Capella to report enabling or enabled before the follow-up plan refreshes the state.
+//
+// It then imports the cluster and checks that both attributes are read back, and finally checks
+// that turning express scaling off through the cluster resource is rejected by Update. The
+// attribute is create-only, and the rejection happens before any request is sent, so the
+// cluster is left as it was.
 func TestAccClusterResourceExpressScaling(t *testing.T) {
 	requireExpressScalingAcceptance(t)
 
 	clusterResourceName := randomStringWithPrefix("tf_acc_cluster_express_scaling_attr_")
 	clusterReference := "couchbase-capella_cluster." + clusterResourceName
-	config := testAccClusterResourceExpressScalingConfig(clusterResourceName, generateRandomCIDR())
+	cidr := generateRandomCIDR()
+	config := testAccClusterResourceExpressScalingConfig(clusterResourceName, cidr, true)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -280,6 +286,17 @@ func TestAccClusterResourceExpressScaling(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterReference, "express_scaling", "true"),
 					resource.TestMatchResourceAttr(clusterReference, "express_scaling_state", regexp.MustCompile(`^(enabling|enabled)$`)),
 				),
+			},
+			{
+				ResourceName:      clusterReference,
+				ImportStateIdFunc: generateClusterImportIdForResource(clusterReference),
+				ImportState:       true,
+				ImportStateCheck:  checkImportedClusterExpressScaling,
+			},
+			{
+				Config: testAccClusterResourceExpressScalingConfig(clusterResourceName, cidr, false),
+				ExpectError: regexp.MustCompile(`(?s)` + whitespaceTolerant("Error updating cluster") + `.*` +
+					whitespaceTolerant("unable to update express scaling on the cluster resource")),
 			},
 		},
 		CheckDestroy: testAccCheckClusterDestroyed(t, clusterReference),
@@ -490,8 +507,27 @@ resource "couchbase-capella_cluster_express_scaling" "%[5]s" {
 		globalOrgId, globalProjectId, resourceName, clusterResourceName, enabled, timeout)
 }
 
-func testAccClusterResourceExpressScalingConfig(clusterResourceName, cidr string) string {
-	return globalProviderBlock + testAccClusterExpressScalingClusterBlock(clusterResourceName, cidr, "enterprise", "express_scaling = true")
+func testAccClusterResourceExpressScalingConfig(clusterResourceName, cidr string, enabled bool) string {
+	return globalProviderBlock + testAccClusterExpressScalingClusterBlock(clusterResourceName, cidr, "enterprise",
+		fmt.Sprintf("express_scaling = %t", enabled))
+}
+
+// checkImportedClusterExpressScaling checks the cluster state read by import. The enable can
+// finish between the earlier steps and the import, so either enabling or enabled is accepted.
+func checkImportedClusterExpressScaling(states []*terraform.InstanceState) error {
+	if len(states) != 1 {
+		return fmt.Errorf("expected 1 imported cluster, got %d", len(states))
+	}
+	attributes := states[0].Attributes
+	if got := attributes["express_scaling"]; got != "true" {
+		return fmt.Errorf("imported express_scaling is %q, want \"true\"", got)
+	}
+	switch got := clusterapi.ExpressScalingState(attributes["express_scaling_state"]); got {
+	case clusterapi.ExpressScalingEnabling, clusterapi.ExpressScalingEnabled:
+		return nil
+	default:
+		return fmt.Errorf("imported express_scaling_state is %q, want enabling or enabled", got)
+	}
 }
 
 // testAccClusterExpressScalingViewerConfig keeps the cluster on the default provider and sends the
