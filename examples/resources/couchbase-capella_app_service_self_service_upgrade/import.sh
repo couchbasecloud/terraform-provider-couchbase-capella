@@ -1,0 +1,1 @@
+terraform import couchbase-capella_app_service_self_service_upgrade.new_self_service_upgrade id=<upgrade_id>,app_service_id=<app_service_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
