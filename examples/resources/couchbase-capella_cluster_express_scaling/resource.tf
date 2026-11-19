@@ -1,3 +1,5 @@
+# If this configuration also manages the cluster with couchbase-capella_cluster, remove
+# express_scaling from that resource, or add it to its lifecycle.ignore_changes.
 resource "couchbase-capella_cluster_express_scaling" "example" {
   organization_id = "<organization_id>"
   project_id      = "<project_id>"
