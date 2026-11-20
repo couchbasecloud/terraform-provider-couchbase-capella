@@ -353,6 +353,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppServiceLogStreamingActivationStatus,
 		resources.NewAppServiceAuditLogStreaming,
 		resources.NewAppEndpointLoggingConfig,
+		resources.NewAppEndpointAuditLogging,
 		resources.NewAppEndpointResync,
 		resources.NewClusterDeletionProtection,
 		resources.NewDatabaseRole,
