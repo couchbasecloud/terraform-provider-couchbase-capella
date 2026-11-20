@@ -18,13 +18,8 @@ func ClusterExpressScalingSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", clusterExpressScalingBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", clusterExpressScalingBuilder, requiredUUIDStringAttribute())
 
-	expressScaling := boolAttribute(required)
-	expressScaling.MarkdownDescription = capellaschema.ClusterExpressScalingDescription
-	capellaschema.AddAttr(attrs, "express_scaling", clusterExpressScalingBuilder, expressScaling)
-
-	expressScalingState := stringAttribute([]string{computed})
-	expressScalingState.MarkdownDescription = capellaschema.ExpressScalingStateDescription
-	capellaschema.AddAttr(attrs, "express_scaling_state", clusterExpressScalingBuilder, expressScalingState)
+	capellaschema.AddAttr(attrs, "express_scaling", clusterExpressScalingBuilder, boolAttribute(required))
+	capellaschema.AddAttr(attrs, "express_scaling_state", clusterExpressScalingBuilder, stringAttribute([]string{computed}))
 
 	return schema.Schema{
 		MarkdownDescription: capellaschema.ClusterExpressScalingResourceDescription,
