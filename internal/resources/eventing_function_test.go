@@ -183,3 +183,54 @@ func Test_setEventingFunctionComputedAttributesToNull(t *testing.T) {
 		})
 	}
 }
+
+func Test_activationTarget(t *testing.T) {
+	tests := []struct {
+		name     string
+		prior    string
+		desired  string
+		expected string
+		verb     string
+	}{
+		{
+			name:     "paused to deployed resumes",
+			prior:    eventingStatePaused,
+			desired:  eventingStateDeployed,
+			expected: eventingStateResumed,
+			verb:     "resume",
+		},
+		{
+			name:     "undeployed to deployed deploys",
+			prior:    eventingStateUndeployed,
+			desired:  eventingStateDeployed,
+			expected: eventingStateDeployed,
+			verb:     "deploy",
+		},
+		{
+			name:     "deployed to paused pauses",
+			prior:    eventingStateDeployed,
+			desired:  eventingStatePaused,
+			expected: eventingStatePaused,
+			verb:     "pause",
+		},
+		{
+			name:     "paused to undeployed undeploys",
+			prior:    eventingStatePaused,
+			desired:  eventingStateUndeployed,
+			expected: eventingStateUndeployed,
+			verb:     "undeploy",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			target := activationTarget(test.prior, test.desired)
+
+			assert.Equal(t, test.expected, target)
+			assert.Equal(t, test.verb, activationVerb(target))
+			// Every transition towards deployed must still poll for the deployed status,
+			// including the resume route, whose target state has no status of its own.
+			assert.Equal(t, test.desired, targetStatus(target))
+		})
+	}
+}

@@ -155,9 +155,9 @@ func TestAccClusterZonesExplicitNull(t *testing.T) {
 func TestAccClusterZonesSingleAZImportRoundTrip(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	// One CIDR for every step: cloud_provider is RequiresReplace, so re-generating it per
-	// step would plan a replacement and the no-op assertion below would fail for the wrong
-	// reason.
+	// The import block step below re-plans the configuration applied by the first step, so
+	// the CIDR has to stay stable: cloud_provider is RequiresReplace, and a fresh CIDR would
+	// plan a replacement and fail the no-op assertion for the wrong reason.
 	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -173,24 +173,31 @@ func TestAccClusterZonesSingleAZImportRoundTrip(t *testing.T) {
 				),
 			},
 			{
+				// ImportStateVerify compares every attribute of the imported state against
+				// the state the create left behind, so zones that import fails to read back
+				// are caught here.
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
 				ImportState:       true,
 				ImportStateVerify: true,
-				// Without this the imported state is discarded at the end of this step and
-				// the plan check below would run against the state left by the create,
-				// proving nothing about import. ImportStateVerify only compares attributes;
-				// it does not persist them.
-				ImportStatePersist: true,
 			},
 			{
-				// The plan against the IMPORTED state must be clean rather than a replacement.
-				Config: testAccClusterZonesConfig(resourceName, cidr, "aws", "us-east-1", "single", `["use1-az1"]`),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionNoop),
-					},
-				},
+				// Planning the configuration against the IMPORTED state must be a no-op
+				// rather than a replacement. ImportBlockWithID runs `terraform plan` with an
+				// import block against a copy of the state that has this resource removed,
+				// so the planned values come from the import rather than from the create,
+				// and the framework fails the step unless the change is a no-op.
+				//
+				// An ordinary plan step cannot cover this. Carrying the imported state over
+				// to one needs ImportStatePersist, which runs `terraform import` in the test
+				// case's own working directory - where the create already put this address
+				// in state, and `terraform import` refuses an address it already manages.
+				// Plannable import blocks reject ImportStatePersist and ImportStateVerify,
+				// which is why the import coverage is split across these two steps.
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
 			},
 		},
 	})
