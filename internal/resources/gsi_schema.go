@@ -40,7 +40,15 @@ func GsiSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "collection_name", gsiBuilder, stringDefaultAttribute("_default", optional, computed, useStateForUnknown, requiresReplace))
 	capellaschema.AddAttr(attrs, "index_name", gsiBuilder, stringAttribute([]string{optional, requiresReplace}))
 	capellaschema.AddAttr(attrs, "is_primary", gsiBuilder, boolAttribute(optional))
-	capellaschema.AddAttr(attrs, "index_keys", gsiBuilder, stringListAttribute(optional, requiresReplace))
+	indexKeys := stringListAttribute(optional, requiresReplace)
+	capellaschema.AddAttr(attrs, "index_keys", gsiBuilder, indexKeys)
+	// index_keys has no OpenAPI description, and AddAttr overwrites
+	// MarkdownDescription, so the description is set afterwards.
+	indexKeys.MarkdownDescription = "The index key expressions. Write each key in the " +
+		"canonical form Couchbase returns: backtick-quote identifiers and keep any key " +
+		"modifiers, e.g. \"`geo`\", \"`age` INCLUDE MISSING\", \"`vec` VECTOR\". Changing " +
+		"index_keys forces the index to be recreated, so matching the canonical form avoids " +
+		"a spurious replacement when the index is imported."
 	capellaschema.AddAttr(attrs, "where", gsiBuilder, stringAttribute([]string{optional, requiresReplace}))
 	capellaschema.AddAttr(attrs, "status", gsiBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "partition_by", gsiBuilder, stringListAttribute(optional, requiresReplace))
