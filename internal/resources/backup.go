@@ -24,6 +24,7 @@ var (
 	_ resource.Resource                = &Backup{}
 	_ resource.ResourceWithConfigure   = &Backup{}
 	_ resource.ResourceWithImportState = &Backup{}
+	_ resource.ResourceWithModifyPlan  = &Backup{}
 )
 
 const errorMessageWhileBackupCreation = "There is an error during backup creation. Please check in Capella to see if any hanging resources" +
@@ -47,6 +48,61 @@ func (b *Backup) Metadata(_ context.Context, req resource.MetadataRequest, resp 
 // Schema defines the schema for the Backup resource.
 func (b *Backup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = BackupSchema()
+}
+
+// ModifyPlan validates restore-related fields at plan time. On create (no prior
+// state) it rejects restore and restore_times, which are only valid when restoring
+// an existing backup. On update (prior state present) it enforces that restore and
+// restore_times are configured together, since one without the other is invalid.
+func (b *Backup) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan providerschema.Backup
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	restoreTimesConfigured := !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown()
+	restoreConfigured := !plan.Restore.IsNull() && !plan.Restore.IsUnknown()
+
+	if !req.State.Raw.IsNull() {
+		if restoreTimesConfigured && !restoreConfigured {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("restore"),
+				"Invalid Backup Restore Configuration",
+				"restore must be configured when restore_times is set.",
+			)
+		}
+
+		if restoreConfigured && !restoreTimesConfigured {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("restore_times"),
+				"Invalid Backup Restore Configuration",
+				"restore_times must be configured when restore is set.",
+			)
+		}
+
+		return
+	}
+
+	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("restore_times"),
+			"Invalid Backup Restore Configuration",
+			internal_errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup.Error(),
+		)
+	}
+
+	if !plan.Restore.IsNull() && !plan.Restore.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("restore"),
+			"Invalid Backup Restore Configuration",
+			internal_errors.ErrRestoreMustNotBeSetWhileCreateBackup.Error(),
+		)
+	}
 }
 
 // Create creates a new Backup.
@@ -398,6 +454,9 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	}
 	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
 		return internal_errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup
+	}
+	if !plan.Restore.IsNull() && !plan.Restore.IsUnknown() {
+		return internal_errors.ErrRestoreMustNotBeSetWhileCreateBackup
 	}
 	return nil
 }

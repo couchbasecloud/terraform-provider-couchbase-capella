@@ -149,6 +149,60 @@ data "couchbase-capella_cloud_snapshot_restores" "%[2]s" {
 	})
 }
 
+func TestAccDatasourceCloudSnapshotRestoresEmptyFilterValues(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_restores_empty_filter_values_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_cloud_snapshot_restores" "%[2]s" {
+  organization_id = "00000000-0000-0000-0000-000000000000"
+  project_id      = "11111111-1111-1111-1111-111111111111"
+  cluster_id      = "22222222-2222-2222-2222-222222222222"
+
+  filter {
+    name   = "status"
+    values = []
+  }
+}
+`, globalProviderBlock, dsName),
+				ExpectError: regexp.MustCompile(`(?s)filter.*values.*(at least 1|minimum|empty)`),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceCloudSnapshotRestoresInvalidFilterName(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_restores_invalid_filter_name_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_cloud_snapshot_restores" "%[2]s" {
+  organization_id = "00000000-0000-0000-0000-000000000000"
+  project_id      = "11111111-1111-1111-1111-111111111111"
+  cluster_id      = "22222222-2222-2222-2222-222222222222"
+
+  filter {
+    name   = "created_at"
+    values = ["complete"]
+  }
+}
+`, globalProviderBlock, dsName),
+				ExpectError: regexp.MustCompile(`(?s)filter.*name.*value must be one of|Attribute.*name.*one of`),
+			},
+		},
+	})
+}
+
 func testAccCloudSnapshotRestoreBackupOnlyConfig(clusterID, backupResourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
