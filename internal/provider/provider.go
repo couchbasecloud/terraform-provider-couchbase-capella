@@ -302,6 +302,11 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewEventingFunction,
 		datasources.NewEventingFunctions,
 		datasources.NewDataApi,
+		datasources.NewAlertConfigurationOverrides,
+		datasources.NewAlerts,
+		datasources.NewOrganizationAlertConfiguration,
+		datasources.NewProjectAlertConfiguration,
+		datasources.NewClusterAlertConfiguration,
 	}
 }
 
@@ -360,5 +365,8 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewDatabaseRole,
 		resources.NewEventingFunction,
 		resources.NewDataApi,
+		resources.NewOrganizationAlertConfiguration,
+		resources.NewProjectAlertConfiguration,
+		resources.NewClusterAlertConfiguration,
 	}
 }
