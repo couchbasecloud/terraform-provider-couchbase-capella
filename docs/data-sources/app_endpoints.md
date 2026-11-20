@@ -48,6 +48,7 @@ Read-Only:
 - `bucket` (String)
 - `cors` (Attributes) (see [below for nested schema](#nestedatt--app_endpoints--cors))
 - `delta_sync_enabled` (Boolean)
+- `import_partitions` (Number)
 - `metrics_url` (String)
 - `name` (String)
 - `oidc` (Attributes List) (see [below for nested schema](#nestedatt--app_endpoints--oidc))
