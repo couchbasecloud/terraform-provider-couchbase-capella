@@ -464,8 +464,9 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 
 // Update will send a request to alter an index.
 func (g *GSI) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan providerschema.GsiDefinition
+	var plan, state providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -476,6 +477,18 @@ func (g *GSI) Update(ctx context.Context, req resource.UpdateRequest, resp *reso
 			"Missing Required Attribute",
 			"num_replica must be specified for index updates. The update operation only supports changing the number of replicas.",
 		)
+		return
+	}
+
+	// Skip the ALTER INDEX call if num_replica hasn't changed.
+	// This prevents unnecessary and failing ALTER INDEX calls when an in-place
+	// update is triggered by a non-num_replica attribute change (e.g. is_primary
+	// becoming null on import).
+	if state.With != nil &&
+		!state.With.NumReplica.IsNull() && !state.With.NumReplica.IsUnknown() &&
+		state.With.NumReplica.ValueInt64() == plan.With.NumReplica.ValueInt64() {
+
+		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 		return
 	}
 

@@ -39,7 +39,7 @@ func GsiSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "scope_name", gsiBuilder, stringDefaultAttribute("_default", optional, computed, useStateForUnknown, requiresReplace))
 	capellaschema.AddAttr(attrs, "collection_name", gsiBuilder, stringDefaultAttribute("_default", optional, computed, useStateForUnknown, requiresReplace))
 	capellaschema.AddAttr(attrs, "index_name", gsiBuilder, stringAttribute([]string{optional, requiresReplace}))
-	capellaschema.AddAttr(attrs, "is_primary", gsiBuilder, boolAttribute(optional))
+	capellaschema.AddAttr(attrs, "is_primary", gsiBuilder, boolAttribute(optional, computed))
 	capellaschema.AddAttr(attrs, "index_keys", gsiBuilder, stringListAttribute(optional, requiresReplace))
 	capellaschema.AddAttr(attrs, "where", gsiBuilder, stringAttribute([]string{optional, requiresReplace}))
 	capellaschema.AddAttr(attrs, "status", gsiBuilder, stringAttribute([]string{computed, useStateForUnknown}))
