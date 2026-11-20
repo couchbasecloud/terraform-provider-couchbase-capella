@@ -21,6 +21,11 @@ func TestAccAppEndpoint(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
+			// An unsupported import_partitions value must be rejected at plan time, before any API call.
+			{
+				Config:      testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true, 20),
+				ExpectError: re.MustCompile(`(?s)import_partitions.*value must be one of`),
+			},
 			{
 				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true, 32),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -55,9 +60,12 @@ func TestAccAppEndpoint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateAppEndpointImportId(resourceReference),
-				ImportState:       true,
+				ResourceName:                         resourceReference,
+				ImportStateIdFunc:                    generateAppEndpointImportId(resourceReference),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIgnore:              []string{"state"},
 			},
 		},
 	})
