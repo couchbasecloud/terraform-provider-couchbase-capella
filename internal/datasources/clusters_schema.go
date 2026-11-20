@@ -70,16 +70,8 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "enable_private_dns_resolution", clusterBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "deletion_protection", clusterBuilder, computedBool())
 
-	expressScaling := computedBool()
-	expressScaling.MarkdownDescription = capellaschema.ExpressScalingDescription
-	capellaschema.AddAttr(dataAttrs, "express_scaling", clusterBuilder, expressScaling)
-	// The published expressScaling field is the state enum, which describes express_scaling_state
-	// rather than this bool, so the fallback is reapplied after the spec lookup.
-	expressScaling.MarkdownDescription = capellaschema.ExpressScalingDescription
-
-	expressScalingState := computedString()
-	expressScalingState.MarkdownDescription = capellaschema.ExpressScalingStateDescription
-	capellaschema.AddAttr(dataAttrs, "express_scaling_state", clusterBuilder, expressScalingState)
+	capellaschema.AddAttr(dataAttrs, "express_scaling", clusterBuilder, computedBool())
+	capellaschema.AddAttr(dataAttrs, "express_scaling_state", clusterBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "connection_string", clusterBuilder, computedString())
 	zones := &schema.ListAttribute{
 		Computed:    true,
