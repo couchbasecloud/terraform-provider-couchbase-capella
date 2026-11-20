@@ -417,6 +417,10 @@ func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer)
 		return errors.ErrClusterIdMissing
 	}
 
+	if err := n.validateProviderTypeConfigMatch(plan); err != nil {
+		return err
+	}
+
 	if plan.ProviderConfig != nil && plan.ProviderConfig.AzureConfig != nil {
 		if err := plan.ProviderConfig.AzureConfig.Validate(); err != nil {
 			return err
@@ -424,6 +428,39 @@ func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer)
 	}
 
 	return n.validateNetworkPeerAttributesTrimmed(plan)
+}
+
+// validateProviderTypeConfigMatch checks that the provider_type value matches the provider_config
+// block that the user has populated. For example, provider_type "azure" requires provider_config.azure_config,
+// and setting aws_config with provider_type "azure" is rejected at plan time before any API call.
+func (n *NetworkPeer) validateProviderTypeConfigMatch(plan providerschema.NetworkPeer) error {
+	if plan.ProviderConfig == nil {
+		return errors.ErrProviderConfigCannotBeEmpty
+	}
+
+	providerType := plan.ProviderType.ValueString()
+
+	switch {
+	case plan.ProviderConfig.AWSConfig != nil:
+		if !strings.EqualFold(providerType, "aws") {
+			return fmt.Errorf("%w: provider_type is %q but provider_config.aws_config is set; expected provider_type \"aws\"",
+				errors.ErrProviderTypeConfigMismatch, providerType)
+		}
+	case plan.ProviderConfig.GCPConfig != nil:
+		if !strings.EqualFold(providerType, "gcp") {
+			return fmt.Errorf("%w: provider_type is %q but provider_config.gcp_config is set; expected provider_type \"gcp\"",
+				errors.ErrProviderTypeConfigMismatch, providerType)
+		}
+	case plan.ProviderConfig.AzureConfig != nil:
+		if !strings.EqualFold(providerType, "azure") {
+			return fmt.Errorf("%w: provider_type is %q but provider_config.azure_config is set; expected provider_type \"azure\"",
+				errors.ErrProviderTypeConfigMismatch, providerType)
+		}
+	default:
+		return errors.ErrProviderConfigCannotBeEmpty
+	}
+
+	return nil
 }
 
 func (n *NetworkPeer) validateNetworkPeerAttributesTrimmed(plan providerschema.NetworkPeer) error {
