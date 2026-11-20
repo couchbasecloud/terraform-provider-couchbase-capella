@@ -65,6 +65,14 @@ type CreateDatabaseCredentialRequest struct {
 type AccessibleResources struct {
 	// Buckets contains the details of all buckets with scope and collection level information to which the access applies.
 	Buckets []Bucket `json:"buckets"`
+
+	// Catalogs is the list of external catalogs the catalog privileges are granted on.
+	// "*" grants every catalog. Supported on database roles only.
+	Catalogs []string `json:"catalogs,omitempty"`
+
+	// Credentials is the list of external credential IDs the credential privileges are granted on.
+	// Supported on database roles only.
+	Credentials []string `json:"credentials,omitempty"`
 }
 
 // Bucket contains the details of a single bucket with scope and collection level information.

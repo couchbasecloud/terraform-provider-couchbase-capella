@@ -52,6 +52,14 @@ func DatabaseRoleSchema() schema.Schema {
 		},
 	})
 
+	catalogs := stringListAttribute(optional)
+	catalogs.MarkdownDescription = "The external catalogs the catalog privileges are granted on. `*` grants every catalog. Required for catalog privileges and not allowed with any other privilege."
+	resourcesAttrs["catalogs"] = catalogs
+
+	credentials := stringListAttribute(optional)
+	credentials.MarkdownDescription = "The external credential IDs the credential privileges are granted on. Wildcards (`*`) and internal credentials prefixed `cbc-` are not allowed. Required for the `credentialConsumer` privilege and not allowed with any other privilege."
+	resourcesAttrs["credentials"] = credentials
+
 	accessAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(accessAttrs, "privileges", databaseRoleBuilder, stringSetAttribute(required))
 	capellaschema.AddAttr(accessAttrs, "resources", databaseRoleBuilder, &schema.SingleNestedAttribute{

@@ -40,6 +40,8 @@ Read-Only:
 Read-Only:
 
 - `buckets` (Attributes List) (see [below for nested schema](#nestedatt--data--resources--buckets))
+- `catalogs` (List of String)
+- `credentials` (List of String)
 
 <a id="nestedatt--data--resources--buckets"></a>
 ### Nested Schema for `data.resources.buckets`

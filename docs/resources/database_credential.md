@@ -91,6 +91,8 @@ Optional:
 Optional:
 
 - `buckets` (Attributes Set) (see [below for nested schema](#nestedatt--access--resources--buckets))
+- `catalogs` (List of String) Not supported for database credentials. Grant catalog access through a `couchbase-capella_database_role` instead.
+- `credentials` (List of String) Not supported for database credentials. Grant credential access through a `couchbase-capella_database_role` instead.
 
 <a id="nestedatt--access--resources--buckets"></a>
 ### Nested Schema for `access.resources.buckets`

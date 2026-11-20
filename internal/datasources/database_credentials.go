@@ -126,9 +126,7 @@ func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
 		for j, permission := range acc.Privileges {
 			access[i].Privileges[j] = types.StringValue(permission)
 		}
-		if acc.Resources != nil && acc.Resources.Buckets != nil {
-			access[i].Resources = &providerschema.Resources{Buckets: providerschema.MapBucketsFromAPI(acc.Resources.Buckets)}
-		}
+		access[i].Resources = providerschema.MapResourcesFromAPI(acc.Resources)
 	}
 
 	return access

@@ -51,6 +51,8 @@ Optional:
 Optional:
 
 - `buckets` (Attributes List) (see [below for nested schema](#nestedatt--access--resources--buckets))
+- `catalogs` (List of String) The external catalogs the catalog privileges are granted on. `*` grants every catalog. Required for catalog privileges and not allowed with any other privilege.
+- `credentials` (List of String) The external credential IDs the credential privileges are granted on. Wildcards (`*`) and internal credentials prefixed `cbc-` are not allowed. Required for the `credentialConsumer` privilege and not allowed with any other privilege.
 
 <a id="nestedatt--access--resources--buckets"></a>
 ### Nested Schema for `access.resources.buckets`

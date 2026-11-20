@@ -66,11 +66,7 @@ func (d *DatabasePrivileges) Read(ctx context.Context, req datasource.ReadReques
 			Name:  types.StringValue(priv.Name),
 			Group: types.StringValue(priv.Group),
 		}
-		if priv.Resources != nil && priv.Resources.Buckets != nil {
-			item.Resources = &providerschema.Resources{
-				Buckets: providerschema.MapBucketsFromAPI(priv.Resources.Buckets),
-			}
-		}
+		item.Resources = providerschema.MapResourcesFromAPI(priv.Resources)
 		state.Data = append(state.Data, item)
 	}
 
