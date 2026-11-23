@@ -14,52 +14,45 @@ jobs:
     steps:
       - name: Check PR body
         id: check-pr
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          if [ -z "${{ github.event.pull_request.body }}" ]; then
+          if [ -z "$PR_BODY" ]; then
             echo "PR body is empty. Please fill out the PR template."
             exit 1
           fi
 
-      - name: Extract and set labels based on PR body
-        id: get-labels
-        run: |
-          echo "PR_BODY<<EOF" >> $GITHUB_ENV
-          echo "${{ github.event.pull_request.body }}" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          
-          # Debug: Show PR body
-          echo "PR Body content:"
-          echo "${{ github.event.pull_request.body }}"
-
       - name: Determine which labels to apply
         id: determine-labels
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           declare -a LABELS=()
           
           echo "Checking PR body content for matches..."
           
           # Core changes
-          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] Bug fix"; then
+          if echo "$PR_BODY" | grep -iq "\[[xX]\] Bug fix"; then
             echo "Found Bug fix checkbox"
             LABELS+=("bug")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] New feature"; then
+          if echo "$PR_BODY" | grep -iq "\[[xX]\] New feature"; then
             echo "Found New feature checkbox"
             LABELS+=("enhancement")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] Breaking change"; then
+          if echo "$PR_BODY" | grep -iq "\[[xX]\] Breaking change"; then
             echo "Found Breaking change checkbox"
             LABELS+=("breaking change")
           fi
           
           # Documentation
-          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] Documentation"; then
+          if echo "$PR_BODY" | grep -iq "\[[xX]\] Documentation"; then
             echo "Found Documentation checkbox"
             LABELS+=("documentation")
           fi
           
           # ci/cd
-          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] This change updates the ci/cd workflow"; then
+          if echo "$PR_BODY" | grep -iq "\[[xX]\] This change updates the ci/cd workflow"; then
             echo "Found ci/cd workflow checkbox"
             LABELS+=("ci/cd")
           fi
