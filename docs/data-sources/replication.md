@@ -62,7 +62,7 @@ resource "couchbase-capella_replication_activation_status" "pause_existing_repli
 - `mobile_sync_mode` (String) - `active` when App Services can run on both the source and the target, else `off`.
 - `network_usage_limit` (Number) - Network usage limit in MiB per second. 0 means unlimited. The maximum is 1000000.
  - **Default**: `0`
-- `priority` (String) - Priority represents the resource allocation to the replication. low: Resource constraints are applied when competing with high priority replications medium: Resource constraints are applied during initial processing when competing with high priority replications, then operates as high priority high: No resource constraints are applied (default priority)
+- `priority` (String) - Priority represents the resource allocation to the replication. low: Resource constraints are applied when competing with high priority replications. medium: Resource constraints are applied during initial processing when competing with high priority replications, then operates as high priority. high: No resource constraints are applied (default priority).
  - **Valid Values**: `low`, `medium`, `high`
  - **Default**: `high`
 - `source_bucket` (String) - The ID of the source bucket.
@@ -196,8 +196,8 @@ Read-Only:
 
 Read-Only:
 
-- `bucket` (String) - The target bucket identifier. For Capella buckets, use bucket ID For external clusters, use bucket name
-- `cluster` (String) - The target cluster identifier. For Capella clusters, use cluster ID For external clusters, use cluster reference name
+- `bucket` (String) - The target bucket identifier. For Capella buckets, use bucket ID. For external clusters, use bucket name.
+- `cluster` (String) - The target cluster identifier. For Capella clusters, use cluster ID. For external clusters, use cluster reference name.
 - `type` (String) - Type tells us if the target cluster is capella or external.
  - **Valid Values**: `capella`, `external`
  - **Default**: `capella`
