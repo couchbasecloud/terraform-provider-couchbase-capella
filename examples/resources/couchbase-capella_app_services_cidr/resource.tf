@@ -25,4 +25,6 @@ resource "couchbase-capella_app_services_cidr" "new_public_app_services_cidr" {
   app_service_id  = "<app_service_id>"
   cidr            = "203.0.113.0/24"
   access_mode     = "public"
+
+  depends_on = [couchbase-capella_app_service_public_access.app_service_public_access]
 }
