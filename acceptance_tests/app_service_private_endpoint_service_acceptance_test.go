@@ -37,6 +37,7 @@ func TestAccAppServicePrivateEndpoint(t *testing.T) {
 	t.Run("App Service Private Endpoints Datasource", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			CheckDestroy:             testAccCheckAppServicePrivateEndpointServiceDestroy(t),
 			Steps:                    appServicePrivateEndpointsDatasourceSteps(),
 		})
 	})
@@ -47,6 +48,7 @@ func TestAccAppServicePrivateEndpoint(t *testing.T) {
 		steps := appServicePrivateEndpointServiceAWSCommandSteps(t)
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			CheckDestroy:             testAccCheckAppServicePrivateEndpointServiceDestroy(t),
 			Steps:                    steps,
 		})
 	})
@@ -117,6 +119,8 @@ func generateAppServicePrivateEndpointServiceImportIdForResource(resourceReferen
 
 // testAccCheckAppServicePrivateEndpointServiceDestroy verifies that the remote state is "disabled" after destroy,
 // because destroy disables the private endpoint service on the App Service and does not delete a resource.
+// Every subtest of TestAccAppServicePrivateEndpoint uses it, so a subtest that leaves the service enabled
+// fails itself instead of the next subtest that expects to enable it.
 func testAccCheckAppServicePrivateEndpointServiceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		data := newTestClient(t)
