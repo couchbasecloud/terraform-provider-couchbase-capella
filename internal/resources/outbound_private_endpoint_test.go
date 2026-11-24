@@ -325,12 +325,16 @@ func TestOutboundPrivateEndpointPlanAndApply(t *testing.T) {
 				),
 			},
 			{
-				// A rename updates in place.
+				// A rename updates in place, and the fields a rename can't change keep their values in the plan.
 				Config: outboundPrivateEndpointConfig("cng-prod-east", opeServiceA, ""),
 				ConfigPlanChecks: tfresource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(opeResource, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(opeResource, tfjsonpath.New("hostname"), knownvalue.StringExact("3f2e1d0c.assigned.example.com")),
+						plancheck.ExpectKnownValue(opeResource, tfjsonpath.New("provider_endpoint_id"), knownvalue.StringExact("vpce-0a1b2c3d4e5f67891")),
+						plancheck.ExpectKnownValue(opeResource, tfjsonpath.New("is_custom_hostname"), knownvalue.Bool(false)),
+						plancheck.ExpectKnownValue(opeResource, tfjsonpath.New("cloud_provider").AtMapKey("type"), knownvalue.StringExact("aws")),
+						plancheck.ExpectUnknownValue(opeResource, tfjsonpath.New("status")),
 					},
 				},
 				Check: tfresource.ComposeAggregateTestCheckFunc(

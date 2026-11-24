@@ -51,11 +51,11 @@ func OutboundPrivateEndpointSchema() schema.Schema {
 		},
 	})
 
-	capellaschema.AddAttr(attrs, "provider_endpoint_id", outboundPrivateEndpointBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "provider_endpoint_id", outboundPrivateEndpointBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "status", outboundPrivateEndpointBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "failure_reason", outboundPrivateEndpointBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "provider_status", outboundPrivateEndpointBuilder, stringAttribute([]string{computed}))
-	capellaschema.AddAttr(attrs, "is_custom_hostname", outboundPrivateEndpointBuilder, boolAttribute(computed))
+	capellaschema.AddAttr(attrs, "is_custom_hostname", outboundPrivateEndpointBuilder, boolAttribute(computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "private_dns_enabled", outboundPrivateEndpointBuilder, boolAttribute(computed))
 	capellaschema.AddAttr(attrs, "ip_addresses", outboundPrivateEndpointBuilder, stringListAttribute(computed))
 
