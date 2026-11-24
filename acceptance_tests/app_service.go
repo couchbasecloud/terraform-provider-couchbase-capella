@@ -64,6 +64,16 @@ func createAppService(ctx context.Context, client *api.Client) error {
 // appServiceCurrentState reads the current state of the shared app service. Unlike
 // appServiceWait it does not block, so tests can assert on the fixture's state up front.
 func appServiceCurrentState(ctx context.Context, client *api.Client) (appservice.State, error) {
+	appServiceResponse, err := getAppService(ctx, client)
+	if err != nil {
+		return "", err
+	}
+
+	return appServiceResponse.CurrentState, nil
+}
+
+// getAppService reads the shared app service.
+func getAppService(ctx context.Context, client *api.Client) (*appservice.GetAppServiceResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s",
 		globalHost,
@@ -80,15 +90,15 @@ func appServiceCurrentState(ctx context.Context, client *api.Client) (appservice
 
 	response, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var appServiceResponse appservice.GetAppServiceResponse
 	if err = json.Unmarshal(response.Body, &appServiceResponse); err != nil {
-		return "", fmt.Errorf("error unmarshalling app service response: %w", err)
+		return nil, fmt.Errorf("error unmarshalling app service response: %w", err)
 	}
 
-	return appServiceResponse.CurrentState, nil
+	return &appServiceResponse, nil
 }
 
 func appServiceWait(ctx context.Context, client *api.Client, destroy bool) error {
