@@ -16,6 +16,7 @@ func AppServicesCidrSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", appServicesCidrBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "cluster_id", appServicesCidrBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "app_service_id", appServicesCidrBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "access_mode", appServicesCidrBuilder, optionalStringSet())
 
 	// Build data attributes
 	dataAttrs := make(map[string]schema.Attribute)
@@ -23,6 +24,7 @@ func AppServicesCidrSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "cidr", appServicesCidrBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "comment", appServicesCidrBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "expires_at", appServicesCidrBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "access_mode", appServicesCidrBuilder, computedString())
 
 	// Build audit attributes
 	auditAttrs := make(map[string]schema.Attribute)

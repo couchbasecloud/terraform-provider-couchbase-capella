@@ -31,6 +31,7 @@ func TestAccAppServicesCIDRDataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "cidr", allowedCIDR),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckNoResourceAttr(resourceReference, "access_mode"),
 
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
@@ -38,8 +39,9 @@ func TestAccAppServicesCIDRDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "data.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceReference, "data.*", map[string]string{
-						"cidr":    allowedCIDR,
-						"comment": comment,
+						"cidr":        allowedCIDR,
+						"comment":     comment,
+						"access_mode": "admin",
 					}),
 				),
 			},
@@ -64,6 +66,31 @@ data "couchbase-capella_app_services_cidr" "%[2]s" {}
 		},
 	})
 }
+
+// TODO: Enable once specs are merged and enums are regenerated
+//func TestAccAppServicesCIDRDataSourceInvalidAccessMode(t *testing.T) {
+//	dataSourceName := randomStringWithPrefix("tf_acc_app_services_cidr_ds_")
+//
+//	resource.ParallelTest(t, resource.TestCase{
+//		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+//		Steps: []resource.TestStep{
+//			{
+//				Config: fmt.Sprintf(`
+//%[1]s
+//
+//data "couchbase-capella_app_services_cidr" "%[2]s" {
+//  organization_id = "%[3]s"
+//  project_id      = "%[4]s"
+//  cluster_id      = "%[5]s"
+//  app_service_id  = "%[6]s"
+//  access_mode     = ["admin", "invalid"]
+//}
+//`, globalProviderBlock, dataSourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId),
+//				ExpectError: regexp.MustCompile(`Error Reading App Service Allowed CIDRs`),
+//			},
+//		},
+//	})
+//}
 
 func testAccAppServicesCIDRDataSourceConfig(resourceName, dataSourceName, cidr, comment, expiresAt string) string {
 	return fmt.Sprintf(`
