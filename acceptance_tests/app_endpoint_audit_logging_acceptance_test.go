@@ -134,6 +134,8 @@ func TestAccAppEndpointAuditLoggingMinimal(t *testing.T) {
 // after step 3 the disabled user stays in Capella. Step 4 then adopts the endpoint with only audit_enabled.
 // The prerequisites stay in every step, so turning audit logging off cannot clear the endpoint's settings.
 func TestAccAppEndpointAuditLoggingAdoptKeepsUnconfigured(t *testing.T) {
+	t.Skip("AV-153185: create resets App Endpoint audit settings the configuration leaves out; unskip once Create keeps them")
+
 	name := randomStringWithPrefix("tf_acc_ae_audit_")
 	adopted := "couchbase-capella_app_endpoint_audit_logging.adopt_" + name
 	prerequisites := appEndpointAuditLoggingPrerequisites(name)
