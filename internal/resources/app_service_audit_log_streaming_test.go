@@ -38,7 +38,7 @@ resource "couchbase-capella_app_service_audit_log_streaming" "streaming" {
 
 const (
 	auditStreamingGenericHttpCredentials = `    generic_http = { url = "https://example.com/audit" }`
-	auditStreamingDatadogCredentials     = `    datadog = { url = "https://http-intake.logs.datadoghq.com", api_key = "test-key" }`
+	auditStreamingDatadogCredentials     = `    datadog = { url = "https://http-intake.logs.datadoghq.com", api_key = "test-key" }` //nolint:gosec // G101: a placeholder key sent only to a local stub API
 )
 
 func capellaProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
