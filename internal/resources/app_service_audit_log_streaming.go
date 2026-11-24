@@ -20,9 +20,10 @@ import (
 )
 
 var (
-	_ resource.Resource                = (*AppServiceAuditLogStreaming)(nil)
-	_ resource.ResourceWithConfigure   = (*AppServiceAuditLogStreaming)(nil)
-	_ resource.ResourceWithImportState = (*AppServiceAuditLogStreaming)(nil)
+	_ resource.Resource                   = (*AppServiceAuditLogStreaming)(nil)
+	_ resource.ResourceWithConfigure      = (*AppServiceAuditLogStreaming)(nil)
+	_ resource.ResourceWithImportState    = (*AppServiceAuditLogStreaming)(nil)
+	_ resource.ResourceWithValidateConfig = (*AppServiceAuditLogStreaming)(nil)
 )
 
 // AppServiceAuditLogStreaming is the App Service audit log streaming resource implementation.
@@ -194,6 +195,16 @@ func (a *AppServiceAuditLogStreaming) Delete(ctx context.Context, req resource.D
 			"Audit log streaming disable was initiated, but checking its state failed: "+err.Error(),
 		)
 	}
+}
+
+// ValidateConfig checks at plan time that the credentials block matches output_type.
+func (a *AppServiceAuditLogStreaming) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.AppServiceAuditLogStreaming
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	validateLogStreamingCredentials(ctx, config.OutputType, config.Credentials, &resp.Diagnostics)
 }
 
 // ImportState imports a remote resource that is not managed by Terraform.
