@@ -33,6 +33,7 @@ func AppServiceSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "version", appServiceDSBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "load_balancer_cidr", appServiceDSBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "audit", appServiceDSBuilder, computedAudit())
+	capellaschema.AddAttr(dataAttrs, "public_access", appServiceDSBuilder, computedString())
 
 	capellaschema.AddAttr(attrs, "data", appServiceDSBuilder, &schema.ListNestedAttribute{
 		Computed: true,
