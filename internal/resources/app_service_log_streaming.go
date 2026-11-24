@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -396,25 +398,21 @@ func (r *AppServiceLogStreaming) ValidateConfig(ctx context.Context, req resourc
 		return
 	}
 
-	// If credentials is unknown (e.g. passed via a variable), we can't validate.
-	if config.Credentials.IsUnknown() || config.Credentials.IsNull() {
+	validateLogStreamingCredentials(ctx, config.OutputType, config.Credentials, &resp.Diagnostics)
+}
+
+// validateLogStreamingCredentials checks that the credentials block matches output_type.
+// It skips the check when either value is not known at plan time.
+func validateLogStreamingCredentials(ctx context.Context, outputTypeAttr types.String, credentials types.Object, diags *diag.Diagnostics) {
+	if credentials.IsUnknown() || credentials.IsNull() || outputTypeAttr.IsUnknown() {
 		return
 	}
 
-	// If output_type is unknown, we can't validate the match.
-	if config.OutputType.IsUnknown() {
-		return
-	}
+	outputType := outputTypeAttr.ValueString()
 
-	outputType := config.OutputType.ValueString()
-
-	// Extract the LogStreamingCredentials from the types.Object
-	creds, diags := config.AsLogStreamingCredentials(ctx)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if creds == nil {
+	var creds providerschema.LogStreamingCredentials
+	diags.Append(credentials.As(ctx, &creds, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
 		return
 	}
 
@@ -440,7 +438,7 @@ func (r *AppServiceLogStreaming) ValidateConfig(ctx context.Context, req resourc
 		if check.outputType == outputType {
 			matchFound = true
 			if !check.isPresent {
-				resp.Diagnostics.AddAttributeError(
+				diags.AddAttributeError(
 					path.Root("credentials"),
 					"Missing Credential Configuration",
 					fmt.Sprintf("credentials.%s must be configured when output_type is %q", check.outputType, outputType),
@@ -448,7 +446,7 @@ func (r *AppServiceLogStreaming) ValidateConfig(ctx context.Context, req resourc
 				return
 			}
 		} else if check.isPresent {
-			resp.Diagnostics.AddAttributeError(
+			diags.AddAttributeError(
 				path.Root("credentials"),
 				"Invalid Credential Configuration",
 				fmt.Sprintf("credentials.%s must not be configured when output_type is %q", check.outputType, outputType),
@@ -458,7 +456,7 @@ func (r *AppServiceLogStreaming) ValidateConfig(ctx context.Context, req resourc
 	}
 
 	if !matchFound {
-		resp.Diagnostics.AddAttributeError(
+		diags.AddAttributeError(
 			path.Root("output_type"),
 			"Invalid Attribute Configuration",
 			fmt.Sprintf("Unsupported output_type %q. Please read the documentation for supported values.", outputType),
