@@ -239,6 +239,7 @@ func (p *capellaProvider) Configure(
 func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		datasources.NewOrganization,
+		datasources.NewCloudAccounts,
 		datasources.NewUsers,
 		datasources.NewProject,
 		datasources.NewProjects,

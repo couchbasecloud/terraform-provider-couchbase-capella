@@ -1043,3 +1043,25 @@ func TestGetOpenAPIDescription_NestedAttributeSchemas(t *testing.T) {
 		})
 	}
 }
+
+func TestGetOpenAPIDescription_KebabCaseProperties(t *testing.T) {
+	// CloudAccounts names its properties in kebab-case, so aws_capella_account is
+	// looked up as aws-capella-account once awsCapellaAccount isn't found.
+	tests := []struct {
+		fieldName     string
+		shouldContain string
+	}{
+		{fieldName: "aws_capella_account", shouldContain: "AWS account"},
+		{fieldName: "gcp_capella_project", shouldContain: "GCP project"},
+		{fieldName: "azure_capella_subscription", shouldContain: "Azure subscription"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.fieldName, func(t *testing.T) {
+			desc := GetOpenAPIDescription("CloudAccounts", tt.fieldName)
+			if !contains(desc, tt.shouldContain) {
+				t.Errorf("Expected description to contain %q, got: %q", tt.shouldContain, desc)
+			}
+		})
+	}
+}
