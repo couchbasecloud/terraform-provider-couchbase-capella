@@ -17,29 +17,18 @@ import (
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
-// TestAccAppServiceAuditLogExportJobNoAuditData exports a window with no audit data. Audit logging is never enabled
-// on the shared App Service, so every window is empty. Unlike the cluster export API, which answers GET with 404 for
-// such a job (AV-128951), this API returns the job with status "No Log Files In Requested Time Range". The second
-// step guards that the job stays in state once it has run: a 404 there would make Read drop it and every apply
-// create a new job. Right after create the API can return the job without a status, so status is only checked
-// after the job has run. Each run leaves an export job behind, because export jobs have no delete API.
+// TestAccAppServiceAuditLogExportJobNoAuditData exports a window with no audit data. Unlike the cluster export API,
+// which answers GET with 404 for such a job (AV-128951), this API returns the job with status "No Log Files In
+// Requested Time Range". The second step guards that the job stays in state once it has run: a 404 there would make
+// Read drop it and every apply create a new job. Right after create the API can return the job without a status, so
+// status is only checked after the job has run. Each run leaves an export job behind, because export jobs have no
+// delete API.
 func TestAccAppServiceAuditLogExportJobNoAuditData(t *testing.T) {
 	name := randomStringWithPrefix("tf_acc_as_audit_export_")
 	resourceReference := "couchbase-capella_app_service_audit_log_export_job." + name
 
-	end := time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Second)
-	start := end.Add(-4 * time.Hour)
-	config := fmt.Sprintf(`
-%s
-resource "couchbase-capella_app_service_audit_log_export_job" "%s" {
-  organization_id = "%s"
-  project_id      = "%s"
-  cluster_id      = "%s"
-  app_service_id  = "%s"
-  start           = "%s"
-  end             = "%s"
-}`, globalProviderBlock, name, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId,
-		start.Format(time.RFC3339), end.Format(time.RFC3339))
+	start, end := appServiceAuditLogEmptyExportWindow(t)
+	config := testAccAppServiceAuditLogExportJobConfig(name, start, end)
 
 	var jobId string
 
@@ -156,6 +145,34 @@ func TestAccAppServiceAuditLogExportJobInvalidTimestamp(t *testing.T) {
 	})
 }
 
+// appServiceAuditLogEmptyExportWindow returns a 1-hour window ending a minute before the shared App Service was
+// created, so it cannot hold audit data. A window ending an hour ago is not enough: other tests in this package enable
+// audit logging on the shared App Service, and TF_VAR_app_service_id can reuse one that earlier runs logged to. The
+// test is skipped when the App Service is too old for the window to fall inside the 30-day retention period.
+func appServiceAuditLogEmptyExportWindow(t *testing.T) (string, string) {
+	t.Helper()
+	data := newTestClient(t)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s",
+		globalHost, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, data.Token, nil)
+	if err != nil {
+		t.Fatalf("reading App Service: %v", err)
+	}
+	var appService apigen.GetAppServiceResponse
+	if err := json.Unmarshal(response.Body, &appService); err != nil {
+		t.Fatalf("unmarshalling App Service: %v", err)
+	}
+
+	end := appService.Audit.CreatedAt.UTC().Add(-1 * time.Minute).Truncate(time.Second)
+	start := end.Add(-1 * time.Hour)
+	if start.Before(time.Now().Add(-29 * 24 * time.Hour)) {
+		t.Skipf("shared App Service was created at %s, too long ago for a known-empty window inside the 30-day retention period",
+			appService.Audit.CreatedAt.Format(time.RFC3339))
+	}
+	return start.Format(time.RFC3339), end.Format(time.RFC3339)
+}
+
 // appServiceAuditLogExportWindow returns a 4-hour window ending an hour ago, inside the 30-day retention period.
 func appServiceAuditLogExportWindow() (string, string) {
 	end := time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Second)
@@ -177,7 +194,9 @@ resource "couchbase-capella_app_service_audit_log_export_job" "%[2]s" {
 }
 
 // waitForAppServiceAuditLogExportJobToRun polls the export job until it reaches a final status or GET returns 404,
-// logging every status it sees. It gives up after 20 minutes and lets the plan step run regardless.
+// logging every status it sees. It fails the test if the job is still pending after 20 minutes, so a later step never
+// mistakes a pending status for a final one. A 404 returns without failing, so that the next step shows how the
+// provider handles it.
 func waitForAppServiceAuditLogExportJobToRun(t *testing.T, jobId string) {
 	t.Helper()
 	data := newTestClient(t)
@@ -217,7 +236,7 @@ func waitForAppServiceAuditLogExportJobToRun(t *testing.T, jobId string) {
 		}
 		time.Sleep(15 * time.Second)
 	}
-	t.Logf("export job %s: still %q after 20 minutes; planning anyway", jobId, lastStatus)
+	t.Fatalf("export job %s: still %q after 20 minutes", jobId, lastStatus)
 }
 
 func isPendingAppServiceAuditLogExportStatus(status string) bool {
