@@ -18,6 +18,7 @@ const (
 	projectRoleViewer           = "projectViewer"
 	projectRoleDataReaderWriter = "projectDataReaderWriter"
 	projectRoleDataReader       = "projectDataReader"
+	projectRoleReadOnly         = "projectReadOnly"
 )
 
 var validOrganizationRoles = []string{
@@ -40,4 +41,5 @@ var validProjectRoles = []string{
 	projectRoleViewer,
 	projectRoleDataReaderWriter,
 	projectRoleDataReader,
+	projectRoleReadOnly,
 }

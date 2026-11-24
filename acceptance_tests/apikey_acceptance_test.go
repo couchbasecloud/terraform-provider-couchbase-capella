@@ -283,7 +283,7 @@ func TestAccApiKeyResourceInvalidScenarioInvalidProjectRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccApiKeyResourceConfigWithProjectRole(resourceName, "projectWizard"),
-				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*projectWizard.*projectOwner.*projectManager.*projectViewer.*projectDataReaderWriter.*projectDataReader`),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*projectWizard.*projectOwner.*projectManager.*projectViewer.*projectDataReaderWriter.*projectDataReader.*projectReadOnly`),
 			},
 		},
 	})
