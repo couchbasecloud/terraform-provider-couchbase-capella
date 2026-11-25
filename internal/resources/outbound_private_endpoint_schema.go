@@ -33,7 +33,7 @@ func OutboundPrivateEndpointSchema() schema.Schema {
 		Optional: true,
 		Computed: true,
 		Validators: []validator.String{
-			stringvalidator.LengthBetween(1, 254),
+			stringvalidator.LengthBetween(1, 253),
 		},
 		PlanModifiers: []planmodifier.String{
 			outboundPrivateEndpointHostnameModifier{},
@@ -114,8 +114,10 @@ func (outboundPrivateEndpointHostnameModifier) PlanModifyString(ctx context.Cont
 		return
 	}
 
+	// A hostname only known at apply replaces too: Update can only rename, so it must not be
+	// planned for a hostname that may turn out different.
 	if !req.ConfigValue.IsNull() {
-		if !req.ConfigValue.IsUnknown() && !req.ConfigValue.Equal(req.StateValue) {
+		if !req.ConfigValue.Equal(req.StateValue) {
 			resp.RequiresReplace = true
 		}
 		return

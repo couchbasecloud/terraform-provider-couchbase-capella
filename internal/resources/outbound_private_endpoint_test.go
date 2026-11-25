@@ -410,6 +410,56 @@ func TestOutboundPrivateEndpointPlanAndApply(t *testing.T) {
 	assert.Equal(t, 1, fake.renames)
 }
 
+// TestOutboundPrivateEndpointApplyTimeHostnameReplaces sets hostname from a value only known at
+// apply. Update can only rename, so a hostname that may change has to plan a replacement up front.
+func TestOutboundPrivateEndpointApplyTimeHostnameReplaces(t *testing.T) {
+	fastOutboundPrivateEndpointPolling(t)
+	fake := newFakeOutboundPrivateEndpoints()
+
+	// terraform_data's output reads as unknown in the plan whenever its input changes.
+	config := func(hostname string) string {
+		return fmt.Sprintf(`
+resource "terraform_data" "hostname" {
+  input = %q
+}
+
+resource "couchbase-capella_outbound_private_endpoint" "test" {
+  organization_id = %q
+  project_id      = %q
+  cluster_id      = %q
+  name            = "cng-prod"
+  service_name    = %q
+  hostname        = terraform_data.hostname.output
+}
+`, hostname, opeOrgID, opeProjectID, opeClusterID, opeServiceA)
+	}
+
+	tfresource.UnitTest(t, tfresource.TestCase{
+		ProtoV6ProviderFactories: outboundPrivateEndpointFactories(t, fake),
+		Steps: []tfresource.TestStep{
+			{
+				Config: config("cng.acme.example.com"),
+				Check:  tfresource.TestCheckResourceAttr(opeResource, "hostname", "cng.acme.example.com"),
+			},
+			{
+				Config: config("cng2.acme.example.com"),
+				ConfigPlanChecks: tfresource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(opeResource, plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectUnknownValue(opeResource, tfjsonpath.New("hostname")),
+					},
+				},
+				Check: tfresource.ComposeAggregateTestCheckFunc(
+					tfresource.TestCheckResourceAttr(opeResource, "hostname", "cng2.acme.example.com"),
+					tfresource.TestCheckResourceAttr(opeResource, "is_custom_hostname", "true"),
+				),
+			},
+		},
+	})
+
+	assert.Equal(t, 0, fake.renames)
+}
+
 func TestOutboundPrivateEndpointFailedCreateStaysInState(t *testing.T) {
 	fastOutboundPrivateEndpointPolling(t)
 	fake := newFakeOutboundPrivateEndpoints()
