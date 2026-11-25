@@ -97,3 +97,9 @@ type AWSIpAddress struct {
 	IpAddress        string `json:"ipAddress"`
 	AvailabilityZone string `json:"availabilityZone"`
 }
+
+// ListOutboundPrivateEndpointsResponse is every endpoint on a cluster, newest first. The route
+// doesn't page: a cluster holds at most its endpoint limit.
+type ListOutboundPrivateEndpointsResponse struct {
+	Data []GetOutboundPrivateEndpointResponse `json:"data"`
+}
