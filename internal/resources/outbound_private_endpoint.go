@@ -427,13 +427,7 @@ func (o *OutboundPrivateEndpoint) getOutboundPrivateEndpoint(
 func (o *OutboundPrivateEndpoint) newState(
 	ctx context.Context, endpoint *outboundpe.GetOutboundPrivateEndpointResponse, organizationId, projectId, clusterId string,
 ) (*providerschema.OutboundPrivateEndpoint, error) {
-	audit := providerschema.NewCouchbaseAuditData(endpoint.Audit)
-	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
-	if diags.HasError() {
-		return nil, fmt.Errorf("%w: %v", errors.ErrUnableToConvertAuditData, diags.Errors())
-	}
-
-	state, err := providerschema.NewOutboundPrivateEndpoint(ctx, endpoint, organizationId, projectId, clusterId, auditObj)
+	state, err := providerschema.NewOutboundPrivateEndpoint(ctx, endpoint, organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrRefreshingState, err)
 	}
