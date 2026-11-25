@@ -150,8 +150,9 @@ func TestAccOutboundPrivateEndpointInvalidServiceName(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOutboundPrivateEndpointResourceConfig(resourceName, env, "tf-acc-outbound-pe", ""),
-				ExpectError: regexp.MustCompile(`(?s)Could not create the outbound private endpoint.*service name does not match the cloud's format`),
+				Config: testAccOutboundPrivateEndpointResourceConfig(resourceName, env, "tf-acc-outbound-pe", ""),
+				// Match the code: Terraform wraps the message mid-phrase.
+				ExpectError: regexp.MustCompile(`(?s)Could not create the outbound private endpoint.*"code":16006`),
 			},
 		},
 	})
