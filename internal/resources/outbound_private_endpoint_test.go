@@ -611,8 +611,6 @@ func TestOutboundPrivateEndpointWaitUntilDeleted(t *testing.T) {
 }
 
 func TestNewOutboundPrivateEndpointState(t *testing.T) {
-	audit := types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
-
 	t.Run("gcp has no provider config and no hostname yet", func(t *testing.T) {
 		got, err := providerschema.NewOutboundPrivateEndpoint(t.Context(), &outboundpe.GetOutboundPrivateEndpointResponse{
 			Id:            "e",
@@ -621,7 +619,7 @@ func TestNewOutboundPrivateEndpointState(t *testing.T) {
 			EndpointType:  "interface",
 			ServiceName:   "projects/p/regions/us-east1/serviceAttachments/s",
 			Status:        outboundpe.StatusPending,
-		}, opeOrgID, opeProjectID, opeClusterID, audit)
+		}, opeOrgID, opeProjectID, opeClusterID)
 		require.NoError(t, err)
 
 		assert.True(t, got.ProviderConfig.IsNull())
@@ -638,7 +636,7 @@ func TestNewOutboundPrivateEndpointState(t *testing.T) {
 			CloudProvider:  outboundpe.CloudProvider{Type: "aws", Region: "us-east-1"},
 			Status:         outboundpe.StatusPending,
 			ProviderConfig: &outboundpe.ProviderConfig{AWS: &outboundpe.AWSConfig{}},
-		}, opeOrgID, opeProjectID, opeClusterID, audit)
+		}, opeOrgID, opeProjectID, opeClusterID)
 		require.NoError(t, err)
 
 		var config providerschema.OutboundPrivateEndpointProviderConfig

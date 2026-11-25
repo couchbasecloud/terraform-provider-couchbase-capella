@@ -108,13 +108,19 @@ func (o *OutboundPrivateEndpoint) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-// NewOutboundPrivateEndpoint builds the Terraform state from the API's endpoint.
+// NewOutboundPrivateEndpoint builds the Terraform state from the API's endpoint. The resource and
+// the outbound_private_endpoints data source both use it, so they map every field the same way.
 func NewOutboundPrivateEndpoint(
 	ctx context.Context,
 	endpoint *outboundpe.GetOutboundPrivateEndpointResponse,
 	organizationId, projectId, clusterId string,
-	auditObject basetypes.ObjectValue,
 ) (*OutboundPrivateEndpoint, error) {
+	audit := NewCouchbaseAuditData(endpoint.Audit)
+	auditObject, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		return nil, fmt.Errorf("%w: %v", errors.ErrUnableToConvertAuditData, diags.Errors())
+	}
+
 	cloudProvider, diags := types.ObjectValueFrom(ctx, OutboundPrivateEndpointCloudProvider{}.AttributeTypes(), OutboundPrivateEndpointCloudProvider{
 		Type:   types.StringValue(endpoint.CloudProvider.Type),
 		Region: types.StringValue(endpoint.CloudProvider.Region),
