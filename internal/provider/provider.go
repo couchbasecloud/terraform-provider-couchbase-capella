@@ -266,6 +266,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAWSPrivateEndpointCommand,
 		datasources.NewAzurePrivateEndpointCommand,
 		datasources.NewGCPPrivateEndpointCommand,
+		datasources.NewOutboundPrivateEndpointServiceVerification,
 		datasources.NewNetworkPeers,
 		datasources.NewAzureNetworkPeerCommand,
 		datasources.NewEvents,
