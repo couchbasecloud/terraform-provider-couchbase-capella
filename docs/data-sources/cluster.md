@@ -46,6 +46,8 @@ output "existing_cluster" {
 - `description` (String)
 - `enable_private_dns_resolution` (Boolean)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `express_scaling` (Boolean) - Enables express scaling on the cluster. It can only be set when the cluster is created; use the `couchbase-capella_cluster_express_scaling` resource to change it afterwards. Requires the Enterprise support plan. Enabling starts a rebalance that can run for many hours after the cluster reports healthy.
+- `express_scaling_state` (String) - The express scaling status of the cluster: `enabled`, `enabling`, `disabled` or `disabling`.
 - `id` (String) The ID of this resource.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 - `name` (String)

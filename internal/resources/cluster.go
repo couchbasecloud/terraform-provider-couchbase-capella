@@ -102,6 +102,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
 	}
 
+	if !plan.ExpressScaling.IsNull() && !plan.ExpressScaling.IsUnknown() {
+		clusterRequest.ExpressScaling = plan.ExpressScaling.ValueBoolPointer()
+	}
+
 	if !plan.Zones.IsNull() && !plan.Zones.IsUnknown() {
 		resp.Diagnostics.Append(plan.Zones.ElementsAs(ctx, &clusterRequest.Zones, false)...)
 		if resp.Diagnostics.HasError() {
@@ -212,6 +216,12 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	refreshedState.Zones = zonesForState(refreshedState.Zones, plan.Zones)
+
+	// The enable runs as a rebalance after the cluster reports healthy, so the first read can
+	// still say disabled. Keep the requested value; later reads report the live state.
+	if !plan.ExpressScaling.IsNull() && !plan.ExpressScaling.IsUnknown() {
+		refreshedState.ExpressScaling = plan.ExpressScaling
+	}
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -798,6 +808,13 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 
 	if !reflect.DeepEqual(planCloudProvider, stateCloudProvider) {
 		return errors.ErrUnableToUpdateCloudProvider
+	}
+
+	// express_scaling is create-only on this resource. An omitted value plans as the
+	// prior state, so only an explicit change in configuration lands here.
+	if !plan.ExpressScaling.IsNull() && !plan.ExpressScaling.IsUnknown() &&
+		plan.ExpressScaling.ValueBool() != state.ExpressScaling.ValueBool() {
+		return errors.ErrUnableToUpdateExpressScaling
 	}
 
 	return nil
