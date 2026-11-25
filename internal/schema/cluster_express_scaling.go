@@ -8,18 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// The express scaling endpoint is not in the published API reference yet, so these
-// descriptions are used until the spec lookup finds one.
-const (
-	ClusterExpressScalingResourceDescription = "Manages express scaling on an existing Couchbase Capella cluster. Express scaling requires the Enterprise support plan. " +
-		"Enabling or disabling it starts a rebalance that can run for many hours on large clusters, so create and update wait for the change to finish, " +
-		"up to the configured timeouts. If a timeout is reached, the change carries on in Capella and the resource is saved with a warning. " +
-		"Destroying this resource only removes it from the Terraform state and leaves express scaling on the cluster unchanged. " +
-		"If the same configuration also manages the cluster with `couchbase-capella_cluster`, remove `express_scaling` from that resource, or list it in its `lifecycle.ignore_changes`. " +
-		"Otherwise, once this resource changes the setting, the value on the cluster resource no longer matches and every later apply of the cluster fails."
-	ClusterExpressScalingDescription = "\n - Whether express scaling is enabled on the cluster. Set to `true` to enable it and `false` to disable it. " +
-		"Reads as `true` while express scaling is being enabled, and `false` while it is being disabled."
-)
+// ClusterExpressScalingResourceDescription is the description of the resource itself. The
+// attribute descriptions come from the OpenAPI spec.
+const ClusterExpressScalingResourceDescription = "Manages express scaling on an existing Couchbase Capella cluster. Express scaling requires the Enterprise support plan. " +
+	"Enabling or disabling it starts a rebalance that can run for many hours on large clusters, so create and update wait for the change to finish, " +
+	"up to the configured timeouts. If a timeout is reached, the change carries on in Capella and the resource is saved with a warning. " +
+	"Destroying this resource only removes it from the Terraform state and leaves express scaling on the cluster unchanged. " +
+	"If the same configuration also manages the cluster with `couchbase-capella_cluster`, remove `express_scaling` from that resource, or list it in its `lifecycle.ignore_changes`. " +
+	"Otherwise, once this resource changes the setting, the value on the cluster resource no longer matches and every later apply of the cluster fails."
 
 // ClusterExpressScaling manages the express scaling setting of a cluster.
 type ClusterExpressScaling struct {
