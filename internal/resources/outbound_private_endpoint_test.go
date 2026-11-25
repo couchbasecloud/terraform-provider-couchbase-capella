@@ -71,7 +71,7 @@ type fakeOutboundPrivateEndpoints struct {
 	createStatus        string
 	createFailureReason string
 
-	// busy answers this many requests with 409 16018 before handling one.
+	// busy answers this many requests with 409 16017 before handling one.
 	busy int
 
 	creates, renames, deletes int
@@ -535,7 +535,7 @@ func TestOutboundPrivateEndpointExecuteRetryingConflicts(t *testing.T) {
 	}{
 		{name: "busy then accepted", answers: []int{http.StatusConflict, http.StatusConflict, http.StatusAccepted}, code: outboundpe.ErrCodeOperationInProgress, wantCalls: 3},
 		{name: "endpoint busy then accepted", answers: []int{http.StatusConflict, http.StatusAccepted}, code: outboundpe.ErrCodeBusy, wantCalls: 2},
-		{name: "already connected is not retried", answers: []int{http.StatusConflict, http.StatusAccepted}, code: 16009, wantCalls: 1, wantErr: true},
+		{name: "already connected is not retried", answers: []int{http.StatusConflict, http.StatusAccepted}, code: 16008, wantCalls: 1, wantErr: true},
 		{name: "busy on every attempt gives up", answers: []int{http.StatusConflict}, code: outboundpe.ErrCodeOperationInProgress, wantCalls: 5, wantErr: true},
 	}
 	for _, tt := range tests {

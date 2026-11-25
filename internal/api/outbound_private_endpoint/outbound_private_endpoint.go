@@ -22,11 +22,11 @@ const FailureReasonDeleteFailed = "deleteFailed"
 // or the cluster is busy. Both are worth retrying.
 const (
 	// ErrCodeBusy is returned when updating an endpoint that is pending or deleting.
-	ErrCodeBusy = 16017
+	ErrCodeBusy = 16016
 
 	// ErrCodeOperationInProgress is returned when another change to the cluster's
 	// outbound private endpoints holds the cluster.
-	ErrCodeOperationInProgress = 16018
+	ErrCodeOperationInProgress = 16017
 )
 
 // CreateOutboundPrivateEndpointRequest is the body of a create.
