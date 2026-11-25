@@ -263,8 +263,9 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		return ""
 	}
 
-	// Convert snake_case to camelCase for schema property lookup
+	// Spec properties are camelCase, or kebab-case in a few schemas such as CloudAccounts.
 	camelFieldName := snakeToCamel(tfFieldName)
+	kebabFieldName := strings.ReplaceAll(tfFieldName, "_", "-")
 
 	// Capitalize resource name for schema patterns
 	capitalizedResource := capitalize(resourceName)
@@ -289,6 +290,10 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 
 		// Retrieve the property description from the schema
 		if prop := getPropertyFromSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
+			return buildEnhancedDescription(prop, openAPIDoc)
+		}
+
+		if prop := getPropertyFromSchema(schemaRef.Value, kebabFieldName, make(map[string]bool)); prop != nil {
 			return buildEnhancedDescription(prop, openAPIDoc)
 		}
 	}
