@@ -350,7 +350,7 @@ func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Conte
 					return nil
 				}
 			default:
-				return err
+				return api.PollError(ctx, err, fmt.Errorf("app endpoint activation status transition timed out after initiation, unexpected error: %w", err))
 			}
 			timer.Reset(sleep)
 		}
