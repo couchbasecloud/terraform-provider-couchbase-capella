@@ -69,15 +69,16 @@ func TestAccOutboundPrivateEndpointResource(t *testing.T) {
 					testAccOutboundPrivateEndpointRecordId(resourceReference, &createdId),
 				),
 			},
-			// ImportState. status and the addresses move on their own once the service accepts the
-			// connection, so they aren't compared.
+			// ImportState. The service can accept the connection between create and import, which
+			// moves the status, the addresses and private DNS, and may write the record's modified
+			// audit fields, so those aren't compared. The steps' checks cover them.
 			{
 				ResourceName:                         resourceReference,
 				ImportStateIdFunc:                    generateOutboundPrivateEndpointImportIdForResource(resourceReference),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "id",
-				ImportStateVerifyIgnore:              []string{"status", "provider_status", "ip_addresses", "provider_config"},
+				ImportStateVerifyIgnore:              outboundPrivateEndpointImportVerifyIgnore,
 			},
 			// Update. A rename keeps the endpoint, so every other field is unchanged.
 			{
@@ -118,7 +119,12 @@ func TestAccOutboundPrivateEndpointResourceCustomHostname(t *testing.T) {
 					testAccOutboundPrivateEndpointCommonChecks(resourceReference, env, name),
 					resource.TestCheckResourceAttr(resourceReference, "hostname", hostname),
 					resource.TestCheckResourceAttr(resourceReference, "is_custom_hostname", "true"),
-					resource.TestCheckResourceAttr(resourceReference, "private_dns_enabled", "true"),
+					// A service that accepts each connection itself leaves create at pendingAcceptance,
+					// and AWS only turns private DNS on once the endpoint is available.
+					testAccOutboundPrivateEndpointByStatus(resourceReference,
+						resource.TestCheckResourceAttr(resourceReference, "private_dns_enabled", "false"),
+						resource.TestCheckResourceAttr(resourceReference, "private_dns_enabled", "true"),
+					),
 				),
 			},
 			{
@@ -127,7 +133,7 @@ func TestAccOutboundPrivateEndpointResourceCustomHostname(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "id",
-				ImportStateVerifyIgnore:              []string{"status", "provider_status", "ip_addresses", "provider_config"},
+				ImportStateVerifyIgnore:              outboundPrivateEndpointImportVerifyIgnore,
 			},
 		},
 	})
@@ -189,8 +195,8 @@ func TestAccOutboundPrivateEndpointInvalidHostname(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOutboundPrivateEndpointResourceConfig(resourceName, env, "tf-acc-outbound-pe", strings.Repeat("a", 255)),
-				ExpectError: regexp.MustCompile(`(?s)hostname.*string length must be between 1 and 254`),
+				Config:      testAccOutboundPrivateEndpointResourceConfig(resourceName, env, "tf-acc-outbound-pe", strings.Repeat("a", 254)),
+				ExpectError: regexp.MustCompile(`(?s)hostname.*string length must be between 1 and 253`),
 			},
 		},
 	})
@@ -218,7 +224,54 @@ func testAccOutboundPrivateEndpointCommonChecks(resourceReference string, env ou
 		resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
 		resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_by"),
 		resource.TestCheckResourceAttrSet(resourceReference, "audit.version"),
+		testAccOutboundPrivateEndpointAWSChecks(resourceReference),
 	)
+}
+
+// outboundPrivateEndpointImportVerifyIgnore are the fields that can change between create and
+// import without Terraform doing anything: the service accepting the connection moves them.
+var outboundPrivateEndpointImportVerifyIgnore = []string{
+	"status", "provider_status", "ip_addresses", "provider_config", "private_dns_enabled",
+	"audit.modified_at", "audit.modified_by", "audit.version",
+}
+
+var (
+	outboundPrivateEndpointIPv4 = regexp.MustCompile(`^\d{1,3}(\.\d{1,3}){3}$`)
+	awsAvailabilityZone         = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d[a-z]$`)
+)
+
+// testAccOutboundPrivateEndpointAWSChecks asserts the AWS details. The zones are known from
+// create, while the endpoint's addresses, its provider status and its regional DNS name come once
+// the service has accepted the connection, so they're only required when the endpoint is linked.
+func testAccOutboundPrivateEndpointAWSChecks(resourceReference string) resource.TestCheckFunc {
+	return resource.ComposeAggregateTestCheckFunc(
+		resource.TestMatchResourceAttr(resourceReference, "provider_config.aws.availability_zones.0", awsAvailabilityZone),
+		testAccOutboundPrivateEndpointByStatus(resourceReference,
+			resource.ComposeAggregateTestCheckFunc(),
+			resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "provider_status", "available"),
+				resource.TestMatchResourceAttr(resourceReference, "provider_config.aws.regional_dns_name", regexp.MustCompile(`\.vpce\.amazonaws\.com$`)),
+				resource.TestMatchResourceAttr(resourceReference, "ip_addresses.0", outboundPrivateEndpointIPv4),
+				resource.TestMatchResourceAttr(resourceReference, "provider_config.aws.ip_addresses.0.ip_address", outboundPrivateEndpointIPv4),
+				resource.TestMatchResourceAttr(resourceReference, "provider_config.aws.ip_addresses.0.availability_zone", awsAvailabilityZone),
+			),
+		),
+	)
+}
+
+// testAccOutboundPrivateEndpointByStatus runs linked once the service has accepted the connection,
+// and pending before then.
+func testAccOutboundPrivateEndpointByStatus(resourceReference string, pending, linked resource.TestCheckFunc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceReference]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", resourceReference)
+		}
+		if rs.Primary.Attributes["status"] == "linked" {
+			return linked(s)
+		}
+		return pending(s)
+	}
 }
 
 // testAccOutboundPrivateEndpointAssignedHostnameChecks asserts an endpoint created without a
