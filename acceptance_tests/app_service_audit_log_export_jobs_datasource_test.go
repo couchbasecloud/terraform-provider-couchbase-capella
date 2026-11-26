@@ -8,11 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TestAccDatasourceAppServiceAuditLogExportJobsRegistered reads the export jobs list of the shared App Service.
-// It fails with "Invalid data source" until the data source is registered in the provider (AV-153097).
+// TestAccDatasourceAppServiceAuditLogExportJobsRegistered reads the export jobs list of the shared App Service. It
+// guards that the data source stays registered in the provider: it was missing, failing with "Invalid data source"
+// (AV-153097).
 func TestAccDatasourceAppServiceAuditLogExportJobsRegistered(t *testing.T) {
-	t.Skip("AV-153097: app_service_audit_log_export_jobs is not registered; unskip once it is added to DataSources")
-
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{{
@@ -31,11 +30,8 @@ data "couchbase-capella_app_service_audit_log_export_jobs" "x" {
 
 // TestAccDatasourceAppServiceAuditLogExportJobs creates an export job, then lists the App Service's export jobs
 // filtered by its ID and by an ID that does not exist. Right after create the API can return the job without a
-// status, so status is checked in a second step, after the job has run. It fails with "Invalid data source" until
-// AV-153097 is fixed.
+// status, so status is checked in a second step, after the job has run.
 func TestAccDatasourceAppServiceAuditLogExportJobs(t *testing.T) {
-	t.Skip("AV-153097: app_service_audit_log_export_jobs is not registered; unskip once it is added to DataSources")
-
 	name := randomStringWithPrefix("tf_acc_as_audit_export_")
 	resourceReference := "couchbase-capella_app_service_audit_log_export_job." + name
 	matching := "data.couchbase-capella_app_service_audit_log_export_jobs.matching_" + name

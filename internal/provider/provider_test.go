@@ -91,8 +91,6 @@ func TestCapellaProvider_DataSources(t *testing.T) {
 // docs/data-sources but is missing from DataSources, which makes Terraform reject it with
 // "does not support data source" although it is published in the Registry.
 func TestCapellaProvider_DocumentedDataSourcesAreRegistered(t *testing.T) {
-	t.Skip("AV-153097: app_service_audit_log_export_jobs is documented but not registered; unskip once it is added to DataSources")
-
 	p := &capellaProvider{name: providerName}
 	ctx := context.Background()
 

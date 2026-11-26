@@ -48,11 +48,9 @@ func capellaProviderFactories() map[string]func() (tfprotov6.ProviderServer, err
 }
 
 // TestAppServiceAuditLogStreamingCredentialsMatchOutputType checks that credentials for a different output_type are
-// rejected at plan time with the same error as couchbase-capella_app_service_log_streaming. Today the resource has no
-// ValidateConfig, so the plan passes and the mismatch only fails at apply (AV-153198).
+// rejected at plan time with the same error as couchbase-capella_app_service_log_streaming. Before AV-153198 the
+// resource had no ValidateConfig, so the plan passed and the mismatch only failed at apply.
 func TestAppServiceAuditLogStreamingCredentialsMatchOutputType(t *testing.T) {
-	t.Skip("AV-153198: credentials for another output_type pass the plan; unskip once ValidateConfig rejects them")
-
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: capellaProviderFactories(),
 		Steps: []resource.TestStep{{
