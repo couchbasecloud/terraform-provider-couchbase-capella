@@ -21,8 +21,13 @@ func TestAccAppEndpoint(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
+			// An unsupported import_partitions value must be rejected at plan time, before any API call.
 			{
-				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true),
+				Config:      testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true, 20),
+				ExpectError: re.MustCompile(`(?s)import_partitions.*value must be one of`),
+			},
+			{
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true, 32),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -33,20 +38,34 @@ func TestAccAppEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "syncFnXattr"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "32"),
 				),
 			},
 			{
-				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "new_xattr", false),
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "new_xattr", false, 64),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "new_xattr"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "64"),
 				),
 			},
 			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateAppEndpointImportId(resourceReference),
-				ImportState:       true,
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPCollectionName, "syncFnXattr", true, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "syncFnXattr"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "64"),
+				),
+			},
+			{
+				ResourceName:                         resourceReference,
+				ImportStateIdFunc:                    generateAppEndpointImportId(resourceReference),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIgnore:              []string{"state"},
 			},
 		},
 	})
@@ -97,7 +116,13 @@ func TestAccAppEndpointInexistentCollection(t *testing.T) {
 	})
 }
 
-func testAccAppEndpointResourceConfig(resourceName, endpointName, collectionName, userXattr string, deltaSync bool) string {
+// testAccAppEndpointResourceConfig leaves import_partitions out of the config when importPartitions is 0.
+func testAccAppEndpointResourceConfig(resourceName, endpointName, collectionName, userXattr string, deltaSync bool, importPartitions int) string {
+	partitions := ""
+	if importPartitions != 0 {
+		partitions = fmt.Sprintf("import_partitions  = %d", importPartitions)
+	}
+
 	return fmt.Sprintf(`
 %[1]s
 
@@ -110,6 +135,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	name               = "%[8]s"
 	user_xattr_key     = "%[9]s"
 	delta_sync_enabled = %[10]t
+	%[11]s
 	cors = {
 		origin = ["*"]
 	}
@@ -139,6 +165,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		endpointName,
 		userXattr,
 		deltaSync,
+		partitions,
 	)
 }
 
@@ -164,6 +191,7 @@ func TestAccAppEndpointNoCors(t *testing.T) {
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckNoResourceAttr(resourceReference, "cors"),
+					resource.TestCheckResourceAttr(resourceReference, "import_partitions", "16"),
 				),
 			},
 			// Re-apply the same config; expect no changes (no perpetual drift).

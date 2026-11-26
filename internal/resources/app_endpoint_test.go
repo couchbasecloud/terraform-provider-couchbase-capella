@@ -2,8 +2,11 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"testing"
 
+	"github.com/couchbase/tools-common/types/ptr"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -224,4 +227,35 @@ func requireNoDiags(t *testing.T, diags diag.Diagnostics) {
 	t.Helper()
 
 	require.Falsef(t, diags.HasError(), "unexpected diagnostics: %v", diags.Errors())
+}
+
+func Test_morphToAppEndpointRequestImportPartitions(t *testing.T) {
+	type test struct {
+		name             string
+		importPartitions types.Int64
+		expected         *int64
+	}
+
+	tests := []test{
+		{name: "set value is sent", importPartitions: types.Int64Value(64), expected: ptr.To[int64](64)},
+		{name: "null is omitted", importPartitions: types.Int64Null()},
+		{name: "unknown is omitted", importPartitions: types.Int64Unknown()},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			plan := &providerschema.AppEndpoint{
+				Scopes:           types.MapNull(types.ObjectType{}),
+				ImportPartitions: tc.importPartitions,
+			}
+
+			req, diags := morphToAppEndpointRequest(context.Background(), plan)
+			require.False(t, diags.HasError())
+			assert.Equal(t, tc.expected, req.ImportPartitions)
+
+			body, err := json.Marshal(req)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected != nil, strings.Contains(string(body), `"importPartitions"`))
+		})
+	}
 }

@@ -142,6 +142,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 	state.Bucket = types.StringValue(appEndpoint.Bucket)
 	state.Name = types.StringValue(appEndpoint.Name)
 	state.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
+	state.ImportPartitions = types.Int64Value(appEndpoint.ImportPartitions)
 	state.UserXattrKey = types.StringValue(appEndpoint.UserXattrKey)
 
 	if len(appEndpoint.Scopes) > 0 {
