@@ -119,25 +119,28 @@ func TestAccClusterAlertConfigurationBasicPlan(t *testing.T) {
 					testAccCheckNoResourceInState(alertReference),
 				),
 			},
-			// Configuring alerts on a Basic cluster is rejected, for each attribute on its own.
+			// Configuring alerts on a Basic cluster is rejected, for each attribute on its own. Each
+			// uses a value Capella does not already hold: the provider sends only differences, and
+			// once AV-153495 is fixed destroy leaves the earlier values in place, so reusing them
+			// would send nothing and never reach the plan check.
 			{
 				Config: testAccBasicPlanAlertConfig(clusterName, cidr, "basic", alertName, `
   configs = {
     cpu_usage_high = {
-      warning_threshold = 80
+      warning_threshold = 85
     }
   }`),
 				ExpectError: basicPlanError,
 			},
 			{
 				Config: testAccBasicPlanAlertConfig(clusterName, cidr, "basic", alertName, `
-  recipients = ["`+recipient1+`"]`),
+  recipients = ["`+recipient2+`"]`),
 				ExpectError: basicPlanError,
 			},
 			{
 				Config: testAccBasicPlanAlertConfig(clusterName, cidr, "basic", alertName, `
   muted_alerts = {
-    disk_usage_high = {
+    cb_high_disk_write_queue = {
       action      = "mute"
       muted_until = "`+mutedUntil+`"
     }
@@ -159,7 +162,7 @@ func TestAccClusterAlertConfigurationBasicPlan(t *testing.T) {
 				Config: testAccBasicPlanClusterConfig(clusterName, cidr, "basic"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNoResourceInState(alertReference),
-					testAccCheckBasicClusterHasNoAlertOverrides(clusterReference),
+					testAccCheckBasicClusterRejectedCreatesStoredNothing(clusterReference, recipient2),
 				),
 			},
 		},
@@ -174,7 +177,11 @@ func deleteClusterIfPresent(t *testing.T, clusterId string) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, clusterId)
 	get := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	if _, err := globalClient.ExecuteWithRetry(context.Background(), get, nil, globalToken, nil); err != nil {
-		return // already deleted
+		if notFound, _ := api.CheckResourceNotFoundError(err); notFound {
+			return // already deleted
+		}
+		// Anything else does not prove the cluster is gone, so still try to delete it.
+		t.Logf("could not check whether cluster %s still exists: %v", clusterId, err)
 	}
 	t.Logf("deleting cluster %s, which destroy left behind", clusterId)
 	del := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
@@ -204,10 +211,10 @@ func testAccCheckNoResourceInState(reference string) resource.TestCheckFunc {
 	}
 }
 
-// testAccCheckBasicClusterHasNoAlertOverrides checks that the rejected creates did not store
-// recipients or mutes at the cluster. Thresholds set before the downgrade cannot be removed, so
-// configs are not checked.
-func testAccCheckBasicClusterHasNoAlertOverrides(clusterReference string) resource.TestCheckFunc {
+// testAccCheckBasicClusterRejectedCreatesStoredNothing checks that none of the values the
+// rejected creates tried to set reached the cluster. Values from before the downgrade may remain,
+// so only the attempted ones are checked.
+func testAccCheckBasicClusterRejectedCreatesStoredNothing(clusterReference, rejectedRecipient string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributes, err := datasourceAttributes(s, clusterReference)
 		if err != nil {
@@ -218,7 +225,20 @@ func testAccCheckBasicClusterHasNoAlertOverrides(clusterReference string) resour
 		if err != nil {
 			return err
 		}
-		return firstAlertError(expectAlertRecipients(config), expectAlertMutes(config, map[string]string{}))
+		if entry, ok := config.Configs["cpu_usage_high"]; ok && entry.WarningThreshold != nil && *entry.WarningThreshold == 85 {
+			return fmt.Errorf("a rejected create stored cpu_usage_high warning_threshold 85")
+		}
+		for _, address := range config.Recipients {
+			if strings.EqualFold(address, rejectedRecipient) {
+				return fmt.Errorf("a rejected create stored recipient %s", rejectedRecipient)
+			}
+		}
+		for _, name := range []string{"cb_high_disk_write_queue", "cpu_usage_high"} {
+			if mute, ok := config.MutedAlerts[name]; ok && mute.Action == "mute" {
+				return fmt.Errorf("a rejected create stored a mute of %s", name)
+			}
+		}
+		return nil
 	}
 }
 

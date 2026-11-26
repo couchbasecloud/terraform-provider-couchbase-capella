@@ -646,6 +646,7 @@ data "couchbase-capella_alerts" "%[2]s" {
 						"status":     {"firing", "resolved"},
 						"severity":   {"warning", "critical"},
 					}),
+					testAccCheckListedAlertsInClusterAndWindow(datasourceReference, globalClusterId, from, to),
 				),
 			},
 		},
@@ -882,6 +883,38 @@ func testAccCheckEveryListedAlert(datasourceReference string, allowed map[string
 	}
 }
 
+// testAccCheckListedAlertsInClusterAndWindow checks the filters testAccCheckEveryListedAlert
+// cannot: a cluster-scoped alert belongs to clusterId, and every alert's event time is inside
+// [from, to]. An empty list passes, because alerts cannot be raised on demand from Terraform.
+func testAccCheckListedAlertsInClusterAndWindow(datasourceReference, clusterId, from, to string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributes, err := datasourceAttributes(s, datasourceReference)
+		if err != nil {
+			return err
+		}
+		start, err1 := time.Parse(time.RFC3339, from)
+		end, err2 := time.Parse(time.RFC3339, to)
+		if err1 != nil || err2 != nil {
+			return fmt.Errorf("could not parse the window %s to %s", from, to)
+		}
+		var count int
+		if _, err := fmt.Sscan(attributes["data.#"], &count); err != nil {
+			return fmt.Errorf("could not read data.#: %w", err)
+		}
+		for i := 0; i < count; i++ {
+			get := func(field string) string { return attributes[fmt.Sprintf("data.%d.%s", i, field)] }
+			if get("resource_type") == "cluster" && get("resource_id") != clusterId {
+				return fmt.Errorf("alert %s is on cluster %s, which the cluster_ids filter excludes", get("alert_id"), get("resource_id"))
+			}
+			eventTime, err := time.Parse(time.RFC3339Nano, get("event_time"))
+			if err != nil || eventTime.Before(start) || eventTime.After(end) {
+				return fmt.Errorf("alert %s has event_time %q, outside the window %s to %s", get("alert_id"), get("event_time"), from, to)
+			}
+		}
+		return nil
+	}
+}
+
 func datasourceAttributes(s *terraform.State, reference string) (map[string]string, error) {
 	for _, m := range s.Modules {
 		if v, ok := m.Resources[reference]; ok {
@@ -1044,6 +1077,8 @@ func restoreAlertConfigurationAfterTest(t *testing.T, level string) {
 			return
 		}
 
+		// Configs and recipients, and mutes, are restored in separate requests, so that Capella
+		// rejecting one cannot leave the other changed.
 		var update alertsapi.UpdateAlertConfigurationRequest
 		for name, was := range before.Configs {
 			if sameAlertConfigs(map[string]alertsapi.AlertConfigurationEntry{name: was}, map[string]alertsapi.AlertConfigurationEntry{name: now.Configs[name]}) == nil {
@@ -1063,27 +1098,45 @@ func restoreAlertConfigurationAfterTest(t *testing.T, level string) {
 			recipients := append([]string{}, before.Recipients...)
 			update.Recipients = &recipients
 		}
+		if update.Recipients != nil || len(update.Configs) > 0 {
+			if err := putAlertConfigurationForTest(level, update); err != nil {
+				t.Errorf("could not restore the configs and recipients at %s to their state before the test: %v", level, err)
+			}
+		}
+
+		// A mute whose window has ended since the snapshot cannot be sent again (Capella refuses a
+		// past muted_until) and silences nothing, so it is cleared rather than restored.
+		var mutes alertsapi.UpdateAlertConfigurationRequest
 		for _, name := range sortedAlertNames(now.MutedAlerts) {
-			if _, ok := before.MutedAlerts[name]; !ok {
-				update.Alerts = append(update.Alerts, alertsapi.AlertMuteAction{AlertName: name, Action: alertsapi.AlertMuteActionClear})
+			was, existed := before.MutedAlerts[name]
+			if !existed || (alertMuteExpired(was) && !sameAlertMute(was, now.MutedAlerts[name])) {
+				mutes.Alerts = append(mutes.Alerts, alertsapi.AlertMuteAction{AlertName: name, Action: alertsapi.AlertMuteActionClear})
 			}
 		}
 		for _, name := range sortedAlertNames(before.MutedAlerts) {
 			mute := before.MutedAlerts[name]
-			if current, ok := now.MutedAlerts[name]; ok && sameAlertMute(mute, current) {
+			if current, ok := now.MutedAlerts[name]; (ok && sameAlertMute(mute, current)) || alertMuteExpired(mute) {
 				continue
 			}
-			update.Alerts = append(update.Alerts, alertsapi.AlertMuteAction{
+			mutes.Alerts = append(mutes.Alerts, alertsapi.AlertMuteAction{
 				AlertName: name, Action: mute.Action, MutedFrom: mute.MutedFrom, MutedUntil: mute.MutedUntil,
 			})
 		}
-		if update.Recipients == nil && len(update.Alerts) == 0 && len(update.Configs) == 0 {
-			return
-		}
-		if err := putAlertConfigurationForTest(level, update); err != nil {
-			t.Errorf("could not restore the alert configuration at %s to its state before the test: %v", level, err)
+		if len(mutes.Alerts) > 0 {
+			if err := putAlertConfigurationForTest(level, mutes); err != nil {
+				t.Errorf("could not restore the mutes at %s to their state before the test: %v", level, err)
+			}
 		}
 	})
+}
+
+// alertMuteExpired reports whether a mute's window has already ended.
+func alertMuteExpired(mute alertsapi.AlertMuteState) bool {
+	if mute.MutedUntil == nil {
+		return false
+	}
+	until, err := time.Parse(time.RFC3339Nano, *mute.MutedUntil)
+	return err == nil && !until.After(time.Now())
 }
 
 // roundAlertThreshold converts a threshold read from Capella to the whole number it accepts.

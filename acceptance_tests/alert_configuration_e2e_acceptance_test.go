@@ -33,6 +33,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -122,6 +123,53 @@ func runAlertConfigurationE2ESubtests(t *testing.T, clusterLevel, projectLevel, 
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 			Steps:                    alertConfigurationApiValidationSteps(clusterLevel, projectLevel, orgLevel),
+		})
+	})
+
+	// A resource with only its IDs manages nothing: create sends nothing, state holds no
+	// settings, and destroy clears nothing, at every level.
+	t.Run("Ids Only Manages Nothing", func(t *testing.T) {
+		restoreAlertConfigurationAfterTest(t, clusterLevel)
+		restoreAlertConfigurationAfterTest(t, projectLevel)
+		restoreAlertConfigurationAfterTest(t, orgLevel)
+		resourceName := randomStringWithPrefix("tf_acc_alert_ids_only_")
+		var clusterBefore, projectBefore, orgBefore *alertsapi.GetAlertConfigurationResponse
+		unchanged := resource.ComposeAggregateTestCheckFunc(
+			testAccCheckAlertConfigurationUnchanged(clusterLevel, &clusterBefore),
+			testAccCheckAlertConfigurationUnchanged(projectLevel, &projectBefore),
+			testAccCheckAlertConfigurationUnchanged(orgLevel, &orgBefore),
+		)
+		config := globalProviderBlock
+		var checks []resource.TestCheckFunc
+		for _, level := range []string{"organization", "project", "cluster"} {
+			config += fmt.Sprintf("\nresource \"couchbase-capella_%s_alert_configuration\" %q {\n%s}\n",
+				level, resourceName, alertRBACIds(level, globalProjectId, globalClusterId))
+			reference := "couchbase-capella_" + level + "_alert_configuration." + resourceName
+			checks = append(checks,
+				resource.TestCheckNoResourceAttr(reference, "configs.%"),
+				resource.TestCheckNoResourceAttr(reference, "recipients.#"),
+				resource.TestCheckNoResourceAttr(reference, "muted_alerts.%"),
+			)
+		}
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			CheckDestroy:             unchanged,
+			Steps: []resource.TestStep{{
+				PreConfig: func() {
+					var err error
+					if clusterBefore, err = getAlertConfigurationForTest(clusterLevel); err != nil {
+						t.Fatal(err)
+					}
+					if projectBefore, err = getAlertConfigurationForTest(projectLevel); err != nil {
+						t.Fatal(err)
+					}
+					if orgBefore, err = getAlertConfigurationForTest(orgLevel); err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: config,
+				Check:  resource.ComposeAggregateTestCheckFunc(append(checks, unchanged)...),
+			}},
 		})
 	})
 
@@ -467,7 +515,7 @@ func alertConfigurationMuteLifecycleSteps(clusterLevel string) []resource.TestSt
 	resourceName := randomStringWithPrefix("tf_acc_alert_mutes_")
 	resourceReference := "couchbase-capella_cluster_alert_configuration." + resourceName
 	const kind = "cb_high_disk_throughput_usage"
-	testStart := alertMuteTime(-2 * time.Minute)
+	var beforeRemute time.Time
 
 	scheduledFrom := alertMuteTime(time.Hour)
 	scheduledUntil := alertMuteTime(24 * time.Hour)
@@ -545,12 +593,13 @@ func alertConfigurationMuteLifecycleSteps(clusterLevel string) []resource.TestSt
 		// MUT-08: muting again with a longer window replaces the window. AUD-01, AUD-04: the
 		// change through the v4 API appears in the cluster's Activity Log.
 		{
-			Config: muteConfig(only(timed(scheduledFrom, longerUntil))) + alertActivityLogDatasource(resourceName, testStart),
+			PreConfig: func() { beforeRemute = time.Now().UTC().Add(-5 * time.Second) },
+			Config:    muteConfig(only(timed(scheduledFrom, longerUntil))),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				onServer(func(m map[string]alertsapi.AlertMuteState) error {
 					return expectAlertMute(m, kind, "mute", scheduledFrom, longerUntil)
 				}),
-				testAccCheckAlertConfigurationActivityLogged("data.couchbase-capella_events."+resourceName),
+				testAccCheckAlertConfigurationActivityLoggedSince(globalClusterId, &beforeRemute),
 			),
 		},
 		// DIS-22: a timed mute turned into a disable (a mute with no end); DIS-23, MUT-30: the
@@ -1482,45 +1531,82 @@ resource "couchbase-capella_cluster_alert_configuration" "%[1]s" {
 `, name, globalOrgId, globalProjectId, clusterName, body)
 	}
 	refused := regexp.MustCompile("(?i)" + wrapTolerantPattern(basicPlanAlertConfigurationMessage))
+	var freeTierId string
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		// The organization has one free tier slot, so confirm with Capella that it was freed.
+		CheckDestroy: func(_ *terraform.State) error {
+			if freeTierId == "" {
+				return nil
+			}
+			endpoint := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", globalHost, globalOrgId, globalProjectId, freeTierId)
+			cfg := api.EndpointCfg{Url: endpoint, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+			_, err := globalClient.ExecuteWithRetry(context.Background(), cfg, nil, globalToken, nil)
+			if err == nil {
+				return fmt.Errorf("free tier cluster %s still exists after destroy", freeTierId)
+			}
+			if notFound, message := api.CheckResourceNotFoundError(err); !notFound {
+				return fmt.Errorf("could not confirm free tier cluster %s was deleted: %s", freeTierId, message)
+			}
+			return nil
+		},
 		Steps: []resource.TestStep{
-			{Config: cluster},
+			{
+				Config: cluster,
+				Check: func(s *terraform.State) error {
+					attributes, err := datasourceAttributes(s, "couchbase-capella_free_tier_cluster."+clusterName)
+					if err == nil {
+						freeTierId = attributes["id"]
+					}
+					return err
+				},
+			},
 			{Config: alerts("  configs = { cpu_usage_high = { warning_threshold = 85 } }"), ExpectError: refused},
 			{Config: alerts(`  muted_alerts = { cpu_usage_high = { action = "mute" } }`), ExpectError: refused},
 		},
 	})
 }
 
-// alertActivityLogDatasource reads the shared cluster's Activity Log since the test began.
-func alertActivityLogDatasource(name, from string) string {
-	return fmt.Sprintf(`
-data "couchbase-capella_events" %q {
-  organization_id = %q
-  cluster_ids     = [%q]
-  from            = %q
-  depends_on      = [couchbase-capella_cluster_alert_configuration.%s]
-}
-`, name, globalOrgId, globalClusterId, from, name)
-}
-
 // alertActivityLogEvent matches the key or summary of an Activity Log entry for a change to
 // alert configuration. The event key is not documented; this is the plan's AUD-01 wording.
 var alertActivityLogEvent = regexp.MustCompile(`(?i)(mute|alert[ _-]?config)`)
 
-func testAccCheckAlertConfigurationActivityLogged(reference string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		attributes, err := datasourceAttributes(s, reference)
-		if err != nil {
-			return err
-		}
-		for key, value := range attributes {
-			if (strings.HasSuffix(key, ".key") || strings.HasSuffix(key, ".summary")) && alertActivityLogEvent.MatchString(value) {
-				return nil
+// testAccCheckAlertConfigurationActivityLoggedSince requires an alert configuration entry in the
+// cluster's Activity Log emitted after *since, so that an earlier entry cannot satisfy it. The
+// PRD's target is one second; this polls for up to a minute.
+func testAccCheckAlertConfigurationActivityLoggedSince(clusterId string, since *time.Time) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		query := url.Values{}
+		query.Set("clusterIds", clusterId)
+		query.Set("from", since.Format(time.RFC3339))
+		query.Set("perPage", "100")
+		endpoint := fmt.Sprintf("%s/v4/organizations/%s/events?%s", globalHost, globalOrgId, query.Encode())
+		cfg := api.EndpointCfg{Url: endpoint, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		deadline := time.Now().Add(time.Minute)
+		for {
+			response, err := globalClient.ExecuteWithRetry(context.Background(), cfg, nil, globalToken, nil)
+			if err != nil {
+				return fmt.Errorf("could not read the cluster's Activity Log: %w", err)
 			}
+			var events api.GetEventsResponse
+			if err := json.Unmarshal(response.Body, &events); err != nil {
+				return fmt.Errorf("could not read the cluster's Activity Log: %w", err)
+			}
+			for _, event := range events.Data {
+				summary := ""
+				if event.Summary != nil {
+					summary = *event.Summary
+				}
+				if event.Timestamp.After(*since) && (alertActivityLogEvent.MatchString(event.Key) || alertActivityLogEvent.MatchString(summary)) {
+					return nil
+				}
+			}
+			if time.Now().After(deadline) {
+				return fmt.Errorf("no alert configuration entry in the cluster's Activity Log since %s", since.Format(time.RFC3339))
+			}
+			time.Sleep(5 * time.Second)
 		}
-		return fmt.Errorf("the cluster's Activity Log has no alert configuration entry since the test began")
 	}
 }
 
@@ -1540,6 +1626,11 @@ func testAccCheckAlertListContract(reference string, statuses []string) resource
 		for i := 0; i < count; i++ {
 			get := func(field string) string { return attributes[fmt.Sprintf("data.%d.%s", i, field)] }
 			id, status, kind := get("alert_id"), get("status"), get("kind")
+			for _, field := range []string{"alert_id", "event_id", "kind", "resource_id", "resource_type", "severity", "status", "starts_at", "event_time"} {
+				if get(field) == "" {
+					return fmt.Errorf("alert %d (%s) has no %s", i, id, field)
+				}
+			}
 			if seen[id] {
 				return fmt.Errorf("alert %s is listed more than once", id)
 			}
@@ -1569,7 +1660,8 @@ func testAccCheckAlertListContract(reference string, statuses []string) resource
 }
 
 // alertKindAliases maps alert-list kinds that do not normalise to a catalog identifier. Add to it
-// when a run reports a configurable alert under a new name.
+// when a run reports a configurable alert under a new name. App Service kinds, which use SGW where
+// identifiers say syncgateway (SGWCPUUsageHigh), are handled by the normalisation.
 var alertKindAliases = map[string]string{
 	"CBHighDiskUsage": "disk_usage_high",
 }
@@ -1585,6 +1677,9 @@ func alertKindConfigurable(kind string) bool {
 		name = strings.ToLower(regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(name, ""))
 		for _, severity := range []string{"warning", "critical"} {
 			name = strings.TrimSuffix(name, severity)
+		}
+		if strings.HasPrefix(name, "syncgateway") {
+			name = "sgw" + strings.TrimPrefix(name, "syncgateway")
 		}
 		return name
 	}
