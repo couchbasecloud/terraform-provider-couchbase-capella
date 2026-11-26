@@ -2444,7 +2444,11 @@ func TestAccEventingFunctionResourceActivationLifecycle(t *testing.T) {
 	})
 }
 
-// TestAccEventingFunctionResourceActivationResume (TC-AS-UP-04): resuming a paused function (state=deployed, deploy verb) ends deployed.
+// TestAccEventingFunctionResourceActivationResume (TC-AS-UP-04): resuming a paused function
+// (state=deployed, resume verb) ends deployed.
+//
+// Capella rejects the deploy verb on a paused function with 422, so the provider has to pick
+// resume for this transition - see activationTarget in internal/resources/eventing_function.go.
 func TestAccEventingFunctionResourceActivationResume(t *testing.T) {
 	funcName := randomStringWithPrefix("tf_acc_evt_resume_fn_")
 	funcReference := "couchbase-capella_eventing_function." + funcName
