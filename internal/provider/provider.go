@@ -303,6 +303,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewEventingFunction,
 		datasources.NewEventingFunctions,
 		datasources.NewDataApi,
+		datasources.NewOutboundPrivateEndpointCapacity,
 	}
 }
 
