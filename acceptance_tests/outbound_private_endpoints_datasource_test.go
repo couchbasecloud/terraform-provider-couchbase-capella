@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,16 +17,11 @@ import (
 
 // TestAccOutboundPrivateEndpointsDataSource lists the outbound private endpoints of a cluster and
 // compares them with the API's own response. The shared test cluster runs a Server version older
-// than 8.5, which outbound private endpoints need, so the test reads its own cluster: set
-// ACC_OUTBOUND_PE_PROJECT_ID and ACC_OUTBOUND_PE_CLUSTER_ID to an AWS cluster on Couchbase Server
-// 8.5 or later with the SelfManagedPrivateEndpoints flag on. The cluster may have no endpoints.
+// than 8.5, which outbound private endpoints need, so the test reads its own cluster (see
+// outboundPrivateEndpointClusterEnv). The cluster may have no endpoints.
 func TestAccOutboundPrivateEndpointsDataSource(t *testing.T) {
-	projectId := os.Getenv("ACC_OUTBOUND_PE_PROJECT_ID")
-	clusterId := os.Getenv("ACC_OUTBOUND_PE_CLUSTER_ID")
-	if projectId == "" || clusterId == "" {
-		t.Skip("skipping: set ACC_OUTBOUND_PE_PROJECT_ID and ACC_OUTBOUND_PE_CLUSTER_ID (an AWS cluster on Couchbase Server " +
-			"8.5 or later with the SelfManagedPrivateEndpoints flag on) to run this test")
-	}
+	env := outboundPrivateEndpointClusterEnv(t)
+	projectId, clusterId := env.projectId, env.clusterId
 
 	resourceName := randomStringWithPrefix("tf_acc_outbound_pes_")
 	resourceReference := "data.couchbase-capella_outbound_private_endpoints." + resourceName
@@ -111,26 +105,20 @@ func testAccCheckOutboundPrivateEndpointsMatchAPI(resourceReference, projectId, 
 // TestAccOutboundPrivateEndpointsDataSourceWithEndpoint creates an endpoint and checks the list
 // returns it with every field the resource has. It lists the cluster before, with and after the
 // endpoint, so the count goes back to where it started once the endpoint is gone: on a cluster
-// with no other endpoints, the first and last reads are the empty list. Needs
-// ACC_OUTBOUND_PE_SERVICE_NAME as well: an AWS endpoint service in the cluster's region that
-// allows Capella's AWS account.
+// with no other endpoints, the first and last reads are the empty list. See
+// outboundPrivateEndpointTestEnv for the environment.
 func TestAccOutboundPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
-	projectId := os.Getenv("ACC_OUTBOUND_PE_PROJECT_ID")
-	clusterId := os.Getenv("ACC_OUTBOUND_PE_CLUSTER_ID")
-	serviceName := os.Getenv("ACC_OUTBOUND_PE_SERVICE_NAME")
-	if projectId == "" || clusterId == "" || serviceName == "" {
-		t.Skip("skipping: set ACC_OUTBOUND_PE_PROJECT_ID, ACC_OUTBOUND_PE_CLUSTER_ID and ACC_OUTBOUND_PE_SERVICE_NAME to run this test")
-	}
+	env := outboundPrivateEndpointTestEnv(t)
 
 	dataName := randomStringWithPrefix("tf_acc_outbound_pes_")
 	dataReference := "data.couchbase-capella_outbound_private_endpoints." + dataName
 	resourceName := randomStringWithPrefix("tf_acc_outbound_pe_")
-	resourceReference := "couchbase-capella_outbound_private_endpoint." + resourceName
+	resourceReference := outboundPrivateEndpointType + "." + resourceName
 	endpointName := randomStringWithPrefix("tf-acc-outbound-pe-")
 
 	var before int
 	var createdId string
-	listOnly := testAccOutboundPrivateEndpointsDataSourceConfig(dataName, projectId, clusterId)
+	listOnly := testAccOutboundPrivateEndpointsDataSourceConfig(dataName, env.projectId, env.clusterId)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -140,22 +128,14 @@ func TestAccOutboundPrivateEndpointsDataSourceWithEndpoint(t *testing.T) {
 				Check:  testAccOutboundPrivateEndpointsCount(dataReference, &before),
 			},
 			{
-				Config: globalProviderBlock + fmt.Sprintf(`
-resource "couchbase-capella_outbound_private_endpoint" "%[1]s" {
+				Config: testAccOutboundPrivateEndpointResourceConfig(resourceName, env, endpointName, "") + fmt.Sprintf(`
+data "couchbase-capella_outbound_private_endpoints" "%[1]s" {
   organization_id = %[2]q
   project_id      = %[3]q
   cluster_id      = %[4]q
-  name            = %[5]q
-  service_name    = %[6]q
+  depends_on      = [couchbase-capella_outbound_private_endpoint.%[5]s]
 }
-
-data "couchbase-capella_outbound_private_endpoints" "%[7]s" {
-  organization_id = %[2]q
-  project_id      = %[3]q
-  cluster_id      = %[4]q
-  depends_on      = [couchbase-capella_outbound_private_endpoint.%[1]s]
-}
-`, resourceName, globalOrgId, projectId, clusterId, endpointName, serviceName, dataName),
+`, dataName, globalOrgId, env.projectId, env.clusterId, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccOutboundPrivateEndpointsCountFrom(dataReference, &before, 1),
 					testAccOutboundPrivateEndpointsListsResource(dataReference, resourceReference, &createdId),
