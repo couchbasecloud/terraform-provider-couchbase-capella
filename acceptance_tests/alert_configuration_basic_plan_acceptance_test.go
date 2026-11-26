@@ -29,7 +29,8 @@ const basicPlanAlertConfigurationMessage = "Alert configuration is available for
 //
 //  1. a cluster configured on Developer Pro and then downgraded to Basic, which is what an
 //     existing customer hits: refresh still works, a change to the configuration is rejected,
-//     and destroy still succeeds so the resource can be removed from state.
+//     and destroy still succeeds so the resource can be removed from state (skipped while
+//     AV-153495 is open; the test removes the resource on Developer Pro meanwhile).
 //  2. configuring alerts on the now-Basic cluster, with each of configs, recipients and
 //     muted_alerts on its own, in case Capella gates them separately.
 func TestAccClusterAlertConfigurationBasicPlan(t *testing.T) {
@@ -112,6 +113,25 @@ func TestAccClusterAlertConfigurationBasicPlan(t *testing.T) {
 			},
 			// Removing the resource must still succeed, or a downgraded customer could never get
 			// it out of state. Destroy clears recipients and mutes, which is itself a change.
+			{
+				SkipFunc: skipStepForBug(t, "AV-153495: destroying the alert configuration of a Basic cluster fails with a 422; unskip once destroy succeeds"),
+				Config:   testAccBasicPlanClusterConfig(clusterName, cidr, "basic"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterReference, "support.plan", "basic"),
+					testAccCheckNoResourceInState(alertReference),
+				),
+			},
+			// While AV-153495 is open, remove the resource the way a customer would have to: on a
+			// plan that allows alert configuration, then downgrade again. Once the step above runs,
+			// these recreate and remove it on Developer Pro, which is harmless.
+			{
+				Config: testAccBasicPlanAlertConfig(clusterName, cidr, "developer pro", alertName, alertBody),
+				Check:  resource.TestCheckResourceAttr(clusterReference, "support.plan", "developer pro"),
+			},
+			{
+				Config: testAccBasicPlanClusterConfig(clusterName, cidr, "developer pro"),
+				Check:  testAccCheckNoResourceInState(alertReference),
+			},
 			{
 				Config: testAccBasicPlanClusterConfig(clusterName, cidr, "basic"),
 				Check: resource.ComposeAggregateTestCheckFunc(
