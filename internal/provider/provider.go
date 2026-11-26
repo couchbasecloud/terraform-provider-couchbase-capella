@@ -262,6 +262,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAuditLogExport,
 		datasources.NewPrivateEndpointService,
 		datasources.NewPrivateEndpoints,
+		datasources.NewOutboundPrivateEndpoints,
 		datasources.NewAppServicePrivateEndpoints,
 		datasources.NewAWSPrivateEndpointCommand,
 		datasources.NewAzurePrivateEndpointCommand,
@@ -303,6 +304,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewEventingFunction,
 		datasources.NewEventingFunctions,
 		datasources.NewDataApi,
+		datasources.NewOutboundPrivateEndpointCapacity,
 	}
 }
 
