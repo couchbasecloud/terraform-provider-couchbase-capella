@@ -218,7 +218,7 @@ func TestAccReplicationResourceFilter(t *testing.T) {
 			testAccReplicationImportStep(),
 			{
 				Config:      testAccReplicationConfig(buckets, replicationInvalidFilter),
-				ExpectError: regexp.MustCompile("Error updating replication"),
+				ExpectError: regexp.MustCompile(`(?s)` + terraformDiagnosticPattern("Error updating replication") + `.*` + terraformDiagnosticPattern("Validation of filter regular expression failed")),
 			},
 			{
 				Config: testAccReplicationConfig(buckets, replicationExpressionOnlyFilter),
@@ -593,7 +593,7 @@ func TestAccReplicationResourceCreateFailure(t *testing.T) {
 			},
 			{
 				Config:      testAccReplicationConfig(buckets, replicationInvalidFilter),
-				ExpectError: regexp.MustCompile("Error creating replication"),
+				ExpectError: regexp.MustCompile(`(?s)` + terraformDiagnosticPattern("Error creating replication") + `.*` + terraformDiagnosticPattern("Validation of filter regular expression failed")),
 			},
 			{
 				Config: testAccReplicationConfig(buckets, ""),
@@ -618,18 +618,19 @@ func TestAccReplicationResourceImportNotFound(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
+				PreConfig:     testAccPreConfigWaitForReplicationClusters(t),
 				Config:        testAccReplicationPlanOnlyConfig(replicationBucketIds),
 				ResourceName:  testAccReplicationReference,
 				ImportState:   true,
 				ImportStateId: fmt.Sprintf("id=%s,cluster_id=%s,project_id=%s,organization_id=%s", missingId, globalClusterId, globalProjectId, globalOrgId),
-				ExpectError:   regexp.MustCompile(`(?i)non-existent|not\s+found`),
+				ExpectError:   regexp.MustCompile(`(?s)` + terraformDiagnosticPattern("Cannot import non-existent remote object")),
 			},
 			{
 				Config:        testAccReplicationPlanOnlyConfig(replicationBucketIds),
 				ResourceName:  testAccReplicationReference,
 				ImportState:   true,
 				ImportStateId: fmt.Sprintf("id=%s,cluster_id=%s", missingId, globalClusterId),
-				ExpectError:   regexp.MustCompile(`Error reading replication`),
+				ExpectError:   regexp.MustCompile(`(?s)` + terraformDiagnosticPattern("terraform import parameters did not match those expected for the resource")),
 			},
 		},
 	})

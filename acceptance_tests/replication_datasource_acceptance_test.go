@@ -101,6 +101,7 @@ func TestAccReplicationDataSourceNotFound(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: testAccPreConfigWaitForReplicationClusters(t),
 				Config: fmt.Sprintf(`
 %[1]s
 

@@ -71,6 +71,7 @@ func TestAccReplicationActivationStatusResource(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccReplicationReference, "priority", "low"),
 					resource.TestCheckResourceAttr(testAccReplicationForwardStatusReference, "state", "paused"),
 					testAccCheckReplicationDirectionStatus(t, false, "paused"),
+					testAccCheckReplicationDirectionStatus(t, true, "running"),
 				),
 			},
 			{
