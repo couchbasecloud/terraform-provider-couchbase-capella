@@ -1096,10 +1096,9 @@ func TestAccAlertConfigurationHierarchy(t *testing.T) {
 
 	type projectValues struct{ cpuWarning int }
 	type clusterValues struct {
-		present       bool
-		cpuFrequency  int
-		diskCritical  int
-		enableDiverge bool
+		present      bool
+		cpuFrequency int
+		diskCritical int
 	}
 
 	config := func(p projectValues, c clusterValues) string {
@@ -1250,7 +1249,7 @@ data "couchbase-capella_alert_configuration_overrides" "%[4]s" {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			func(s *terraform.State) error {
-				if _, err := datasourceAttributes(s, clusterReference); err != nil {
+				if _, ok := s.RootModule().Resources[clusterReference]; !ok {
 					return nil // the cluster was never created
 				}
 				return testAccCheckClusterDestroyed(t, clusterReference)(s)
