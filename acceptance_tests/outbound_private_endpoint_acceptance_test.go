@@ -26,22 +26,32 @@ type outboundPrivateEndpointEnv struct {
 	serviceName string
 }
 
-// outboundPrivateEndpointTestEnv skips the test unless ACC_OUTBOUND_PE_PROJECT_ID,
-// ACC_OUTBOUND_PE_CLUSTER_ID and ACC_OUTBOUND_PE_SERVICE_NAME are set. The cluster must be an AWS
-// cluster on Couchbase Server 8.5 or later with the SelfManagedPrivateEndpoints flag on, and the
-// service an AWS endpoint service in the cluster's region whose allowed principals include
-// Capella's AWS account (see the couchbase-capella_cloud_accounts data source).
-func outboundPrivateEndpointTestEnv(t *testing.T) outboundPrivateEndpointEnv {
+// outboundPrivateEndpointClusterEnv skips the test unless ACC_OUTBOUND_PE_PROJECT_ID and
+// ACC_OUTBOUND_PE_CLUSTER_ID are set. The cluster must be an AWS cluster on Couchbase Server 8.5
+// or later with the SelfManagedPrivateEndpoints flag on.
+func outboundPrivateEndpointClusterEnv(t *testing.T) outboundPrivateEndpointEnv {
 	t.Helper()
 	env := outboundPrivateEndpointEnv{
-		projectId:   os.Getenv("ACC_OUTBOUND_PE_PROJECT_ID"),
-		clusterId:   os.Getenv("ACC_OUTBOUND_PE_CLUSTER_ID"),
-		serviceName: os.Getenv("ACC_OUTBOUND_PE_SERVICE_NAME"),
+		projectId: os.Getenv("ACC_OUTBOUND_PE_PROJECT_ID"),
+		clusterId: os.Getenv("ACC_OUTBOUND_PE_CLUSTER_ID"),
 	}
-	if env.projectId == "" || env.clusterId == "" || env.serviceName == "" {
-		t.Skip("skipping: set ACC_OUTBOUND_PE_PROJECT_ID, ACC_OUTBOUND_PE_CLUSTER_ID (an AWS cluster on Couchbase Server 8.5 or later " +
-			"with the SelfManagedPrivateEndpoints flag on) and ACC_OUTBOUND_PE_SERVICE_NAME (an AWS endpoint service in the " +
-			"cluster's region that allows Capella's AWS account) to run this test")
+	if env.projectId == "" || env.clusterId == "" {
+		t.Skip("skipping: set ACC_OUTBOUND_PE_PROJECT_ID and ACC_OUTBOUND_PE_CLUSTER_ID (an AWS cluster on Couchbase " +
+			"Server 8.5 or later with the SelfManagedPrivateEndpoints flag on) to run this test")
+	}
+	return env
+}
+
+// outboundPrivateEndpointTestEnv also needs ACC_OUTBOUND_PE_SERVICE_NAME: an AWS endpoint service
+// in the cluster's region whose allowed principals include Capella's AWS account (see the
+// couchbase-capella_cloud_accounts data source).
+func outboundPrivateEndpointTestEnv(t *testing.T) outboundPrivateEndpointEnv {
+	t.Helper()
+	env := outboundPrivateEndpointClusterEnv(t)
+	env.serviceName = os.Getenv("ACC_OUTBOUND_PE_SERVICE_NAME")
+	if env.serviceName == "" {
+		t.Skip("skipping: set ACC_OUTBOUND_PE_SERVICE_NAME (an AWS endpoint service in the cluster's region that " +
+			"allows Capella's AWS account) to run this test")
 	}
 	return env
 }
@@ -140,9 +150,9 @@ func TestAccOutboundPrivateEndpointResourceCustomHostname(t *testing.T) {
 }
 
 // TestAccOutboundPrivateEndpointInvalidServiceName checks the API's answer to a service name that
-// isn't an AWS endpoint service name.
+// isn't an AWS endpoint service name. It sets its own service name, so it needs only the cluster.
 func TestAccOutboundPrivateEndpointInvalidServiceName(t *testing.T) {
-	env := outboundPrivateEndpointTestEnv(t)
+	env := outboundPrivateEndpointClusterEnv(t)
 	env.serviceName = "vpce-svc-0123456789abcdef0"
 
 	resourceName := randomStringWithPrefix("tf_acc_outbound_pe_")
@@ -151,8 +161,8 @@ func TestAccOutboundPrivateEndpointInvalidServiceName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutboundPrivateEndpointResourceConfig(resourceName, env, "tf-acc-outbound-pe", ""),
-				// Match the code: Terraform wraps the message mid-phrase.
-				ExpectError: regexp.MustCompile(`(?s)Could not create the outbound private endpoint.*"code":16006`),
+				// Terraform wraps the message mid-phrase, so any whitespace separates the words.
+				ExpectError: regexp.MustCompile(`(?s)Could not create the outbound private endpoint.*The\s+service\s+name\s+does\s+not\s+match\s+the\s+cloud's\s+format`),
 			},
 		},
 	})
