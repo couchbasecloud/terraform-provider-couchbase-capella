@@ -2,7 +2,6 @@ package acceptance_tests
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -50,18 +49,12 @@ func TestAccOutboundPrivateEndpointServiceVerificationDataSourceInvalidFormat(t 
 }
 
 // TestAccOutboundPrivateEndpointServiceVerificationDataSource checks a real endpoint service, and
-// one in the same region that doesn't exist. It needs ACC_OUTBOUND_PE_PROJECT_ID,
-// ACC_OUTBOUND_PE_CLUSTER_ID (an AWS cluster on Couchbase Server 8.5 or later with the
-// SelfManagedPrivateEndpoints flag on) and ACC_OUTBOUND_PE_SERVICE_NAME (an AWS endpoint service
-// in the cluster's region that allows Capella's AWS account, accepts connections itself and has
-// no endpoint from this cluster).
+// one in the same region that doesn't exist. See outboundPrivateEndpointTestEnv for the
+// environment. The service must also accept connections itself and have no endpoint from this
+// cluster.
 func TestAccOutboundPrivateEndpointServiceVerificationDataSource(t *testing.T) {
-	projectId := os.Getenv("ACC_OUTBOUND_PE_PROJECT_ID")
-	clusterId := os.Getenv("ACC_OUTBOUND_PE_CLUSTER_ID")
-	serviceName := os.Getenv("ACC_OUTBOUND_PE_SERVICE_NAME")
-	if projectId == "" || clusterId == "" || serviceName == "" {
-		t.Skip("skipping: set ACC_OUTBOUND_PE_PROJECT_ID, ACC_OUTBOUND_PE_CLUSTER_ID and ACC_OUTBOUND_PE_SERVICE_NAME to run this test")
-	}
+	env := outboundPrivateEndpointTestEnv(t)
+	projectId, clusterId, serviceName := env.projectId, env.clusterId, env.serviceName
 	// com.amazonaws.vpce.<region>.vpce-svc-<id>
 	parts := strings.Split(serviceName, ".")
 	if len(parts) != 5 {
