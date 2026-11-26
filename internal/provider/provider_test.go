@@ -2,8 +2,11 @@ package provider
 
 import (
 	"context"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/stretchr/testify/assert"
@@ -82,6 +85,30 @@ func TestCapellaProvider_DataSources(t *testing.T) {
 
 	require.NotNil(t, sources)
 	assert.NotEmpty(t, sources, "provider should expose data sources")
+}
+
+// TestCapellaProvider_DocumentedDataSourcesAreRegistered fails when a data source has a page in
+// docs/data-sources but is missing from DataSources, which makes Terraform reject it with
+// "does not support data source" although it is published in the Registry.
+func TestCapellaProvider_DocumentedDataSourcesAreRegistered(t *testing.T) {
+	p := &capellaProvider{name: providerName}
+	ctx := context.Background()
+
+	registered := make(map[string]bool)
+	for _, newDataSource := range p.DataSources(ctx) {
+		var resp datasource.MetadataResponse
+		newDataSource().Metadata(ctx, datasource.MetadataRequest{ProviderTypeName: providerName}, &resp)
+		registered[resp.TypeName] = true
+	}
+
+	docs, err := filepath.Glob(filepath.Join("..", "..", "docs", "data-sources", "*.md"))
+	require.NoError(t, err)
+	require.NotEmpty(t, docs, "no data source docs found")
+
+	for _, doc := range docs {
+		typeName := providerName + "_" + strings.TrimSuffix(filepath.Base(doc), ".md")
+		assert.True(t, registered[typeName], "%s is documented but not registered in DataSources", typeName)
+	}
 }
 
 func TestCapellaProvider_Resources(t *testing.T) {
