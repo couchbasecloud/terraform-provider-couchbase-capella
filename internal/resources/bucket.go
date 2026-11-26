@@ -3,8 +3,10 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
@@ -31,6 +33,9 @@ const errorMessageAfterBucketCreation = "Bucket creation is successful, but enco
 
 const errorMessageWhileBucketCreation = "There is an error during bucket creation. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
+
+const warningClusterUnavailableOnRead = "The cluster is not available, so the last known state is kept. " +
+	"Changes made outside Terraform are not detected until the cluster is available again, error: "
 
 // Bucket is the bucket resource implementation.
 type Bucket struct {
@@ -222,6 +227,12 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		// Keep the last known state so that plan still works while the cluster is turned off.
+		// An import has no state to keep, so it still fails.
+		if isClusterUnavailableError(err) && !state.OrganizationId.IsNull() {
+			resp.Diagnostics.AddWarning("Bucket not refreshed", warningClusterUnavailableOnRead+errString)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading bucket",
 			"Could not read bucket with id "+state.Id.String()+": "+errString,
@@ -309,6 +320,15 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 func (c *Bucket) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// isClusterUnavailableError reports whether the API rejected the request because the cluster is
+// turned off or in another state that blocks reads.
+func isClusterUnavailableError(err error) bool {
+	var apiError *api.Error
+	return stderrors.As(err, &apiError) &&
+		apiError.HttpStatusCode == http.StatusUnprocessableEntity &&
+		strings.Contains(apiError.Message, "Temporarily unavailable while the Cluster is in the")
 }
 
 // retrieveBucket retrieves bucket information for a specified organization, project, cluster and bucket ID.
