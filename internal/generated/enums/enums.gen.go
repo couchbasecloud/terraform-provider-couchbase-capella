@@ -23,8 +23,9 @@ var enumTable = map[string]map[string]EnumDef{
 		"type":   {Type: "string", Values: []string{"temporary", "permanent"}},
 	},
 	"AppServiceAllowedCidr": {
-		"status": {Type: "string", Values: []string{"active", "expired"}},
-		"type":   {Type: "string", Values: []string{"temporary", "permanent"}},
+		"accessMode": {Type: "string", Values: []string{"admin", "public"}},
+		"status":     {Type: "string", Values: []string{"active", "expired"}},
+		"type":       {Type: "string", Values: []string{"temporary", "permanent"}},
 	},
 	"Availability": {
 		"type": {Type: "string", Values: []string{"single", "multi"}},
@@ -173,6 +174,7 @@ var enumTable = map[string]map[string]EnumDef{
 	"GetAppServiceResponse": {
 		"currentState": {Type: "string", Values: []string{"pending", "deploying", "deploymentFailed", "destroying", "destroyFailed", "healthy", "degraded", "scaling", "scaleFailed", "upgrading", "upgradeFailed", "turnedOff", "turningOff", "turnOffFailed", "turningOn", "turnOnFailed"}},
 		"plan":         {Type: "string", Values: []string{"basic", "developer pro", "enterprise"}},
+		"publicAccess": {Type: "string", Values: []string{"unrestricted", "restricting", "restricted", "unrestricting", "restrictFailed", "unrestrictFailed"}},
 	},
 	"GetBackupByIDResponse": {
 		"method": {Type: "string", Values: []string{"incremental", "full"}},

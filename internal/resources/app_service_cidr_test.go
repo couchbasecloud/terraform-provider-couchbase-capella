@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
@@ -281,6 +282,32 @@ func TestAllowedCIDRsSchema_AccessModeReplace(t *testing.T) {
 			}
 
 			assert.Equal(t, test.wantReplace, gotReplace)
+		})
+	}
+}
+
+func TestAllowedCIDRsSchema_AccessModeValidator(t *testing.T) {
+	attribute, ok := AllowedCIDRsSchema().Attributes["access_mode"].(*schema.StringAttribute)
+	require.True(t, ok, "access_mode is %T", AllowedCIDRsSchema().Attributes["access_mode"])
+
+	tests := []struct {
+		name      string
+		value     string
+		expectErr bool
+	}{
+		{name: "admin is accepted", value: api.AllowedCIDRAccessModeAdmin},
+		{name: "public is accepted", value: "public"},
+		{name: "unknown value is rejected", value: "invalid", expectErr: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			resp := &validator.StringResponse{}
+			for _, v := range attribute.Validators {
+				v.ValidateString(context.Background(), validator.StringRequest{ConfigValue: types.StringValue(test.value)}, resp)
+			}
+
+			assert.Equal(t, test.expectErr, resp.Diagnostics.HasError(), resp.Diagnostics)
 		})
 	}
 }

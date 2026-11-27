@@ -10,7 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -243,6 +246,33 @@ func TestAppServicePublicAccess_failedChange(t *testing.T) {
 
 			assert.Empty(t, resp.Diagnostics)
 			assertPublicAccessState(t, resp.State, test.requested, test.requested)
+		})
+	}
+}
+
+func TestAppServicePublicAccessSchema_PublicAccessValidator(t *testing.T) {
+	attribute, ok := AppServicePublicAccessSchema().Attributes["public_access"].(*schema.StringAttribute)
+	require.True(t, ok, "public_access is %T", AppServicePublicAccessSchema().Attributes["public_access"])
+
+	tests := []struct {
+		name      string
+		value     string
+		expectErr bool
+	}{
+		{name: "restricted is accepted", value: "restricted"},
+		{name: "unrestricted is accepted", value: "unrestricted"},
+		{name: "in progress status is rejected", value: "restricting", expectErr: true},
+		{name: "unknown value is rejected", value: "foo", expectErr: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			resp := &validator.StringResponse{}
+			for _, v := range attribute.Validators {
+				v.ValidateString(context.Background(), validator.StringRequest{ConfigValue: types.StringValue(test.value)}, resp)
+			}
+
+			assert.Equal(t, test.expectErr, resp.Diagnostics.HasError(), resp.Diagnostics)
 		})
 	}
 }
