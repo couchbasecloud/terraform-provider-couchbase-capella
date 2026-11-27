@@ -10,8 +10,8 @@ import (
 
 func TestAccDatasourceCloudSnapshotRestores(t *testing.T) {
 	t.Parallel()
-	cloudSnapshotRestoreMu.Lock()
-	defer cloudSnapshotRestoreMu.Unlock()
+	cloudSnapshotClusterMu.Lock()
+	defer cloudSnapshotClusterMu.Unlock()
 
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
@@ -46,8 +46,8 @@ func TestAccDatasourceCloudSnapshotRestores(t *testing.T) {
 
 func TestAccDatasourceCloudSnapshotRestore(t *testing.T) {
 	t.Parallel()
-	cloudSnapshotRestoreMu.Lock()
-	defer cloudSnapshotRestoreMu.Unlock()
+	cloudSnapshotClusterMu.Lock()
+	defer cloudSnapshotClusterMu.Unlock()
 
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -110,25 +111,16 @@ func (c *Client) ExecuteWithRetry(
 		case endpointCfg.SuccessStatus:
 			// success case
 		case http.StatusTooManyRequests:
-			header := apiRes.Header.Get("Retry-After")
-			retryAfter, err := strconv.Atoi(header)
-			if err != nil {
-				return nil, dur, fmt.Errorf("error parsing Retry-After value from response header")
-			}
-			dur = time.Second * time.Duration(retryAfter)
+			retryAfter := parseRetryAfter(apiRes.Header.Get("Retry-After"), time.Now())
 			tflog.Debug(ctx, "API rate limited", map[string]interface{}{
-				"method":      endpointCfg.Method,
-				"url":         endpointCfg.Url,
-				"retry_after": dur.Seconds(),
+				"method":       endpointCfg.Method,
+				"url":          endpointCfg.Url,
+				"retry_after":  retryAfter.Seconds(),
+				"header_value": apiRes.Header.Get("Retry-After"),
 			})
-			return nil, dur, errors.ErrRatelimit
+			return nil, retryAfter, errors.ErrRatelimit
 		case http.StatusServiceUnavailable:
-			var retryAfter time.Duration
-			if header := apiRes.Header.Get("Retry-After"); header != "" {
-				if secs, parseErr := strconv.Atoi(header); parseErr == nil {
-					retryAfter = time.Second * time.Duration(secs)
-				}
-			}
+			retryAfter := parseRetryAfter(apiRes.Header.Get("Retry-After"), time.Now())
 			tflog.Debug(ctx, "API returned 503 Service Unavailable, retrying", map[string]interface{}{
 				"method": endpointCfg.Method,
 				"url":    endpointCfg.Url,
@@ -170,6 +162,29 @@ func (c *Client) ExecuteWithRetry(
 	}
 
 	return exec(ctx, fn, defaultWaitAttempt)
+}
+
+// parseRetryAfter converts a Retry-After header, in either delay-seconds or
+// HTTP-date form (RFC 9110 10.2.3), to a wait duration. It returns 0 when the
+// header is missing, malformed or in the past, so the caller falls back to its
+// default back-off instead of failing the request.
+func parseRetryAfter(header string, now time.Time) time.Duration {
+	header = strings.TrimSpace(header)
+	if header == "" {
+		return 0
+	}
+	if secs, err := strconv.Atoi(header); err == nil {
+		if secs < 0 {
+			return 0
+		}
+		return time.Second * time.Duration(secs)
+	}
+	if at, err := http.ParseTime(header); err == nil {
+		if d := at.Sub(now); d > 0 {
+			return d
+		}
+	}
+	return 0
 }
 
 func exec(
