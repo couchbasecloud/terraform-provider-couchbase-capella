@@ -50,6 +50,9 @@ Read-Only:
  - **Constraints**: Maximum length: 256 characters
 - `nodes` (Number) - Number of nodes configured for the App Service.
 - `organization_id` (String) The GUID4 ID of the organization.
+- `public_access` (String) - The public access mode of the App Service. `unrestricted` (default): the App Services Public API is open to everyone. `restricting`: a Restrict App Service Public Access request is in progress. `restricted`: the Public API is closed to everyone except private endpoint traffic, the Capella control plane and the public allowed CIDRs. `unrestricting`: a Remove App Service Public Access Restriction request is in progress. `restrictFailed`: the last Restrict App Service Public Access request failed. Contact support to recover. `unrestrictFailed`: the last Remove App Service Public Access Restriction request failed. Contact support to recover. Change it with `POST`/`DELETE .../publicAccessRestriction`. On App Services where public access restrictions are not supported (other cloud providers and free tier), it is always `unrestricted`.
+ - **Valid Values**: `unrestricted`, `restricting`, `restricted`, `unrestricting`, `restrictFailed`, `unrestrictFailed`
+ - **Default**: `unrestricted`
 - `version` (String) - The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 <a id="nestedatt--data--audit"></a>

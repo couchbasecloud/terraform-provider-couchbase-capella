@@ -31,6 +31,10 @@ data "couchbase-capella_app_services_cidr" "existing_allowed_cidr" {
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
+### Optional
+
+- `access_mode` (Set of String)
+
 ### Read-Only
 
 - `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
@@ -40,6 +44,7 @@ data "couchbase-capella_app_services_cidr" "existing_allowed_cidr" {
 
 Read-Only:
 
+- `access_mode` (String)
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `cidr` (String)
 - `comment` (String)
