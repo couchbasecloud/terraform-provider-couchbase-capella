@@ -1,8 +1,10 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -17,7 +19,10 @@ func AppServicePublicAccessSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_service_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 
-	capellaschema.AddAttr(attrs, "public_access", appServicePublicAccessBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(attrs, "public_access", appServicePublicAccessBuilder, stringAttribute(
+		[]string{required},
+		stringvalidator.OneOf(string(appservice.PublicAccessRestricted), string(appservice.PublicAccessUnrestricted)),
+	))
 
 	capellaschema.AddAttr(attrs, "public_access_status", appServicePublicAccessBuilder, stringAttribute([]string{computed}))
 

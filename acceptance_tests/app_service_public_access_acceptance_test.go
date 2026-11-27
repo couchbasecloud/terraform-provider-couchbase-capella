@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 	"time"
 
@@ -169,21 +170,19 @@ func testAccCheckAppServicePublicAccess(publicAccess appservice.PublicAccess) re
 	}
 }
 
-// TODO: enable once the public access endpoints are public, as the schema builder then infers the public_access
-// validator from the OpenAPI spec.
-// func TestAccAppServicePublicAccessInvalidValue(t *testing.T) {
-// 	resourceName := randomStringWithPrefix("tf_acc_app_service_public_access_")
-//
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config:      testAccAppServicePublicAccessConfig(resourceName, "restricting"),
-// 				ExpectError: regexp.MustCompile(`(?s)Attribute public_access value must be one of.*restricted.*unrestricted`),
-// 			},
-// 		},
-// 	})
-// }
+func TestAccAppServicePublicAccessInvalidValue(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_service_public_access_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppServicePublicAccessConfig(resourceName, "restricting"),
+				ExpectError: regexp.MustCompile(`(?s)Attribute public_access value must be one of.*restricted.*unrestricted`),
+			},
+		},
+	})
+}
 
 // testAccCheckAppServicesDataSourcePublicAccess verifies that the app services data source reads publicAccess for the
 // shared app service.

@@ -67,30 +67,29 @@ data "couchbase-capella_app_services_cidr" "%[2]s" {}
 	})
 }
 
-// TODO: Enable once specs are merged and enums are regenerated
-//func TestAccAppServicesCIDRDataSourceInvalidAccessMode(t *testing.T) {
-//	dataSourceName := randomStringWithPrefix("tf_acc_app_services_cidr_ds_")
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: fmt.Sprintf(`
-//%[1]s
-//
-//data "couchbase-capella_app_services_cidr" "%[2]s" {
-//  organization_id = "%[3]s"
-//  project_id      = "%[4]s"
-//  cluster_id      = "%[5]s"
-//  app_service_id  = "%[6]s"
-//  access_mode     = ["admin", "invalid"]
-//}
-//`, globalProviderBlock, dataSourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId),
-//				ExpectError: regexp.MustCompile(`Error Reading App Service Allowed CIDRs`),
-//			},
-//		},
-//	})
-//}
+func TestAccAppServicesCIDRDataSourceInvalidAccessMode(t *testing.T) {
+	dataSourceName := randomStringWithPrefix("tf_acc_app_services_cidr_ds_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_app_services_cidr" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  app_service_id  = "%[6]s"
+  access_mode     = ["admin", "invalid"]
+}
+`, globalProviderBlock, dataSourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId),
+				ExpectError: regexp.MustCompile(`(?s)Error Listing App Service allowed CIDRs.*access\s+mode\s+'invalid'\s+is\s+not\s+valid`),
+			},
+		},
+	})
+}
 
 func testAccAppServicesCIDRDataSourceConfig(resourceName, dataSourceName, cidr, comment, expiresAt string) string {
 	return fmt.Sprintf(`
