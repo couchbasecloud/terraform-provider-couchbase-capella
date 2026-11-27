@@ -85,7 +85,7 @@ data "couchbase-capella_app_services_cidr" "%[2]s" {
   access_mode     = ["admin", "invalid"]
 }
 `, globalProviderBlock, dataSourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId),
-				ExpectError: regexp.MustCompile(`Error Listing App Service allowed CIDRs`),
+				ExpectError: regexp.MustCompile(`(?s)Error Listing App Service allowed CIDRs.*access\s+mode\s+'invalid'\s+is\s+not\s+valid`),
 			},
 		},
 	})
