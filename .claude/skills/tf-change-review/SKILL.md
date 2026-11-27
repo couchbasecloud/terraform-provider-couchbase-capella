@@ -101,7 +101,7 @@ no benefit.
 ## Phase 2 - Analyse for regressions and bugs
 
 Read every changed Go file against its `main` counterpart, then reason about
-consequences rather than syntax. Three questions carry most of the signal:
+consequences rather than syntax. Four questions carry most of the signal:
 
 1. **Where does state come from?** Trace `Create`, `Read` and `Update`. An
    attribute whose state is echoed back from the plan behaves completely
@@ -124,6 +124,33 @@ consequences rather than syntax. Three questions carry most of the signal:
    like ordinary Go. Do not read for this - sweep for it; the recipe is in
    `references/schema-change-analysis.md` section 5, and a scratch test against
    the mapping helper settles it offline in seconds.
+
+4. **Does every value the user writes come back spelled the same way?** Capella
+   normalises some identifiers it stores. It changes the case of email addresses
+   and lowercases alert mute keys (`CBHardOutOfMemoryErrors` comes back as
+   `cbhardoutofmemoryerrors`). It also maps aliases to canonical names
+   (`CPUUsageHighWarning` comes back as `cpu_usage_high`). If state copies the
+   server's spelling, the apply fails with "inconsistent result" and taints the
+   resource. If the update diff matches values exactly, every later plan resends
+   the value. This covers map keys as well as values, and map keys are the case
+   reviews miss.
+
+   Check each attribute that is mapped out of the response, and do not stop at
+   the first one that is handled. When one sibling attribute keeps the configured
+   spelling (this provider's `spellingOf` does it for alert recipients) and
+   another does not, the one that does not is the bug. This was AV-153485: the
+   recipients were handled and the mute keys beside them were not, and the
+   resource description even named an alias that Capella maps. Find these loops
+   with:
+
+   ```bash
+   grep -nE "for [a-zA-Z_]+, [a-zA-Z_]+ := range (current|response|resp)\." <changed files>
+   ```
+
+   A loop that builds state from the server's keys or values, with no lookup into
+   the prior state or plan, needs a test that sends a mixed-case or alias value.
+   If you cannot run that test, list "does X round-trip unchanged?" under
+   Unverified.
 
 Two greps are cheap enough to run on every diff, and both catch defects that
 survive review because the code reads as correct:
@@ -222,6 +249,14 @@ go test -c -o /dev/null ./acceptance_tests
 Run them against a live cluster only when the user asks. They provision real
 Capella resources and can take an hour, so surprise runs are unwelcome; say
 plainly which assumptions remain unverified until someone does run them.
+
+Use realistic test data, not just the shapes the PR's own examples use. Tests
+copied from a README inherit its blind spots. For any attribute keyed or valued by
+an identifier, include at least one mixed-case or CamelCase value and, where the
+API accepts aliases, one alias. Go through the whole catalog when there is one;
+don't stop at one convenient member. In PR 856 every unit test, example and first
+acceptance test muted `disk_usage_high`, so nothing exercised the 7 CamelCase
+alerts that triggered AV-153485.
 
 For a defect you are documenting but not fixing, a test that asserts the correct
 behaviour and is skipped with a ticket reference is far more valuable than no
