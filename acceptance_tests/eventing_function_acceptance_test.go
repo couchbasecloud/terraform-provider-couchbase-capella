@@ -2239,8 +2239,19 @@ resource "couchbase-capella_eventing_function" "%[5]s" {
 		bindingsBody)
 }
 
+// skipOnServer76ForAV153693 skips tests that edit or resume a paused function. On 7.6 clusters
+// Capella rejects both with 422 although GET reports paused; 8.0 is unaffected.
+func skipOnServer76ForAV153693(t *testing.T) {
+	t.Helper()
+	if globalServerVersion == "7.6" {
+		t.Skip("AV-153693: on 7.6 Capella rejects updating or resuming a paused eventing function with 422; unskip once fixed")
+	}
+}
+
 // TestAccEventingFunctionResourceUpdateCodePaused (TC-UP-Code): code is updated while paused and the function stays paused.
 func TestAccEventingFunctionResourceUpdateCodePaused(t *testing.T) {
+	skipOnServer76ForAV153693(t)
+
 	funcName := randomStringWithPrefix("tf_acc_evt_code_paused_fn_")
 	funcReference := "couchbase-capella_eventing_function." + funcName
 
@@ -2270,6 +2281,8 @@ func TestAccEventingFunctionResourceUpdateCodePaused(t *testing.T) {
 
 // TestAccEventingFunctionResourceUpdateBindingsPaused (TC-UP-BucketBinding/UrlBinding-AuthChange/ConstBinding): modifies bindings while paused.
 func TestAccEventingFunctionResourceUpdateBindingsPaused(t *testing.T) {
+	skipOnServer76ForAV153693(t)
+
 	funcName := randomStringWithPrefix("tf_acc_evt_bind_paused_fn_")
 	funcReference := "couchbase-capella_eventing_function." + funcName
 
@@ -2450,6 +2463,8 @@ func TestAccEventingFunctionResourceActivationLifecycle(t *testing.T) {
 // Capella rejects the deploy verb on a paused function with 422, so the provider has to pick
 // resume for this transition - see activationTarget in internal/resources/eventing_function.go.
 func TestAccEventingFunctionResourceActivationResume(t *testing.T) {
+	skipOnServer76ForAV153693(t)
+
 	funcName := randomStringWithPrefix("tf_acc_evt_resume_fn_")
 	funcReference := "couchbase-capella_eventing_function." + funcName
 
