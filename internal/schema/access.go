@@ -32,3 +32,31 @@ func MapBucketsFromAPI(buckets []api.Bucket) []BucketResource {
 	}
 	return result
 }
+
+// MapStringsFromAPI converts a string slice to a types.String slice, preserving nil.
+func MapStringsFromAPI(values []string) []types.String {
+	if values == nil {
+		return nil
+	}
+	result := make([]types.String, len(values))
+	for i, v := range values {
+		result[i] = types.StringValue(v)
+	}
+	return result
+}
+
+// MapResourcesFromAPI converts API resources to the provider schema Resources.
+// It returns nil when the API response carries no buckets, catalogs or credentials.
+func MapResourcesFromAPI(res *api.AccessibleResources) *Resources {
+	if res == nil || (res.Buckets == nil && res.Catalogs == nil && res.Credentials == nil) {
+		return nil
+	}
+	out := &Resources{
+		Catalogs:    MapStringsFromAPI(res.Catalogs),
+		Credentials: MapStringsFromAPI(res.Credentials),
+	}
+	if res.Buckets != nil {
+		out.Buckets = MapBucketsFromAPI(res.Buckets)
+	}
+	return out
+}

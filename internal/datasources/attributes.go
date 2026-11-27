@@ -137,6 +137,9 @@ func computedResourcesAttribute(builder *capellaschema.SchemaBuilder) *schema.Si
 		},
 	})
 
+	capellaschema.AddAttr(resourcesAttrs, "catalogs", builder, computedStringList())
+	capellaschema.AddAttr(resourcesAttrs, "credentials", builder, computedStringList())
+
 	return &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: resourcesAttrs,

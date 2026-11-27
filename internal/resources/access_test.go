@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -234,4 +235,107 @@ func TestReconcileCollections(t *testing.T) {
 			assert.Equal(t, tt.want, reconcileCollections(tt.api, tt.state))
 		})
 	}
+}
+
+func newResourcesAccess(privileges string, catalogs, credentials []string) providerschema.Access {
+	return providerschema.Access{
+		Privileges: newStrings(strings.Split(privileges, ",")...),
+		Resources: &providerschema.Resources{
+			Catalogs:    newStrings(catalogs...),
+			Credentials: newStrings(credentials...),
+		},
+	}
+}
+
+func TestCreateAccessFromSliceCatalogsAndCredentials(t *testing.T) {
+	got := createAccessFromSlice([]providerschema.Access{
+		newResourcesAccess("externalCatalogRead", []string{"*"}, nil),
+		newResourcesAccess("credentialConsumer", nil, []string{"cred-1"}),
+		newAccess("dataRead", newBucket("b")),
+		{Privileges: newStrings("analyticsAdmin")},
+	})
+
+	assert.Equal(t, []string{"*"}, got[0].Resources.Catalogs)
+	assert.Nil(t, got[0].Resources.Credentials)
+	assert.NotNil(t, got[0].Resources.Buckets, "catalog privileges send an empty bucket list")
+	assert.Empty(t, got[0].Resources.Buckets)
+
+	assert.Equal(t, []string{"cred-1"}, got[1].Resources.Credentials)
+	assert.Nil(t, got[1].Resources.Catalogs)
+
+	assert.Len(t, got[2].Resources.Buckets, 1)
+	assert.Nil(t, got[2].Resources.Catalogs)
+
+	assert.NotNil(t, got[3].Resources, "global privileges keep the empty bucket list")
+	assert.Empty(t, got[3].Resources.Buckets)
+}
+
+func TestMapAccessFromAPICatalogsAndCredentials(t *testing.T) {
+	got := mapAccessFromAPI([]api.Access{
+		{
+			Privileges: []string{"externalCatalogRead"},
+			Resources:  &api.AccessibleResources{Buckets: []api.Bucket{}, Catalogs: []string{"*"}},
+		},
+		{
+			Privileges: []string{"credentialConsumer"},
+			Resources:  &api.AccessibleResources{Credentials: []string{"cred-1"}},
+		},
+	})
+
+	assert.Equal(t, newStrings("*"), got[0].Resources.Catalogs)
+	assert.Equal(t, newStrings("cred-1"), got[1].Resources.Credentials)
+	assert.Nil(t, got[1].Resources.Buckets)
+}
+
+func TestReconcileAccessKeepsCatalogAndCredentialStateOrder(t *testing.T) {
+	apiAccess := []providerschema.Access{newResourcesAccess("externalCatalogRead", []string{"b", "a"}, nil)}
+	state := []providerschema.Access{newResourcesAccess("externalCatalogRead", []string{"a", "b"}, nil)}
+
+	got := reconcileAccess(apiAccess, state)
+
+	assert.Equal(t, newStrings("a", "b"), got[0].Resources.Catalogs)
+}
+
+func TestIsWildcardOnlyResourcesSchemaIgnoresCatalogs(t *testing.T) {
+	res := &providerschema.Resources{
+		Buckets:  []providerschema.BucketResource{newBucket("*")},
+		Catalogs: newStrings("*"),
+	}
+	assert.False(t, isWildcardOnlyResourcesSchema(res))
+}
+
+func TestReconcileAccessKeepsExplicitlyEmptyCatalogsAndCredentials(t *testing.T) {
+	apiAccess := []providerschema.Access{newAccess("dataRead", newBucket("b"))}
+	state := []providerschema.Access{newAccess("dataRead", newBucket("b"))}
+	state[0].Resources.Catalogs = []types.String{}
+	state[0].Resources.Credentials = []types.String{}
+
+	got := reconcileAccess(apiAccess, state)
+
+	assert.NotNil(t, got[0].Resources.Catalogs)
+	assert.Empty(t, got[0].Resources.Catalogs)
+	assert.NotNil(t, got[0].Resources.Credentials)
+	assert.Empty(t, got[0].Resources.Credentials)
+
+	state[0].Resources.Catalogs = nil
+	got = reconcileAccess(apiAccess, state)
+	assert.Nil(t, got[0].Resources.Catalogs, "an omitted list stays null")
+}
+
+func TestReconcileAccessKeepsNullBucketsForNonBucketGrants(t *testing.T) {
+	apiAccess := []providerschema.Access{{
+		Privileges: newStrings("externalCatalogRead"),
+		Resources: &providerschema.Resources{
+			Buckets:  []providerschema.BucketResource{},
+			Catalogs: newStrings("*"),
+		},
+	}}
+	state := []providerschema.Access{newResourcesAccess("externalCatalogRead", []string{"*"}, nil)}
+
+	got := reconcileAccess(apiAccess, state)
+	assert.Nil(t, got[0].Resources.Buckets)
+
+	// Import has no prior state, so the API value is kept as is.
+	got = reconcileAccess(apiAccess, nil)
+	assert.NotNil(t, got[0].Resources.Buckets)
 }
