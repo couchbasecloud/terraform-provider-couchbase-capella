@@ -18,4 +18,5 @@ const (
 	IndexName       Attr = "indexName"
 	ProviderId      Attr = "providerId"
 	FunctionName    Attr = "functionName"
+	ReplicationId   Attr = "replicationId"
 )

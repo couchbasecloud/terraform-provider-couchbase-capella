@@ -50,6 +50,13 @@ func TestUpdateBodyAttributesResolveUnknownsToState(t *testing.T) {
 			attrNames:  []string{"audit_enabled", "enabled_event_ids", "disabled_users"},
 		},
 		{
+			// UpdateReplicationRequest. All have a Default, so an unconfigured value is sent
+			// as the default rather than as an unwrapped unknown.
+			name:       "replication",
+			attributes: ReplicationSchema().Attributes,
+			attrNames:  []string{"priority", "network_usage_limit", "mobile_sync_mode"},
+		},
+		{
 			// UpdateClusterRequest, via morphToApiServiceGroups. service_groups is a set and
 			// Terraform correlates set elements by value, so changing anything inside an
 			// element leaves these unknown on that element. On AWS they are plain ints with

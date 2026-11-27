@@ -1,0 +1,1 @@
+terraform import couchbase-capella_replication_activation_status.new_replication_activation_status replication_id=<replication_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>

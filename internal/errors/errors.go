@@ -269,6 +269,36 @@ var (
 	// ErrAppServiceFailedState is returned when the App Service reports that it is in a terminal failed state (e.g. deployment failed).
 	ErrAppServiceFailedState = errors.New("app service operation failed")
 
+	// ErrReplicationJobFailed is returned when an async replication create job stops in a failed state.
+	ErrReplicationJobFailed = errors.New("replication job failed")
+
+	// ErrReplicationJobTimeout is returned when a replication create job does not finish within the polling timeout.
+	ErrReplicationJobTimeout = errors.New("replication job status transition timed out after initiation")
+
+	// ErrReplicationJobNotFound is returned when the API keeps reporting a replication create job as notfound.
+	ErrReplicationJobNotFound = errors.New("replication job not found")
+
+	// ErrReplicationJobMissingId is returned when a replication create job completes without a replication ID.
+	ErrReplicationJobMissingId = errors.New("replication job completed without a replication ID")
+
+	// ErrConvertingReplicationMappings is returned when terraform fails to convert replication mappings.
+	ErrConvertingReplicationMappings = errors.New("failed to convert replication mappings, please contact Couchbase Capella Support")
+
+	// ErrConvertingReplicationDetails is returned when terraform fails to convert replication source or target details.
+	ErrConvertingReplicationDetails = errors.New("failed to convert replication details, please contact Couchbase Capella Support")
+
+	// ErrConvertingReplicationConflictLogging is returned when terraform fails to convert replication conflict logging.
+	ErrConvertingReplicationConflictLogging = errors.New("failed to convert replication conflict logging, please contact Couchbase Capella Support")
+
+	// ErrReplicationDeleteTimeout is returned when a replication is still present after the delete polling timeout.
+	ErrReplicationDeleteTimeout = errors.New("replication was not deleted within the polling timeout")
+
+	// ErrReplicationActivationStatusFailed is returned when a replication has the failed status after a pause or resume.
+	ErrReplicationActivationStatusFailed = errors.New("replication status is failed")
+
+	// ErrReplicationActivationStatusTimeout is returned when a replication does not get the requested status within the polling timeout.
+	ErrReplicationActivationStatusTimeout = errors.New("replication did not get the requested status within the polling timeout")
+
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrIndexDeferred = errors.New("index is in Deferred state and will not become Ready without a BUILD INDEX statement")

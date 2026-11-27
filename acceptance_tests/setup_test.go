@@ -177,6 +177,12 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
+	if replicationAnchorCreated {
+		if err := destroyReplicationAnchor(ctx, client); err != nil {
+			return err
+		}
+	}
+
 	if dmBucketCreated {
 		if err := destroyDMBucket(ctx, client); err != nil {
 			return err
