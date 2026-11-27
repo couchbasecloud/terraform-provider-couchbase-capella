@@ -41,6 +41,7 @@ Read-Only:
 - `bucket_conflict_resolution` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `durability_level` (String)
+- `enable_cross_cluster_versioning` (Boolean)
 - `eviction_policy` (String)
 - `flush` (Boolean)
 - `id` (String)

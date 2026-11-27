@@ -178,6 +178,9 @@ type GetBucketResponse struct {
 	// Vbuckets is the number of vbuckets in the bucket.
 	// This is only configurable on magma buckets for Couchbase 8.0 and above.
 	Vbuckets int64 `json:"vbuckets"`
+
+	// EnableCrossClusterVersioning shows whether cross cluster versioning is on. It cannot be turned off, once enabled.
+	EnableCrossClusterVersioning bool `json:"enableCrossClusterVersioning"`
 }
 
 // PutBucketRequest is the request payload sent to the Capella V4 Public API in order to update an existing bucket.

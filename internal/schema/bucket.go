@@ -122,6 +122,9 @@ type Bucket struct {
 	// Vbuckets is the number of vBuckets for the bucket.
 	// This is only configurable on magma buckets for Couchbase 8.0 and above.
 	Vbuckets types.Int64 `tfsdk:"vbuckets"`
+
+	// EnableCrossClusterVersioning shows whether cross cluster versioning is on.
+	EnableCrossClusterVersioning types.Bool `tfsdk:"enable_cross_cluster_versioning"`
 }
 
 // Stats has the bucket stats that are related to memory and disk consumption.
@@ -161,22 +164,23 @@ type Buckets struct {
 }
 
 type OneBucket struct {
-	Stats                    *Stats       `tfsdk:"stats"`
-	DurabilityLevel          types.String `tfsdk:"durability_level"`
-	Name                     types.String `tfsdk:"name"`
-	StorageBackend           types.String `tfsdk:"storage_backend"`
-	ClusterId                types.String `tfsdk:"cluster_id"`
-	BucketConflictResolution types.String `tfsdk:"bucket_conflict_resolution"`
-	Id                       types.String `tfsdk:"id"`
-	ProjectId                types.String `tfsdk:"project_id"`
-	OrganizationId           types.String `tfsdk:"organization_id"`
-	Type                     types.String `tfsdk:"type"`
-	EvictionPolicy           types.String `tfsdk:"eviction_policy"`
-	TimeToLiveInSeconds      types.Int64  `tfsdk:"time_to_live_in_seconds"`
-	Replicas                 types.Int64  `tfsdk:"replicas"`
-	MemoryAllocationInMB     types.Int64  `tfsdk:"memory_allocation_in_mb"`
-	Flush                    types.Bool   `tfsdk:"flush"`
-	Vbuckets                 types.Int64  `tfsdk:"vbuckets"`
+	Stats                        *Stats       `tfsdk:"stats"`
+	DurabilityLevel              types.String `tfsdk:"durability_level"`
+	Name                         types.String `tfsdk:"name"`
+	StorageBackend               types.String `tfsdk:"storage_backend"`
+	ClusterId                    types.String `tfsdk:"cluster_id"`
+	BucketConflictResolution     types.String `tfsdk:"bucket_conflict_resolution"`
+	Id                           types.String `tfsdk:"id"`
+	ProjectId                    types.String `tfsdk:"project_id"`
+	OrganizationId               types.String `tfsdk:"organization_id"`
+	Type                         types.String `tfsdk:"type"`
+	EvictionPolicy               types.String `tfsdk:"eviction_policy"`
+	TimeToLiveInSeconds          types.Int64  `tfsdk:"time_to_live_in_seconds"`
+	Replicas                     types.Int64  `tfsdk:"replicas"`
+	MemoryAllocationInMB         types.Int64  `tfsdk:"memory_allocation_in_mb"`
+	Flush                        types.Bool   `tfsdk:"flush"`
+	Vbuckets                     types.Int64  `tfsdk:"vbuckets"`
+	EnableCrossClusterVersioning types.Bool   `tfsdk:"enable_cross_cluster_versioning"`
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
