@@ -222,6 +222,7 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		stringSchemaMap := map[string]string{
 			"access_control_function": "AccessFunction",
 			"import_filter":           "ImportFilter",
+			"public_access_status":    "AppServicePublicAccess",
 		}
 
 		if schemaName, ok := stringSchemaMap[tfFieldName]; ok {

@@ -17,13 +17,17 @@ func AppServicePublicAccessSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_service_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 
-	capellaschema.AddAttr(attrs, "public_access", appServicePublicAccessBuilder, stringAttribute([]string{required}))
+	publicAccess := stringAttribute([]string{required})
+	publicAccess.MarkdownDescription = "- The public access mode to apply: `restricted` or `unrestricted`."
+	capellaschema.AddAttr(attrs, "public_access", appServicePublicAccessBuilder, publicAccess)
 
 	capellaschema.AddAttr(attrs, "public_access_status", appServicePublicAccessBuilder, stringAttribute([]string{computed}))
 
 	return schema.Schema{
 		MarkdownDescription: "Manages the public access mode of an App Service. " +
-			"Destroying this resource removes it from the Terraform state only, and does not change public access.",
+			"Destroying this resource does not change public access. " +
+			"To open public access, set `public_access` to `unrestricted` and apply first. " +
+			"Changing to `unrestricted` deletes all public allowed CIDRs.",
 		Attributes: attrs,
 	}
 }
