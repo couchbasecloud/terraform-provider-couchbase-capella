@@ -149,6 +149,12 @@ type Cluster struct {
 	// DeletionProtection prevents accidental cluster deletion when enabled.
 	DeletionProtection types.Bool `tfsdk:"deletion_protection"`
 
+	// ExpressScaling is true when express scaling is enabled or being enabled.
+	ExpressScaling types.Bool `tfsdk:"express_scaling"`
+
+	// ExpressScalingState is the express scaling status reported by the API.
+	ExpressScalingState types.String `tfsdk:"express_scaling_state"`
+
 	// Zones is the set of AWS availability zone IDs the cluster is deployed in.
 	Zones types.Set `tfsdk:"zones"`
 
@@ -202,6 +208,8 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		Description:                types.StringValue(cluster.Description),
 		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
 		DeletionProtection:         types.BoolValue(cluster.DeletionProtection),
+		ExpressScaling:             types.BoolValue(cluster.ExpressScaling.IsEnabled()),
+		ExpressScalingState:        types.StringValue(string(cluster.ExpressScaling)),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
@@ -272,6 +280,8 @@ type OneCluster struct {
 	Description                types.String   `tfsdk:"description"`
 	EnablePrivateDNSResolution types.Bool     `tfsdk:"enable_private_dns_resolution"`
 	DeletionProtection         types.Bool     `tfsdk:"deletion_protection"`
+	ExpressScaling             types.Bool     `tfsdk:"express_scaling"`
+	ExpressScalingState        types.String   `tfsdk:"express_scaling_state"`
 	Zones                      types.List     `tfsdk:"zones"`
 	Name                       types.String   `tfsdk:"name"`
 	AppServiceId               types.String   `tfsdk:"app_service_id"`
@@ -302,6 +312,8 @@ func NewOneCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, 
 		Description:                newCluster.Description,
 		EnablePrivateDNSResolution: newCluster.EnablePrivateDNSResolution,
 		DeletionProtection:         newCluster.DeletionProtection,
+		ExpressScaling:             newCluster.ExpressScaling,
+		ExpressScalingState:        newCluster.ExpressScalingState,
 		Zones:                      NewZonesList(cluster.Zones),
 		Name:                       newCluster.Name,
 		AppServiceId:               newCluster.AppServiceId,
@@ -446,6 +458,8 @@ type ClusterData struct {
 	Description                types.String     `tfsdk:"description"`
 	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
 	DeletionProtection         types.Bool       `tfsdk:"deletion_protection"`
+	ExpressScaling             types.Bool       `tfsdk:"express_scaling"`
+	ExpressScalingState        types.String     `tfsdk:"express_scaling_state"`
 	Name                       types.String     `tfsdk:"name"`
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	ConnectionString           types.String     `tfsdk:"connection_string"`
@@ -464,6 +478,8 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		Description:                types.StringValue(cluster.Description),
 		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
 		DeletionProtection:         types.BoolValue(cluster.DeletionProtection),
+		ExpressScaling:             types.BoolValue(cluster.ExpressScaling.IsEnabled()),
+		ExpressScalingState:        types.StringValue(string(cluster.ExpressScaling)),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},

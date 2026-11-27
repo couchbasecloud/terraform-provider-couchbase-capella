@@ -32,6 +32,11 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "deletion_protection", clusterBuilder, boolAttribute(computed))
 
+	// express_scaling is only sent on create. Changes after that belong to the
+	// couchbase-capella_cluster_express_scaling resource, so two resources never write it.
+	capellaschema.AddAttr(attrs, "express_scaling", clusterBuilder, boolAttribute(optional, computed, useStateForUnknown), "CreateClusterRequest")
+	capellaschema.AddAttr(attrs, "express_scaling_state", clusterBuilder, stringAttribute([]string{computed}))
+
 	cloudProviderAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 	capellaschema.AddAttr(cloudProviderAttrs, "region", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -666,7 +667,10 @@ func waitForLogStreamingState(
 				appServiceUUID,
 			)
 			if err != nil {
-				return fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+				return api.PollError(ctx,
+					fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err),
+					fmt.Errorf("timeout waiting for log streaming to reach state '%s'", string(targetState)),
+				)
 			}
 
 			if response.JSON200 == nil || response.JSON200.ConfigState == nil {

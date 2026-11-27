@@ -361,6 +361,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppEndpointAuditLogging,
 		resources.NewAppEndpointResync,
 		resources.NewClusterDeletionProtection,
+		resources.NewClusterExpressScaling,
 		resources.NewDatabaseRole,
 		resources.NewEventingFunction,
 		resources.NewDataApi,
