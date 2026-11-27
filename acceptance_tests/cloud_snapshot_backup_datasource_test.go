@@ -11,6 +11,10 @@ import (
 )
 
 func TestAccCloudSnapshotBackupDatasource(t *testing.T) {
+	t.Parallel()
+	cloudSnapshotClusterMu.Lock()
+	defer cloudSnapshotClusterMu.Unlock()
+
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -19,7 +23,7 @@ func TestAccCloudSnapshotBackupDatasource(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_ds_")
 	dsReference := "data.couchbase-capella_cloud_snapshot_backup." + dsName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -42,6 +46,10 @@ func TestAccCloudSnapshotBackupDatasource(t *testing.T) {
 }
 
 func TestAccCloudSnapshotBackupsDatasource(t *testing.T) {
+	t.Parallel()
+	cloudSnapshotClusterMu.Lock()
+	defer cloudSnapshotClusterMu.Unlock()
+
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -50,7 +58,7 @@ func TestAccCloudSnapshotBackupsDatasource(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_backups_ds_")
 	dsReference := "data.couchbase-capella_cloud_snapshot_backups." + dsName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -70,6 +78,10 @@ func TestAccCloudSnapshotBackupsDatasource(t *testing.T) {
 }
 
 func TestAccCloudProjectSnapshotBackupsDatasource(t *testing.T) {
+	t.Parallel()
+	cloudSnapshotClusterMu.Lock()
+	defer cloudSnapshotClusterMu.Unlock()
+
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -78,7 +90,7 @@ func TestAccCloudProjectSnapshotBackupsDatasource(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_project_snapshot_backups_ds_")
 	dsReference := "data.couchbase-capella_cloud_project_snapshot_backups." + dsName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
