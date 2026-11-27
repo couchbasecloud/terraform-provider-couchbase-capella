@@ -244,7 +244,7 @@ func TestAccUserResourceInvalidScenarioInvalidProjectRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserResourceConfigWithProjectRole(resourceName, username, "projectWizard"),
-				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*projectWizard.*projectOwner.*projectManager.*projectViewer.*projectDataReaderWriter.*projectDataReader`),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*projectWizard.*projectOwner.*projectManager.*projectViewer.*projectDataReaderWriter.*projectDataReader.*projectReadOnly`),
 			},
 		},
 	})
