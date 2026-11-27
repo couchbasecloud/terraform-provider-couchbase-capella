@@ -55,6 +55,7 @@ Read-Only:
 - `project_id` (String) The GUID4 ID of the project.
 - `service_groups` (Attributes List) - The couchbase service groups to be run. - The set of nodes that share the same disk, number of nodes and services. - At least one service group must contain the data service. (see [below for nested schema](#nestedatt--data--service_groups))
 - `support` (Attributes) (see [below for nested schema](#nestedatt--data--support))
+- `zones` (List of String) The AWS availability zone IDs (for example `use1-az1`) the cluster is deployed in. Null when the zone IDs are not known, for example for GCP and Azure clusters.
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`

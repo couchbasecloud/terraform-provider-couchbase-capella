@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -148,8 +149,8 @@ type Cluster struct {
 	// DeletionProtection prevents accidental cluster deletion when enabled.
 	DeletionProtection types.Bool `tfsdk:"deletion_protection"`
 
-	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
-	Zones []types.String `tfsdk:"zones"`
+	// Zones is the set of AWS availability zone IDs the cluster is deployed in.
+	Zones types.Set `tfsdk:"zones"`
 
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
@@ -218,6 +219,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		CurrentState:     types.StringValue(string(cluster.CurrentState)),
 		Audit:            auditObject,
 		Etag:             types.StringValue(cluster.Etag),
+		Zones:            NewZonesSet(cluster.Zones),
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
@@ -240,6 +242,104 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 	newCluster.ServiceGroups = newServiceGroups
 
 	return &newCluster, nil
+}
+
+// NewZonesSet converts the zone IDs returned by the API to a set. It returns a null set,
+// not an empty one, when the API omits the zones.
+func NewZonesSet(zones []string) types.Set {
+	if len(zones) == 0 {
+		return types.SetNull(types.StringType)
+	}
+	elements := make([]attr.Value, 0, len(zones))
+	for _, zone := range zones {
+		elements = append(elements, types.StringValue(zone))
+	}
+	return types.SetValueMust(types.StringType, elements)
+}
+
+// OneCluster is the model for the cluster data source. It mirrors Cluster, except that Zones
+// is a list: the data source has always exposed zones as a list, and configurations index it.
+type OneCluster struct {
+	Availability               *Availability  `tfsdk:"availability"`
+	Support                    *Support       `tfsdk:"support"`
+	CloudProvider              *CloudProvider `tfsdk:"cloud_provider"`
+	ProjectId                  types.String   `tfsdk:"project_id"`
+	Id                         types.String   `tfsdk:"id"`
+	OrganizationId             types.String   `tfsdk:"organization_id"`
+	Audit                      types.Object   `tfsdk:"audit"`
+	ConfigurationType          types.String   `tfsdk:"configuration_type"`
+	CouchbaseServer            types.Object   `tfsdk:"couchbase_server"`
+	Description                types.String   `tfsdk:"description"`
+	EnablePrivateDNSResolution types.Bool     `tfsdk:"enable_private_dns_resolution"`
+	DeletionProtection         types.Bool     `tfsdk:"deletion_protection"`
+	Zones                      types.List     `tfsdk:"zones"`
+	Name                       types.String   `tfsdk:"name"`
+	AppServiceId               types.String   `tfsdk:"app_service_id"`
+	ConnectionString           types.String   `tfsdk:"connection_string"`
+	CurrentState               types.String   `tfsdk:"current_state"`
+	Etag                       types.String   `tfsdk:"etag"`
+	IfMatch                    types.String   `tfsdk:"if_match"`
+	ServiceGroups              []ServiceGroup `tfsdk:"service_groups"`
+}
+
+// NewOneCluster creates the cluster data source model.
+func NewOneCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*OneCluster, error) {
+	newCluster, err := NewCluster(ctx, cluster, organizationId, projectId, auditObject)
+	if err != nil {
+		return nil, err
+	}
+
+	return &OneCluster{
+		Availability:               newCluster.Availability,
+		Support:                    newCluster.Support,
+		CloudProvider:              newCluster.CloudProvider,
+		ProjectId:                  newCluster.ProjectId,
+		Id:                         newCluster.Id,
+		OrganizationId:             newCluster.OrganizationId,
+		Audit:                      newCluster.Audit,
+		ConfigurationType:          newCluster.ConfigurationType,
+		CouchbaseServer:            newCluster.CouchbaseServer,
+		Description:                newCluster.Description,
+		EnablePrivateDNSResolution: newCluster.EnablePrivateDNSResolution,
+		DeletionProtection:         newCluster.DeletionProtection,
+		Zones:                      NewZonesList(cluster.Zones),
+		Name:                       newCluster.Name,
+		AppServiceId:               newCluster.AppServiceId,
+		ConnectionString:           newCluster.ConnectionString,
+		CurrentState:               newCluster.CurrentState,
+		Etag:                       newCluster.Etag,
+		IfMatch:                    newCluster.IfMatch,
+		ServiceGroups:              newCluster.ServiceGroups,
+	}, nil
+}
+
+// NewZonesList converts the zone IDs returned by the API to a sorted list, so the order does
+// not change between reads. It returns a null list, not an empty one, when the API omits the zones.
+func NewZonesList(zones []string) types.List {
+	if len(zones) == 0 {
+		return types.ListNull(types.StringType)
+	}
+	sorted := slices.Sorted(slices.Values(zones))
+	elements := make([]attr.Value, 0, len(sorted))
+	for _, zone := range sorted {
+		elements = append(elements, types.StringValue(zone))
+	}
+	return types.ListValueMust(types.StringType, elements)
+}
+
+func (c *OneCluster) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: c.OrganizationId,
+		ProjectId:      c.ProjectId,
+		Id:             c.Id,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %w", err)
+	}
+
+	return IDs, nil
 }
 
 func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]ServiceGroup, error) {
@@ -350,6 +450,7 @@ type ClusterData struct {
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	ConnectionString           types.String     `tfsdk:"connection_string"`
 	CurrentState               types.String     `tfsdk:"current_state"`
+	Zones                      types.List       `tfsdk:"zones"`
 	ServiceGroups              []ServiceGroup   `tfsdk:"service_groups"`
 }
 
@@ -378,6 +479,7 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		ConnectionString: types.StringValue(cluster.ConnectionString),
 		CurrentState:     types.StringValue(string(cluster.CurrentState)),
 		Audit:            auditObject,
+		Zones:            NewZonesList(cluster.Zones),
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
