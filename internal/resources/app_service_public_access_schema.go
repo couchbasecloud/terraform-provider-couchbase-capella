@@ -19,7 +19,6 @@ func AppServicePublicAccessSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_service_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 
-	// The OpenAPI spec has no enum of the modes that can be requested, so the validator is not generated.
 	capellaschema.AddAttr(attrs, "public_access", appServicePublicAccessBuilder, stringAttribute(
 		[]string{required},
 		stringvalidator.OneOf(string(appservice.PublicAccessRestricted), string(appservice.PublicAccessUnrestricted)),
