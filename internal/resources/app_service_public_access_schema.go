@@ -17,9 +17,8 @@ func AppServicePublicAccessSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_service_id", appServicePublicAccessBuilder, requiredUUIDStringAttribute())
 
-	// The OpenAPI spec has no description for this field, because the restrict and unrestrict requests take no body.
 	publicAccess := stringAttribute([]string{required})
-	publicAccess.MarkdownDescription = "\n - The public access mode to apply: `restricted` or `unrestricted`."
+	publicAccess.MarkdownDescription = "- The public access mode to apply: `restricted` or `unrestricted`."
 	capellaschema.AddAttr(attrs, "public_access", appServicePublicAccessBuilder, publicAccess)
 
 	capellaschema.AddAttr(attrs, "public_access_status", appServicePublicAccessBuilder, stringAttribute([]string{computed}))
