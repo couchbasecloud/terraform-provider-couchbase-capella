@@ -1,0 +1,1 @@
+terraform import couchbase-capella_organization_alert_configuration.example organization_id=<organization_id>
